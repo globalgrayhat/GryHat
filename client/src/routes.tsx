@@ -8,6 +8,8 @@ import StripeContainer from "./components/pages/payment-stripe/stripe-container"
 import AddCategory from "./components/pages/categories/add-category";
 import EditCategory from "./components/pages/categories/edit-category";
 import ListCategories from "./components/pages/categories/list-category";
+import AdminCoursesPage from "./components/pages/admin/admin-courses-page";
+import AdminProfilePage from "./components/pages/admin/admin-profile-page";
 import DashHome from "./components/pages/student-dash/dash-home";
 import InstructorChannels from "./components/pages/channel/instructor-channels";
 
@@ -30,6 +32,15 @@ const LazyInstructorIndex = lazy(
 
 const LazyStudents = lazy(
   () => import("./components/pages/student-management/students-tab")
+);
+const LazyAdminCoursesPage = lazy(
+  () => import('./components/pages/admin/admin-courses-page')
+);
+const LazyAdminProfilePage = lazy(
+  () => import('./components/pages/admin/admin-profile-page')
+);
+const LazySiteSettingsPage = lazy(
+  () => import('./components/pages/admin/site-settings-page')
 );
 
 const LazyCategories = lazy(
@@ -288,6 +299,30 @@ const AppRouter = createBrowserRouter([
         ),
       },
       {
+        path: "courses",
+        element: (
+          <Suspense fallback={<div>Loading...</div>}>
+            <LazyAdminCoursesPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: "profile",
+        element: (
+          <Suspense fallback={<div>Loading...</div>}>
+            <LazyAdminProfilePage />
+          </Suspense>
+        ),
+      },
+      {
+        path: "settings",
+        element: (
+          <Suspense fallback={<div>Loading...</div>}>
+            <LazySiteSettingsPage />
+          </Suspense>
+        ),
+      },
+      {
         path: "instructors",
         element: (
           <Suspense fallback={<div>loading...</div>}>
@@ -350,6 +385,22 @@ const AppRouter = createBrowserRouter([
             element: <EditCategory />,
           },
         ],
+      },
+      {
+        path: "courses",
+        element: (
+          <Suspense fallback={<div>{'Loading...'}</div>}>
+            <LazyAdminCoursesPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: "profile",
+        element: (
+          <Suspense fallback={<div>{'Loading...'}</div>}>
+            <LazyAdminProfilePage />
+          </Suspense>
+        ),
       },
     ],
   },

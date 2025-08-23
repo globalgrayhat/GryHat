@@ -4,12 +4,14 @@ import {
   PresentationChartBarIcon,
   Cog6ToothIcon,
   PowerIcon,
+  DocumentTextIcon,
 } from "@heroicons/react/24/solid";
 import {
   AcademicCapIcon,
   UserGroupIcon,
   BookOpenIcon,
   Square3Stack3DIcon,
+  UserCircleIcon,
 } from "@heroicons/react/24/outline";
 import { APP_LOGO } from "../../../constants/common";
 import { Link } from "react-router-dom";
@@ -22,6 +24,8 @@ export function AdminSideNav() {
     { icon: UserGroupIcon, label: "Students", path: "students" },
     { icon: BookOpenIcon, label: "Categories", path: "categories" },
     { icon: Square3Stack3DIcon, label: "Courses", path: "courses" },
+    { icon: DocumentTextIcon, label: "Articles", path: "articles" },
+    { icon: UserCircleIcon, label: "Profile", path: "profile" },
     { icon: Cog6ToothIcon, label: "Settings", path: "settings" },
     { icon: PowerIcon, label: "Log Out", path: "" },
   ];

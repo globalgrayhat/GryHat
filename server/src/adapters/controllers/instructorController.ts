@@ -16,12 +16,14 @@ import { InstructorDbInterface } from '../../app/repositories/instructorDbReposi
 import { InstructorRepositoryMongoDb } from '../../frameworks/database/mongodb/repositories/instructorRepoMongoDb';
 import { CustomRequest } from '../../types/customRequest';
 import { CloudServiceInterface } from '../../app/services/cloudServiceInterface';
-import { CloudServiceImpl } from '../../frameworks/services/s3CloudService';
+// Use the provider-aware service factory rather than directly referencing S3.
+import { CloudServiceImpl } from '../../frameworks/services';
 import {
   changePasswordU,
   getStudentsForInstructorsU,
   updateProfileU
 } from '../../app/usecases/instructor';
+import { localStorageService } from '../../frameworks/services/localStorageService';
 import { AuthServiceInterface } from '../../app/services/authServicesInterface';
 import { AuthService } from '../../frameworks/services/authService';
 import { CourseRepositoryMongoDbInterface } from '@src/frameworks/database/mongodb/repositories/courseReposMongoDb';
@@ -165,10 +167,24 @@ const instructorController = (
       const instructorId = req.user?.Id;
       const instructorInfo = req.body;
       const profilePic: Express.Multer.File = req.file as Express.Multer.File;
+      // Always store instructor profile pictures locally regardless of the
+      // configured storage provider. This prevents profile photos from
+      // being uploaded to remote storage such as AWS S3. If a picture is
+      // provided, upload it using the local storage service and attach
+      // the resulting metadata to the instructorInfo.profilePic field.
+      if (profilePic) {
+        // Use the local storage service directly to store the profile
+        // picture locally. UploadAndGetUrl returns name, key, and url.
+        const localService = localStorageService();
+        const uploaded = await localService.uploadAndGetUrl(profilePic);
+        instructorInfo.profilePic = uploaded;
+      }
+      // Pass undefined for profilePic so that the usecase does not attempt
+      // to upload the picture again using the cloudService.
       await updateProfileU(
         instructorId,
         instructorInfo,
-        profilePic,
+        undefined,
         cloudService,
         dbRepositoryInstructor
       );

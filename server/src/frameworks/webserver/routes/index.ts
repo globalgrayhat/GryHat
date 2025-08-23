@@ -6,11 +6,13 @@ import instructorRouter from './instructor';
 import { RedisClient } from '../../../app';
 import jwtAuthMiddleware from '../middlewares/userAuth';
 import roleCheckMiddleware from '../middlewares/roleCheckMiddleware';
+import { UserRole } from '../../../constants/enums';
 import videoStreamRouter from './videoStream';
 import refreshRouter from './refresh';
 import paymentRouter from './payment';
 import categoryRouter from './category';
 import studentRouter from './student';
+import storageConfigRouter from './storageConfig';
 
 const routes = (app: Application, redisClient: RedisClient) => {
   app.use('/api/auth', authRouter());
@@ -18,7 +20,7 @@ const routes = (app: Application, redisClient: RedisClient) => {
   app.use(
     '/api/admin',
     jwtAuthMiddleware,
-    roleCheckMiddleware('admin'),
+    roleCheckMiddleware(UserRole.Admin),
     adminRouter()
   );
   app.use('/api/category', categoryRouter());
@@ -27,6 +29,9 @@ const routes = (app: Application, redisClient: RedisClient) => {
   app.use('/api/instructors', instructorRouter());
   app.use('/api/payments', jwtAuthMiddleware, paymentRouter());
   app.use('/api/students', studentRouter(redisClient));
+  // Storage configuration routes (admin only). Protect with JWT auth; role check
+  // occurs within the router itself.
+  app.use('/api/storage-config', jwtAuthMiddleware, storageConfigRouter);
 };
 
 export default routes;

@@ -20,8 +20,8 @@ const MyCourseCard: React.FC<CourseInterface> = ({
     <Card className='w-80 h-[25rem] border-none shadow-none hover:border-gray-300 hover:border-md hover:shadow-md transition-transform duration-300 overflow-hidden border-2 border-gray-200 hover:scale-105'>
       <CardHeader shadow={false} floated={false} className='h-48'>
         <img
-          src={thumbnailUrl}  
-          
+          src={thumbnailUrl}
+          alt={`Thumbnail of ${title}`}
           className='w-full h-30 object-cover transition-transform duration-300 transform hover:scale-105'
         />
       </CardHeader>

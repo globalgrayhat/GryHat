@@ -12,9 +12,11 @@ import { adminDbRepository } from "../../../app/repositories/adminDbRepository";
 import { adminRepoMongoDb } from "../../../frameworks/database/mongodb/repositories/adminRepoMongoDb";
 import { refreshTokenDbRepository } from "../../../app/repositories/refreshTokenDBRepository";
 import { refreshTokenRepositoryMongoDB } from "../../../frameworks/database/mongodb/repositories/refreshTokenRepoMongoDb";
-import { s3Service } from "../../../frameworks/services/s3CloudService";
+import { CloudServiceImpl } from '../../../frameworks/services';
 import { cloudServiceInterface } from "../../../app/services/cloudServiceInterface";
 import upload from "../middlewares/multer";
+// Import rate limiter middleware to protect login routes
+import { authRateLimiter } from '../middlewares/rateLimit';
 const authRouter = () => {     
   const router = express.Router();
   
@@ -22,7 +24,7 @@ const authRouter = () => {
     authServiceInterface,
     authService,
     cloudServiceInterface,
-    s3Service,
+    CloudServiceImpl,
     studentDbRepository,
     studentRepositoryMongoDB,  
     instructorDbRepository,  
@@ -36,15 +38,18 @@ const authRouter = () => {
   );
   //* Student
   router.post("/student-register",controller.registerStudent)
-  router.post("/student-login", controller.loginStudent);
+  // Apply rate limiter on student login to prevent brute force attacks
+  router.post("/student-login", authRateLimiter, controller.loginStudent);
   router.post("/login-with-google",controller.loginWithGoogle)
   
   //* Instructor
   router.post("/instructor/instructor-register",upload.array('images'), controller.registerInstructor)
-  router.post("/instructor/instructor-login",controller.loginInstructor)
+  // Rate limit instructor login as well
+  router.post("/instructor/instructor-login", authRateLimiter, controller.loginInstructor)
 
   //* Admin 
-  router.post("/admin/admin-login",controller.loginAdmin)
+  // Protect admin login with rate limiting
+  router.post("/admin/admin-login", authRateLimiter, controller.loginAdmin)
 
   return router;
 };

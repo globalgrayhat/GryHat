@@ -9,6 +9,7 @@ import { AuthServiceInterface } from '../../../app/services/authServicesInterfac
 import { RefreshTokenDbInterface } from '../../../app/repositories/refreshTokenDBRepository';
 import { UploadedFileInterface } from '@src/types/common';
 import { CloudServiceInterface } from '@src/app/services/cloudServiceInterface';
+import { UserRole } from '../../../constants/enums';
 
 export const instructorRegister = async (
   instructor: InstructorInterface,
@@ -96,7 +97,7 @@ export const instructorLogin = async (
   const payload = {
     Id: instructor._id,
     email: instructor.email,
-    role: 'instructor'
+    role: UserRole.Instructor
   };
   await refreshTokenRepository.deleteRefreshToken(instructor._id);
   const accessToken = authService.generateToken(payload);

@@ -248,6 +248,7 @@ const AddLessonForm: React.FC = () => {
                       <img
                         src={URL.createObjectURL(materialFile)}
                         className='h-52 w-full rounded-md p-2 mt-3'
+                        alt='Lesson material preview'
                       />
                     )}
                     <ErrorMessage

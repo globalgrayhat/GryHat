@@ -11,6 +11,8 @@ import useIsOnline from "./hooks/useOnline";
 import YouAreOffline from "./components/common/you-are-offline";
 import StudentFooter from "./components/partials/student-footer";
 import { selectIsLoggedIn, selectUserType } from "./redux/reducers/authSlice";
+import { selectStudent } from './redux/reducers/studentSlice';
+import { selectInstructor } from './redux/reducers/instructorSlice';
 import { selectIsFooterVisible } from "./redux/reducers/helperSlice";
 import { fetchStudentData } from "./redux/reducers/studentSlice";
 import SessionExpired from "./components/common/session-expired-modal";
@@ -19,6 +21,7 @@ import { getInstructorDetails } from "./api/endpoints/instructor";
 import { setDetails } from "./redux/reducers/instructorSlice";
 import { AdminSideNav } from "./components/pages/admin/admin-side-nav";
 import { toast } from "react-toastify";   
+import { useLanguage } from './contexts/LanguageContext';
 
 export const Student: React.FC = () => {
   const isOnline = useIsOnline();
@@ -27,6 +30,8 @@ export const Student: React.FC = () => {
   const dispatch = useDispatch();
   const isHeaderVisible = true;
   const user = useSelector(selectUserType);
+  const student = useSelector(selectStudent);
+  const { t } = useLanguage();
   // usePreventBackButton(isLoggedIn);
   const [showSessionExpired, setShowSessionExpired] = useState(false);
 
@@ -69,13 +74,25 @@ export const Student: React.FC = () => {
         />
       )}
       {isOnline ? (
-        <div className='bg-white font-sans'>
-          <div className={`${headerClassName}`}>
-            <StudentHeader />
+        student?.studentDetails?.isBlocked ? (
+          // If the student account is blocked, show a simple message and no app content
+          <div className="flex items-center justify-center h-screen bg-gray-100 dark:bg-[#2e3440]">
+            <p className="text-xl font-semibold text-red-600 dark:text-red-400">
+              {t('auth.blockedTitle') || 'Account Blocked'}
+            </p>
+            <p className="mt-2 text-gray-600 dark:text-gray-300 text-center max-w-md">
+              {t('auth.blockedMessage') || 'Your account has been blocked and you cannot access the platform.'}
+            </p>
           </div>
-          <Outlet />
-          {footerVisible && <StudentFooter />}
-        </div>
+        ) : (
+          <div className="bg-white dark:bg-[#2e3440] font-sans min-h-screen">
+            <div className={`${headerClassName}`}>
+              <StudentHeader />
+            </div>
+            <Outlet />
+            {footerVisible && <StudentFooter />}
+          </div>
+        )
       ) : (
         <YouAreOffline />
       )}
@@ -88,6 +105,7 @@ export const Instructor: React.FC = () => {
   const user = useSelector(selectUserType);
   const isLoggedIn = useSelector(selectIsLoggedIn);
   const dispatch = useDispatch();
+  const instructor = useSelector(selectInstructor);
   const fetchInstructor = async () => {
     try {
       const response = await getInstructorDetails();
@@ -105,21 +123,33 @@ export const Instructor: React.FC = () => {
     <>
       {isOnline ? (
         isLoggedIn && user === "instructor" ? (
-          <>
-            <div className='fixed inset-x-0 top-0 flex flex-col font-sans'>
-              <InstructorHeader />
-              <div className='flex flex-1'>
-                <div className='w-64 h-screen overflow-y-auto'>
-                  <InstructorSideNav />
-                </div>
-                <div className='flex  flex-col flex-1'>
-                  <div className='p-4 bg-customBlueShade overflow-y-scroll h-screen'>
-                    <Outlet />
+          instructor?.instructorDetails?.isBlocked ? (
+            // Blocked instructor message
+            <div className="flex flex-col items-center justify-center h-screen bg-gray-100 dark:bg-[#2e3440] p-4">
+              <p className="text-xl font-semibold text-red-600 dark:text-red-400">
+                {t('auth.blockedTitle') || 'Account Blocked'}
+              </p>
+              <p className="mt-2 text-gray-600 dark:text-gray-300 text-center max-w-md">
+                {t('auth.blockedMessage') || 'Your account has been blocked and you cannot use the platform.'}
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="fixed inset-x-0 top-0 flex flex-col font-sans">
+                <InstructorHeader />
+                <div className="flex flex-1">
+                  <div className="w-64 h-screen overflow-y-auto">
+                    <InstructorSideNav />
+                  </div>
+                  <div className="flex flex-col flex-1">
+                    <div className="p-4 bg-customBlueShade dark:bg-[#2e3440] overflow-y-scroll h-screen">
+                      <Outlet />
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </>
+            </>
+          )
         ) : (
           <div>
             <InstructorLoginPage />

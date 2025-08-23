@@ -4,6 +4,7 @@ import HttpStatusCodes from '../../../constants/HttpStatusCodes';
 import { AdminSavedDbInterface } from '../../../types/adminAuthInterface';
 import AppError from '../../../utils/appError';
 import { RefreshTokenDbInterface} from '../../../app/repositories/refreshTokenDBRepository';
+import { UserRole } from '../../../constants/enums';
 export const adminLogin = async (
   email: string,
   password: string,
@@ -29,7 +30,7 @@ export const adminLogin = async (
   const payload = {
     Id: admin._id,
     email: admin.email,
-    role: 'admin'
+    role: UserRole.Admin
   };
   await refreshTokenRepository.deleteRefreshToken(admin._id)
   const accessToken = authService.generateToken(payload);

@@ -5,6 +5,7 @@ import { getInstructorDetails, updateProfile } from "../../../api/endpoints/inst
 import { UpdateProfileInfo } from "../../../api/types/instructor/instructor";
 import { Avatar } from "@material-tailwind/react";
 import { InstructorApiResponse } from "../../../api/types/apiResponses/api-response-instructors";
+import { useLanguage } from '../../../contexts/LanguageContext';
 
 interface Props {
   editMode: boolean;
@@ -18,6 +19,7 @@ const ProfileForm: React.FC<Props> = ({ editMode, setEditMode }) => {
   );
   const [profileUrl, setProfileUrl] = useState<string>("");
   const [updated, setUpdated] = useState(false);
+  const { t } = useLanguage();
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -123,9 +125,9 @@ const ProfileForm: React.FC<Props> = ({ editMode, setEditMode }) => {
   }
 
   return (
-    <form onSubmit={formik.handleSubmit} >
-      <div></div>
-      <div className='p-5 flex '>
+    <form onSubmit={formik.handleSubmit}>
+      {/* Profile picture */}
+      <div className='p-5 flex'>
         <Avatar
           src={previewImage || profileUrl || "../profile.jpg"}
           alt='avatar'
@@ -133,10 +135,10 @@ const ProfileForm: React.FC<Props> = ({ editMode, setEditMode }) => {
         />
         <div className='pl-4'>
           <label
-            className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'
+            className='block mb-2 text-sm font-medium text-gray-900 dark:text-gray-200'
             htmlFor='file_input'
           >
-            Upload profile photo
+            {t('settings.uploadProfilePhoto') || 'Upload profile photo'}
           </label>
           <input
             className='block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400'
@@ -163,10 +165,10 @@ const ProfileForm: React.FC<Props> = ({ editMode, setEditMode }) => {
           <label
             htmlFor='floating_first_name'
             className={`peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] ${
-              formik.values.firstName ? "peer-placeholder-shown:scale-100" : ""
+              formik.values.firstName ? 'peer-placeholder-shown:scale-100' : ''
             } peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6`}
           >
-            First name
+            {t('settings.firstName') || 'First name'}
           </label>
         </div>
         <div className='relative z-0 w-full mb-6 group'>
@@ -185,10 +187,10 @@ const ProfileForm: React.FC<Props> = ({ editMode, setEditMode }) => {
           <label
             htmlFor='floating_last_name'
             className={`peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] ${
-              formik.values.lastName ? "peer-placeholder-shown:scale-100" : ""
+              formik.values.lastName ? 'peer-placeholder-shown:scale-100' : ''
             } peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6`}
           >
-            Last name
+            {t('settings.lastName') || 'Last name'}
           </label>
         </div>
       </div>
@@ -208,10 +210,10 @@ const ProfileForm: React.FC<Props> = ({ editMode, setEditMode }) => {
         <label
           htmlFor='floating_email'
           className={`peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] ${
-            formik.values.email ? "peer-placeholder-shown:scale-100" : ""
+            formik.values.email ? 'peer-placeholder-shown:scale-100' : ''
           } peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6`}
         >
-          Email address
+          {t('settings.email') || 'Email address'}
         </label>
       </div>
       <div className='relative z-0 w-full mb-6 group'>
@@ -230,10 +232,10 @@ const ProfileForm: React.FC<Props> = ({ editMode, setEditMode }) => {
         <label
           htmlFor='floating_phone'
           className={`peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] ${
-            formik.values.mobile ? "peer-placeholder-shown:scale-100" : ""
+            formik.values.mobile ? 'peer-placeholder-shown:scale-100' : ''
           } peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6`}
         >
-          Mobile
+          {t('settings.mobile') || 'Mobile'}
         </label>
       </div>
       <div className='relative z-0 w-full mb-6 group'>
@@ -251,11 +253,11 @@ const ProfileForm: React.FC<Props> = ({ editMode, setEditMode }) => {
         />
         <label
           htmlFor='floating_qualification'
-          className={`peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] ${
-            formik.values.qualification ? "peer-placeholder-shown:scale-100" : ""
+        className={`peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] ${
+            formik.values.qualification ? 'peer-placeholder-shown:scale-100' : ''
           } peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6`}
         >
-          Qualifications
+          {t('settings.qualification') || 'Qualification'}
         </label>
       </div>
       {/* <div className='relative z-0 w-full mb-6 group'>
@@ -295,11 +297,11 @@ const ProfileForm: React.FC<Props> = ({ editMode, setEditMode }) => {
         />
         <label
           htmlFor='floating_experience'
-          className={`peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] ${
-            formik.values.experience ? "peer-placeholder-shown:scale-100" : ""
+        className={`peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] ${
+            formik.values.experience ? 'peer-placeholder-shown:scale-100' : ''
           } peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6`}
         >
-          Experience
+          {t('settings.experience') || 'Experience'}
         </label>
       </div>
       <div className='relative z-0 w-full mb-6 group'>
@@ -317,21 +319,30 @@ const ProfileForm: React.FC<Props> = ({ editMode, setEditMode }) => {
         />
         <label
           htmlFor='floating_skills'
-          className={`peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] ${
-            formik.values.skills ? "peer-placeholder-shown:scale-100" : ""
+        className={`peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] ${
+            formik.values.skills ? 'peer-placeholder-shown:scale-100' : ''
           } peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6`}
         >
-          Skills
+          {t('settings.skills') || 'Skills'}
         </label>
       </div>
       <div className='relative pt-10 pr-1'>
         {editMode && (
-          <button
-            type={"submit"}
-            className='text-white absolute bottom-0 right-0  bg-blue-500 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800'
-          >
-            Update
-          </button>
+          <div className='flex justify-end gap-3'>
+            <button
+              type='button'
+              onClick={() => setEditMode(false)}
+              className='bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-800 dark:text-gray-200 font-medium px-4 py-2 rounded'
+            >
+              {t('settings.cancel') || 'Cancel'}
+            </button>
+            <button
+              type='submit'
+              className='bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600 text-white font-medium px-4 py-2 rounded'
+            >
+              {t('settings.save') || 'Save'}
+            </button>
+          </div>
         )}
       </div>
     </form>

@@ -12,6 +12,7 @@ import {
   Bars2Icon,
 } from "@heroicons/react/24/outline";
 import { ProfileMenu } from "./profile-menu-instructor";
+import LanguageToggle from '../../common/LanguageToggle';
  
  
 // nav list menu
@@ -172,7 +173,11 @@ export default function InstructorHeader() {
         >
           <Bars2Icon className="h-6 w-6" />
         </IconButton>
-        <ProfileMenu />
+        {/* Show language toggle and profile menu */}
+        <div className="flex items-center space-x-2">
+          <LanguageToggle />
+          <ProfileMenu />
+        </div>
       </div>
       <Collapse open={isNavOpen} className="overflow-scroll">
         <NavList />

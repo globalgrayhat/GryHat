@@ -1,13 +1,15 @@
 import express from 'express';
 import videoStreamController from '../../../adapters/controllers/videoStreamController';
-import { s3Service } from '../../../frameworks/services/s3CloudService';
+import { CloudServiceImpl } from '../../../frameworks/services';
 import { cloudServiceInterface } from '../../../app/services/cloudServiceInterface';
+// Apply rate limiter to video streaming endpoint
+import { videoRateLimiter } from '../middlewares/rateLimit';
 
 const videoStreamRouter = () => {
   const router = express.Router();
-  const controller = videoStreamController(cloudServiceInterface, s3Service);
+  const controller = videoStreamController(cloudServiceInterface, CloudServiceImpl);
 
-  router.get('/stream-video/:videoFileId', controller.streamVideo);
+  router.get('/stream-video/:videoFileId', videoRateLimiter, controller.streamVideo);
 
   return router
 };

@@ -49,6 +49,17 @@ const configKeys = {
 
   REDIS_URL:process.env.REDIS_URL as string
 
+  ,
+
+  /*
+   * The storage provider is now configured dynamically at runtime via the
+   * storage configuration API. This property remains here only for
+   * backwards‑compatibility; however, it is unused by the application. To
+   * change the storage provider, use the `/api/storage-config` endpoints
+   * instead of setting an environment variable.
+   */
+  // STORAGE_PROVIDER: (process.env.STORAGE_PROVIDER as string) || 's3'
+
 };
 
 export default configKeys;

@@ -3,8 +3,9 @@ import courseController from '../../../adapters/controllers/courseController';
 import { courseRepositoryMongodb } from '../../../frameworks/database/mongodb/repositories/courseReposMongoDb';
 import { courseDbRepository } from '../../../app/repositories/courseDbRepository';
 import roleCheckMiddleware from '../middlewares/roleCheckMiddleware';
+import { UserRole } from '../../../constants/enums';
 import { cloudServiceInterface } from '../../../app/services/cloudServiceInterface';
-import { s3Service } from '../../../frameworks/services/s3CloudService';
+import { CloudServiceImpl } from '../../../frameworks/services';
 import upload from '../middlewares/multer';
 import { quizDbRepository } from '../../../app/repositories/quizDbRepository';
 import { quizRepositoryMongodb } from '../../../frameworks/database/mongodb/repositories/quizzDbRepository';
@@ -24,7 +25,7 @@ const courseRouter = (redisClient: RedisClient) => {
   const router = express.Router();
   const controller = courseController(
     cloudServiceInterface,
-    s3Service,
+    CloudServiceImpl,
     courseDbRepository,
     courseRepositoryMongodb,
     quizDbRepository,
@@ -43,7 +44,7 @@ const courseRouter = (redisClient: RedisClient) => {
   router.post(
     '/instructors/add-course',
     jwtAuthMiddleware,
-    roleCheckMiddleware('instructor'),
+    roleCheckMiddleware(UserRole.Instructor),
     upload.array('files'),
     controller.addCourse
   );
@@ -51,7 +52,7 @@ const courseRouter = (redisClient: RedisClient) => {
   router.put(
     '/instructors/edit-course/:courseId',
     jwtAuthMiddleware,
-    roleCheckMiddleware('instructor'),
+    roleCheckMiddleware(UserRole.Instructor),
     upload.array('files'),
     controller.editCourse
   );
@@ -67,14 +68,14 @@ const courseRouter = (redisClient: RedisClient) => {
   router.get(
     '/get-course-by-instructor',
     jwtAuthMiddleware,
-    roleCheckMiddleware('instructor'),
+    roleCheckMiddleware(UserRole.Instructor),
     controller.getCoursesByInstructor
   );
 
   router.post(
     '/instructors/add-lesson/:courseId',
     jwtAuthMiddleware,
-    roleCheckMiddleware('instructor'),
+    roleCheckMiddleware(UserRole.Instructor),
     upload.array('media'),
     controller.addLesson
   );
@@ -82,7 +83,7 @@ const courseRouter = (redisClient: RedisClient) => {
   router.put(
     '/instructors/edit-lesson/:lessonId',
     jwtAuthMiddleware,
-    roleCheckMiddleware('instructor'),
+    roleCheckMiddleware(UserRole.Instructor),
     upload.array('media'),
     controller.editLesson
   );
@@ -139,7 +140,7 @@ const courseRouter = (redisClient: RedisClient) => {
   router.get(
     '/get-recommended-courses',
     jwtAuthMiddleware,
-    roleCheckMiddleware('student'),
+    roleCheckMiddleware(UserRole.Student),
     controller.getRecommendedCourseByStudentInterest
   );
 

@@ -12,7 +12,10 @@ import {
 } from '../../app/usecases/student';
 import { StudentUpdateInfo } from '../../types/studentInterface';
 import { CloudServiceInterface } from '../../app/services/cloudServiceInterface';
-import { CloudServiceImpl } from '../../frameworks/services/s3CloudService';
+// Dynamically select the storage provider based on configuration. Avoid
+// importing directly from the S3 implementation so that local storage is also
+// supported.
+import { CloudServiceImpl } from '../../frameworks/services';
 import {
   blockStudentU,
   getAllBlockedStudentsU,

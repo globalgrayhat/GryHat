@@ -1,4 +1,6 @@
-import { CloudServiceImpl } from "../../frameworks/services/s3CloudService";
+// Select the appropriate storage implementation from the service index. This
+// indirection allows switching between S3 and local providers via configuration.
+import { CloudServiceImpl } from '../../frameworks/services';
 
 export const cloudServiceInterface = (service:ReturnType<CloudServiceImpl>) =>{
    

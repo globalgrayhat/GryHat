@@ -14,6 +14,7 @@ import {
 import { ApiResponseTrending } from "../../../api/types/apiResponses/api-response-home-page-listing";
 import { Link } from "react-router-dom";
 import { selectUserType } from "../../../redux/reducers/authSlice";
+import { useLanguage } from '../../../contexts/LanguageContext';
 
 const StudentHomePage: React.FC = () => {
   const [trendingCourses, setTrendingCourses] = useState<
@@ -30,6 +31,9 @@ const StudentHomePage: React.FC = () => {
   const isLoggedIn = useSelector(selectIsLoggedIn);
   const user = useSelector(selectUserType);
 
+  // Translation hook
+  const { t } = useLanguage();
+
   const fetchTrendingCourses = async () => {
     try {
       setIsLoadingTrending(true);
@@ -40,9 +44,6 @@ const StudentHomePage: React.FC = () => {
       }, 1000);
     } catch (error) {
       setIsLoadingTrending(false);
-      // toast.error("Something went wrong", {
-      //   position: toast.POSITION.BOTTOM_RIGHT,
-      // });
     }
   };
 
@@ -56,9 +57,6 @@ const StudentHomePage: React.FC = () => {
       }, 1000);
     } catch (error) {
       selectIsLoadingRecommended(false);
-      // toast.error("Something went wrong", {
-      //   position: toast.POSITION.BOTTOM_RIGHT,
-      // });
     }
   };
 
@@ -76,6 +74,7 @@ const StudentHomePage: React.FC = () => {
     setShowMoreRecommended(true);
     setCardsToShow((prevCardsToShow) => prevCardsToShow + 3);
   };
+
   if (isLoadingTrending || isLoadingRecommended) {
     return (
       <div>
@@ -86,7 +85,7 @@ const StudentHomePage: React.FC = () => {
               variant='h1'
               className='text-2xl  lg:text-4xl p-2 ml-2  font-semibold'
             >
-              Trending Courses
+              {t('home.trendingCourses') || 'Trending Courses'}
             </Typography>
           </div>
           <div className='flex items-center justify-between px-10 flex-wrap'>
@@ -102,7 +101,7 @@ const StudentHomePage: React.FC = () => {
                 variant='h1'
                 className='text-2xl  p-2 ml-2 lg:text-4xl font-semibold'
               >
-                Recommended Courses
+                {t('home.recommendedCourses') || 'Recommended Courses'}
               </Typography>
             </div>
             <div className='flex items-center justify-between pt-2 px-10 flex-wrap'>
@@ -127,7 +126,7 @@ const StudentHomePage: React.FC = () => {
             variant='h1'
             className='text-2xl  p-2 ml-2 lg:text-4xl font-semibold'
           >
-            Trending Courses
+            {t('home.trendingCourses') || 'Trending Courses'}
           </Typography>
         </div>
 
@@ -146,10 +145,10 @@ const StudentHomePage: React.FC = () => {
           <div className='md:flex-shrink-0 mt-3 ml-6'>
             <div className='flex-shrink-0'>
               <button
-                className='text-customFontColorBlack ml-3 hover:text-blue-gray-600 font-bold px-6 rounded'
+                className='ml-3 font-bold px-6 py-2 rounded-full bg-blue-50 hover:bg-blue-100 text-customFontColorBlack dark:text-[#e5e9f0] dark:bg-[#4c566a] dark:hover:bg-[#434c5e]'
                 onClick={handleShowMoreTrending}
               >
-                View More
+                {t('home.viewMore') || 'View More'}
               </button>
             </div>
           </div>
@@ -163,7 +162,7 @@ const StudentHomePage: React.FC = () => {
               variant='h1'
               className='text-2xl  p-2 ml-2 lg:text-4xl font-semibold'
             >
-              Recommended Courses
+              {t('home.recommendedCourses') || 'Recommended Courses'}
             </Typography>
           </div>
           <div className='flex items-center justify-between pt-2 px-10 flex-wrap'>
@@ -178,10 +177,10 @@ const StudentHomePage: React.FC = () => {
                     recommendedCourses.length > cardsToShow && (
                       <div className='flex justify-end w-full'>
                         <button
-                          className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'
+                          className='bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-full'
                           onClick={handleShowMoreRecommended}
                         >
-                          View More
+                          {t('home.viewMore') || 'View More'}
                         </button>
                       </div>
                     )}

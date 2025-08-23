@@ -17,7 +17,8 @@ import { getCourseByInstructorU } from '../../app/usecases/course/viewCourse';
 import { addLessonsU } from '../../app/usecases/lessons/addLesson';
 import { getLessonsByCourseIdU } from '../../app/usecases/lessons/viewLessons';
 import { CloudServiceInterface } from '../../app/services/cloudServiceInterface';
-import { CloudServiceImpl } from '../../frameworks/services/s3CloudService';
+// Import from the service index to enable configurable storage providers.
+import { CloudServiceImpl } from '../../frameworks/services';
 import { getQuizzesLessonU } from '../../app/usecases/quiz/getQuiz';
 import { getLessonByIdU } from '../../app/usecases/lessons/getLesson';
 import { QuizDbInterface } from '../../app/repositories/quizDbRepository';
@@ -49,6 +50,7 @@ import { searchCourseU } from '../../app/usecases/course/search';
 import { CacheRepositoryInterface } from '@src/app/repositories/cachedRepoInterface';
 import { RedisRepositoryImpl } from '@src/frameworks/database/redis/redisCacheRepository';
 import { RedisClient } from '@src/app';
+import { localStorageService } from '../../frameworks/services/localStorageService';
 
 const courseController = (
   cloudServiceInterface: CloudServiceInterface,
@@ -84,14 +86,28 @@ const courseController = (
       const course: AddCourseInfoInterface = req.body;
       const files: Express.Multer.File[] = req.files as Express.Multer.File[];
       const instructorId = req.user?.Id;
+      // Always store images (thumbnails) locally regardless of global
+      // storage settings. Separate image files from others.
+      const localService = localStorageService();
+      const remainingFiles: Express.Multer.File[] = [];
+      await Promise.all(
+        files.map(async (file) => {
+          if (file.mimetype.includes('image')) {
+            // Upload thumbnail image locally and attach to courseInfo
+            const uploaded = await localService.uploadAndGetUrl(file);
+            course.thumbnail = uploaded;
+          } else {
+            remainingFiles.push(file);
+          }
+        })
+      );
       const response = await addCourses(
         instructorId,
         course,
-        files,
+        remainingFiles,
         cloudService,
         dbRepositoryCourse
       );
-      console.log(response)
       res.status(201).json({
         status: 'success',
         message:
@@ -106,10 +122,24 @@ const courseController = (
     const files: Express.Multer.File[] = req.files as Express.Multer.File[];
     const instructorId = req.user?.Id;
     const courseId: string = req.params.courseId;
+    // Separate image files from others and store images locally
+    const remainingFiles: Express.Multer.File[] = [];
+    const localService = localStorageService();
+    await Promise.all(
+      (files || []).map(async (file) => {
+        if (file.mimetype.includes('image')) {
+          // Upload updated thumbnail locally
+          const uploaded = await localService.uploadAndGetUrl(file);
+          course.thumbnail = uploaded;
+        } else {
+          remainingFiles.push(file);
+        }
+      })
+    );
     const response = await editCourseU(
       courseId,
       instructorId,
-      files,
+      remainingFiles,
       course,
       cloudService,
       dbRepositoryCourse
@@ -176,8 +206,31 @@ const courseController = (
     const medias = req.files as Express.Multer.File[];
     const questions = JSON.parse(lesson.questions);
     lesson.questions = questions;
+    // Split media files into videos and attachments. Videos are uploaded using
+    // the configured cloud service, while attachments (documents, archives,
+    // images) are stored locally. This ensures resumable uploads can be
+    // implemented for local files via TUS in the future.
+    const localService = localStorageService();
+    const videos: Express.Multer.File[] = [];
+    const attachments: Express.Multer.File[] = [];
+    (medias || []).forEach((file) => {
+      if (file.mimetype.startsWith('video/')) {
+        videos.push(file);
+      } else {
+        attachments.push(file);
+      }
+    });
+    // Upload attachments locally and assign to lesson.media.
+    const uploadedAttachments = await Promise.all(
+      attachments.map(async (file) => await localService.uploadAndGetUrl(file))
+    );
+    // Map uploaded attachments to only name and key properties as expected by
+    // the lesson schema. url is preserved if present.
+    lesson.media = uploadedAttachments.map((att) => {
+      return { name: att.name, key: att.key, url: att.url };
+    });
     await addLessonsU(
-      medias,
+      videos,
       courseId,
       instructorId,
       lesson,

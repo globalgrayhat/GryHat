@@ -5,6 +5,7 @@ import { StudentsDbInterface } from '../../repositories/studentDbRepository';
 import { AuthServiceInterface } from '../../services/authServicesInterface';
 import { StudentRegisterInterface } from '../../../types/studentRegisterInterface';
 import { GoogleAuthServiceInterface } from '../../../app/services/googleAuthServicesInterface';
+import { UserRole } from '../../../constants/enums';
 import { RefreshTokenDbInterface } from '../../../app/repositories/refreshTokenDBRepository';
 export const studentRegister = async (
   student: StudentRegisterInterface,
@@ -35,7 +36,7 @@ export const studentRegister = async (
   const payload = {
     Id: studentId,
     email,
-    role: 'student'
+    role: UserRole.Student
   };
   const accessToken = authService.generateToken(payload);
   const refreshToken = authService.generateRefreshToken(payload);
@@ -74,7 +75,7 @@ export const studentLogin = async (
   const payload = {
     Id: student._id,
     email: student.email,
-    role: 'student'
+    role: UserRole.Student
   };
   await refreshTokenRepository.deleteRefreshToken(student._id);
   const accessToken = authService.generateToken(payload);
@@ -103,7 +104,7 @@ export const signInWithGoogle = async (
     const payload = {
       Id: isUserExist._id,
       email: isUserExist.email,
-      role: 'student'
+      role: UserRole.Student
     };
     await refreshTokenRepository.deleteRefreshToken(isUserExist._id);
     const accessToken = authService.generateToken(payload);
@@ -118,7 +119,7 @@ export const signInWithGoogle = async (
     return { accessToken, refreshToken };
   } else {
     const { _id: userId, email } = await studentRepository.addStudent(user);
-    const payload = { Id: userId, email, role: 'student' };
+    const payload = { Id: userId, email, role: UserRole.Student };
     const accessToken = authService.generateToken(payload);
     const refreshToken = authService.generateRefreshToken(payload);
     const expirationDate =

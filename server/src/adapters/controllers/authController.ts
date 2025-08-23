@@ -24,7 +24,9 @@ import { AdminDbInterface } from '@src/app/repositories/adminDbRepository';
 import { AdminRepositoryMongoDb } from '@src/frameworks/database/mongodb/repositories/adminRepoMongoDb';
 import { RefreshTokenDbInterface } from '@src/app/repositories/refreshTokenDBRepository';
 import { RefreshTokenRepositoryMongoDb } from '@src/frameworks/database/mongodb/repositories/refreshTokenRepoMongoDb';
-import { CloudServiceImpl } from '@src/frameworks/services/s3CloudService';
+// Import from the service index rather than directly from S3. This allows
+// swapping implementations via configuration.
+import { CloudServiceImpl } from '@src/frameworks/services';
 import { CloudServiceInterface } from '@src/app/services/cloudServiceInterface';
 const authController = (
   authServiceInterface: AuthServiceInterface,

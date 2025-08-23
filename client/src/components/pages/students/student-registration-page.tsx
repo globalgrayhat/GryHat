@@ -4,7 +4,9 @@ import { registerStudent } from "../../../api/endpoints/auth/student-auth";
 import { studentRegistrationValidationSchema } from "../../../validations/auth/studentRegisterValidation";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
-import SelectInterest from "./custom-select-box";
+// The interests selector has been removed from the registration form.  The
+// student object now no longer requires an interests array (see
+// types/student.ts), simplifying the signup flow.
 import { StudentData } from "../../../types/student";
 import { useNavigate } from "react-router-dom";
 import { APP_LOGO } from "../../../constants/common";
@@ -49,7 +51,6 @@ const StudentRegistrationPage: React.FC = () => {
               password: "",
               confirmPassword: "",
               mobile: "",
-              interests: [],
             }}
             validationSchema={studentRegistrationValidationSchema}
             onSubmit={handleSubmit}
@@ -151,7 +152,14 @@ const StudentRegistrationPage: React.FC = () => {
                   />
                 </div>
               </div>
-              <SelectInterest />
+
+              {/*
+                The interests selector has been intentionally removed.  If you
+                wish to reintroduce category selection in future versions,
+                reimport and render the SelectInterest component here.  See
+                components/pages/students/custom-select-box.tsx for
+                implementation details.
+              */}
               <div>
                 <label
                   htmlFor='password'

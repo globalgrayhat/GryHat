@@ -49,7 +49,7 @@ export const changePasswordU = async (
 export const updateProfileU = async (
   id: string | undefined,
   instructorInfo: SavedInstructorInterface,
-  profilePic: Express.Multer.File,
+  profilePic: Express.Multer.File | undefined,
   cloudService: ReturnType<CloudServiceInterface>,
   instructorDbRepository: ReturnType<InstructorDbInterface>
 ) => {
@@ -62,6 +62,9 @@ export const updateProfileU = async (
       HttpStatusCodes.BAD_REQUEST
     );
   }
+  // Only upload the profile picture if it is provided. The controller can
+  // pre-process profile pictures (e.g. upload locally) before calling this
+  // usecase, in which case it will pass undefined here.
   if (profilePic) {
     const response = await cloudService.upload(profilePic);
     instructorInfo.profilePic = response;

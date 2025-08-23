@@ -1,4 +1,4 @@
-import React, { useEffect, useState, ChangeEvent } from "react";
+import React, { useEffect, useState, ChangeEvent } from 'react';
 import InstructorCard from "./instructor-card";
 import { Link } from "react-router-dom";
 import { getAllInstructors } from "../../../api/endpoints/instructor-management";
@@ -6,15 +6,15 @@ import { InstructorApiResponse } from "../../../api/types/apiResponses/api-respo
 import { toast } from "react-toastify";
 import ShimmerListAllInstructors from "../../shimmer/shimmer-list-all-instructors";
 import FilterInstructorSelectBox from "./filter-instructor-select-box";
-import { RiSearchLine } from "react-icons/ri";
-import { Spinner } from "@material-tailwind/react";
+import { RiSearchLine } from 'react-icons/ri';
+import { Spinner } from '@material-tailwind/react';
+import { useLanguage } from '../../../contexts/LanguageContext';
 
 type Props = {};
 
 const ListAllInstructors: React.FC<Props> = () => {
-  const [instructors, setInstructors] = useState<
-    InstructorApiResponse[] | undefined
-  >(undefined);
+  const { t } = useLanguage();
+  const [instructors, setInstructors] = useState<InstructorApiResponse[] | undefined>(undefined);
   const [filteredInstructors, setFilteredInstructors] = useState<
     InstructorApiResponse[] | undefined
   >(undefined);
@@ -105,52 +105,47 @@ const ListAllInstructors: React.FC<Props> = () => {
   }
 
   return (
-    <div className="h-full pb-7">
-      <div className="h-1/3 p-12 flex flex-col w-full bg-skyBlueCustom items-center justify-center">
-        <div className="block text-center">
-          <h1 className="p-2 text-customFontColorBlack md:text-4xl sm:text-4xl font-bold">
-            Our Instructors
-          </h1>
+    <div className='min-h-screen pb-7'>
+      {/* Header section */}
+      <div className='h-1/3 p-8 md:p-12 flex flex-col w-full bg-blue-gray-50 dark:bg-gray-800 items-center justify-center text-center'>
+        <h1 className='p-2 text-customFontColorBlack dark:text-gray-100 text-3xl md:text-4xl font-bold'>
+          {t('tutors.title') || 'Our Instructors'}
+        </h1>
+        <p className='text-customFontColorBlack dark:text-gray-300 mt-2 md:text-xl font-semibold'>
+          {t('tutors.subtitle') || 'Meet Tutor Trek Subject Experts'}
+        </p>
+      </div>
+      {/* Filter and search */}
+      <div className='flex flex-col sm:flex-row p-4 sm:p-6 bg-white dark:bg-gray-900 justify-center items-center gap-4'>
+        <div className='w-full sm:w-1/3'>
+          <FilterInstructorSelectBox handleSelect={handleSelect} />
         </div>
-        <div className="block text-center">
-          <p className="text-customFontColorBlack md:text-xl sm:text-4xl font-semibold">
-            Meet Tutor Trek Subject Experts
-          </p>
+        <div className='relative w-full sm:w-1/3'>
+          <input
+            type='text'
+            value={searchQuery}
+            onChange={handleSearchInputChange}
+            className='p-2 pr-8 border rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 focus:outline-none focus:border-blue-500 h-10 w-full'
+            placeholder={t('tutors.searchPlaceholder') || 'Search instructors...'}
+          />
+          <RiSearchLine size={20} className='absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-400 pointer-events-none' />
         </div>
       </div>
-      <div>
-        <div className="flex p-3 bg-white justify-center">
-          <div className="p-5 flex md:w-4/12 w-full gap-x-1">
-            <FilterInstructorSelectBox handleSelect={handleSelect} />
-            <div className="relative flex-1 mt-2">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={handleSearchInputChange}
-                className="p-2 pr-8 border rounded-md border-gray-300 focus:outline-none focus:border-blue-500 h-10 w-full"
-                placeholder="Search..."
-              />  
-              <div  className="absolute top-5 right-3 transform -translate-y-1/2 text-gray-400 cursor-pointer">
-                <RiSearchLine size={20} />
-              </div>
-            </div>
+      {/* Instructor list */}
+      <div className='p-6 md:p-10 flex items-center gap-y-10 bg-gray-50 dark:bg-gray-900 justify-evenly flex-wrap'>
+        {isSearchLoading ? (
+          <Spinner color='blue-gray' className='h-8 w-8' />
+        ) : filteredAndSearchedInstructors && filteredAndSearchedInstructors.length ? (
+          filteredAndSearchedInstructors.map((instructor) => (
+            <Link key={instructor._id} to={`/tutors/${instructor._id}`} className='m-4'>
+              <InstructorCard {...instructor} />
+            </Link>
+          ))
+        ) : (
+          <div className='p-3 text-customFontColorBlack dark:text-gray-300 font-light'>
+            {t('tutors.noResults') || 'No results found.'}
           </div>
-        </div>
-        <div className="p-10 flex items-center gap-y-10 bg-gray-50 justify-evenly flex-wrap">
-          {isSearchLoading ? (
-            <Spinner color="blue-gray" className="h-8 w-8" />
-          ) : filteredAndSearchedInstructors?.length ? (
-            filteredAndSearchedInstructors?.map((instructor) => (
-              <Link key={instructor._id} to={`/tutors/${instructor._id}`}>
-                <InstructorCard {...instructor} />
-              </Link>
-            ))
-          ) : (
-            <div className="p-3 text-customFontColorBlack font-light">
-              No results found.
-            </div>
-          )}
-        </div>
+        )}
       </div>
     </div>
   );

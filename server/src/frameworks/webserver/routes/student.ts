@@ -5,7 +5,7 @@ import { studentRepositoryMongoDB } from '../../../frameworks/database/mongodb/r
 import { authService } from '../../../frameworks/services/authService';
 import { authServiceInterface } from '../../../app/services/authServicesInterface';
 import { cloudServiceInterface } from '../../../app/services/cloudServiceInterface';
-import { s3Service } from '../../../frameworks/services/s3CloudService';
+import { CloudServiceImpl } from '../../../frameworks/services';
 import upload from '../middlewares/multer';
 import { RedisClient } from '@src/app';
 import { cachingMiddleware } from '../middlewares/redisCaching';
@@ -15,6 +15,7 @@ import jwtAuthMiddleware from '../middlewares/userAuth';
 import { contactDbInterface } from '../../../app/repositories/contactDbRepository';
 import { contactRepositoryMongodb } from '../../../frameworks/database/mongodb/repositories/contactsRepoMongoDb';
 import roleCheckMiddleware from '../middlewares/roleCheckMiddleware';
+import { UserRole } from '../../../constants/enums';
 
 const studentRouter = (redisClient: RedisClient) => {
   const router = express.Router();
@@ -26,7 +27,7 @@ const studentRouter = (redisClient: RedisClient) => {
     contactDbInterface,
     contactRepositoryMongodb,
     cloudServiceInterface,
-    s3Service,
+    CloudServiceImpl,
     cacheRepositoryInterface,
     redisCacheRepository,
     redisClient
@@ -56,21 +57,21 @@ const studentRouter = (redisClient: RedisClient) => {
   router.patch(
     '/block-student/:studentId',
     jwtAuthMiddleware,
-    roleCheckMiddleware('admin'),
+    roleCheckMiddleware(UserRole.Admin),
     controller.blockStudent
   );
 
   router.patch(
     '/unblock-student/:studentId',
     jwtAuthMiddleware,
-    roleCheckMiddleware('admin'),
+    roleCheckMiddleware(UserRole.Admin),
     controller.unblockStudent
   );
 
   router.get(
     '/get-all-blocked-students',
     jwtAuthMiddleware,
-    roleCheckMiddleware('admin'),
+    roleCheckMiddleware(UserRole.Admin),
     controller.getAllBlockedStudents
   );
 

@@ -1,36 +1,54 @@
-import React, { useState, ChangeEvent } from "react";
-import { Formik, Form, Field, FormikHelpers, ErrorMessage } from "formik";
-import { toast } from "react-toastify";
-import { registerInstructor } from "../../../api/endpoints/auth/instructor-auth";
-import { instructorRegistrationValidationSchema } from "../../../validations/auth/InstructorRegisterValidation";
-import { PhotoIcon } from "@heroicons/react/24/solid";
-import { InstructorRegisterDataInterface } from "../../../api/types/instructor/auth-interface";
-import SpinnerDialog from "../../common/spinner-page";
-const initialValues = {
-  firstName: "",
-  lastName: "",
-  email: "",
-  mobile: "",
-  qualification: "",
-  subjects: "",
-  experience: "",
-  skills: "",
-  about: "",
-  password: "",
-  confirmPassword: "",
+import React, { useState, ChangeEvent } from 'react';
+import { Formik, Form, Field, ErrorMessage, FormikHelpers } from 'formik';
+import { registerInstructor } from '../../../api/endpoints/auth/instructor-auth';
+import { instructorRegistrationValidationSchema } from '../../../validations/auth/InstructorRegisterValidation';
+import { InstructorRegisterDataInterface } from '../../../api/types/instructor/auth-interface';
+import SpinnerDialog from '../../common/spinner-page';
+import { toast } from 'react-toastify';
+import { useLanguage } from '../../../contexts/LanguageContext';
+
+/*
+ * InstructorRegistrationPage presents a simple registration form for instructors.
+ * It uses the global header to provide theme and language toggles; this page
+ * focuses solely on capturing instructor details. The form collects personal
+ * details, professional qualifications, and account credentials. Uploading of
+ * profile picture and certificates is supported via file inputs. Upon
+ * submission, a FormData payload is sent to the server. All labels are
+ * translated using the LanguageContext.
+ */
+
+const initialValues: InstructorRegisterDataInterface = {
+  firstName: '',
+  lastName: '',
+  email: '',
+  mobile: '',
+  qualification: '',
+  subjects: '',
+  experience: '',
+  skills: '',
+  about: '',
+  password: '',
+  confirmPassword: '',
 };
 
 const InstructorRegistrationPage: React.FC = () => {
+  // Local state for file inputs
   const [profilePhoto, setProfilePhoto] = useState<File | null>(null);
-  const [certificate, setCertificateOne] = useState<File | null>(null);
+  const [certificateOne, setCertificateOne] = useState<File | null>(null);
   const [certificateTwo, setCertificateTwo] = useState<File | null>(null);
-  const [isUploading, setIsUploading] = useState<boolean>(false);
+  const [isUploading, setIsUploading] = useState(false);
 
-  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0] || null;
-    setProfilePhoto(file);
-  };
+  // Translation hook
+  const { t } = useLanguage();
 
+  // Handle file selection for different fields
+  const handleFileChange = (setter: React.Dispatch<React.SetStateAction<File | null>>) =>
+    (event: ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0] || null;
+      setter(file);
+    };
+
+  // Submit handler
   const handleSubmit = async (
     instructorInfo: InstructorRegisterDataInterface,
     { resetForm }: FormikHelpers<InstructorRegisterDataInterface>
@@ -38,519 +56,268 @@ const InstructorRegistrationPage: React.FC = () => {
     try {
       setIsUploading(true);
       const formData = new FormData();
-      profilePhoto && formData.append("images", profilePhoto,'profilePic');
-      certificate && formData.append("images", certificate,'certificateOne');
-      certificateTwo && formData.append("images", certificateTwo,'certificateTwo');
-      Object.keys(instructorInfo).forEach((key) =>
-        formData.append(key, instructorInfo[key])
-      );
+      // Append uploaded images
+      if (profilePhoto) formData.append('images', profilePhoto, 'profilePic');
+      if (certificateOne) formData.append('images', certificateOne, 'certificateOne');
+      if (certificateTwo) formData.append('images', certificateTwo, 'certificateTwo');
+      // Append other fields
+      Object.keys(instructorInfo).forEach((key) => {
+        const value = (instructorInfo as any)[key];
+        formData.append(key, value);
+      });
       const response = await registerInstructor(formData);
-      setIsUploading(false);
-      setProfilePhoto(null)
-      setCertificateOne(null)
-      setCertificateTwo(null)
+      toast.success(response.data.message, { position: toast.POSITION.BOTTOM_RIGHT });
+      // Reset form and files
       resetForm();
-      toast.success(response.data.message, {
-        position: toast.POSITION.BOTTOM_RIGHT,
-      }); 
+      setProfilePhoto(null);
+      setCertificateOne(null);
+      setCertificateTwo(null);
     } catch (error: any) {
-      setIsUploading(false);
-      toast.error(error.data?.message, {
+      toast.error(error?.data?.message || 'Registration failed', {
         position: toast.POSITION.BOTTOM_RIGHT,
       });
+    } finally {
+      setIsUploading(false);
     }
   };
 
   return (
-    <div className='mt-4 pl-32 pr-32 my-3 pb-5  text-customFontColorBlack'>
-      <div className='flex items-center justify-center'>
-        {isUploading && <SpinnerDialog isUploading={isUploading} />}
-        <div className=' w-2/3 ml-2 mt-6 mb-8 border p-10 shadow-xl rounded-lg'>
-          <div className='sm:mx-auto sm:w-full sm:max-w-sm'>
-            <img
-              className='mx-auto h-10 w-auto'
-              src='https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=600'
-              alt='Your Company'
-            />
-            <h2 className='mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900'></h2>
-          </div>
-          <Formik
-            initialValues={initialValues}
-            validationSchema={instructorRegistrationValidationSchema}
-            onSubmit={handleSubmit}
-          >
-            <Form className=''>
-              <div className='p-2  mt-6 '>
-                <h1 className='font-semibold text-md customFontColorBlack'>
-                  Personal information's:
-                </h1>
-              </div>
-              <div className='mt-2 mb-2 bg-white border border-gray-200 p-8 rounded-lg'>
-                <div className='flex flex-wrap -mx-3 mb-4'>
-                  <div className='w-full md:w-1/2 px-3 mb-6 md:mb-0'>
-                    <label
-                      htmlFor='lastName'
-                      className='mt-2 block text-sm font-medium leading-6 text-gray-900'
-                    >
-                      First Name
+    <div className="py-10 px-4 md:px-20 lg:px-40 bg-gray-50 dark:bg-[#2e3440] text-customFontColorBlack dark:text-[#e5e9f0]">
+      {isUploading && <SpinnerDialog isUploading={isUploading} />}
+      <div className="max-w-3xl mx-auto bg-white dark:bg-[#3b4252] border border-gray-200 dark:border-[#4c566a] rounded-lg shadow p-8">
+        <div className="text-center mb-6">
+          <img
+            className="mx-auto h-12 w-auto"
+            src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=600"
+            alt="Logo"
+          />
+          <h2 className="mt-4 text-2xl font-bold tracking-tight text-gray-900 dark:text-[#e5e9f0]">
+            {t('auth.registerTitle') || 'Register as Instructor'}
+          </h2>
+        </div>
+        <Formik
+          initialValues={initialValues}
+          validationSchema={instructorRegistrationValidationSchema}
+          onSubmit={handleSubmit}
+        >
+          {() => (
+            <Form className="space-y-6">
+              {/* Personal Information */}
+              <div>
+                <h3 className="font-semibold text-md mb-2">
+                  {t('auth.personalInfo') || 'Personal Information'}
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="firstName" className="block text-sm font-medium">
+                      {t('auth.firstName') || 'First Name'}
                     </label>
-                    <div className='mt-2'>
-                      <Field
-                        id='firstName'
-                        name='firstName'
-                        type='text'
-                        autoComplete='firstName'
-                        required
-                        className=' pl-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-700 focus-visible:outline-none focus-visible:ring-blue-600 sm:text-sm sm:leading-6'
-                      />
-                      <ErrorMessage
-                        name='firstName'
-                        component='div'
-                        className='text-red-500 text-sm'
-                      />
-                    </div>
+                    <Field
+                      id="firstName"
+                      name="firstName"
+                      type="text"
+                      className="mt-1 block w-full rounded-md border-gray-300 dark:border-[#4c566a] dark:bg-[#434c5e] dark:text-[#e5e9f0] focus:ring-indigo-500 focus:border-indigo-500"
+                    />
+                    <ErrorMessage name="firstName" component="div" className="text-red-500 text-xs" />
                   </div>
-                  <div className='w-full md:w-1/2 px-3'>
-                    <label
-                      htmlFor='lastName'
-                      className='mt-2 block text-sm font-medium leading-6 text-gray-900'
-                    >
-                      Last Name
+                  <div>
+                    <label htmlFor="lastName" className="block text-sm font-medium">
+                      {t('auth.lastName') || 'Last Name'}
                     </label>
-                    <div className='mt-2'>
-                      <Field
-                        id='lastName'
-                        name='lastName'
-                        type='text'
-                        autoComplete='lastName'
-                        required
-                        className=' pl-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-700 focus-visible:outline-none focus-visible:ring-blue-600 sm:text-sm sm:leading-6'
-                      />
-                      <ErrorMessage
-                        name='lastName'
-                        component='div'
-                        className='text-red-500 text-sm'
-                      />
-                    </div>
+                    <Field
+                      id="lastName"
+                      name="lastName"
+                      type="text"
+                      className="mt-1 block w-full rounded-md border-gray-300 dark:border-[#4c566a] dark:bg-[#434c5e] dark:text-[#e5e9f0] focus:ring-indigo-500 focus:border-indigo-500"
+                    />
+                    <ErrorMessage name="lastName" component="div" className="text-red-500 text-xs" />
                   </div>
-                </div>
-                <div className='flex flex-wrap -mx-3 mb-4'>
-                  <div className='w-full md:w-1/2 px-3 mb-6 md:mb-0'>
-                    <label
-                      htmlFor='email'
-                      className='mt-2 block text-sm font-medium leading-6 text-gray-900'
-                    >
-                      Email
+                  <div>
+                    <label htmlFor="email" className="block text-sm font-medium">
+                      {t('auth.email') || 'Email'}
                     </label>
-                    <div className='mt-2'>
-                      <Field
-                        id='email'
-                        name='email'
-                        type='email'
-                        autoComplete='email'
-                        required
-                        className=' pl-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-700 focus-visible:outline-none focus-visible:ring-blue-600 sm:text-sm sm:leading-6'
-                      />
-                      <ErrorMessage
-                        name='email'
-                        component='div'
-                        className='text-red-500 text-sm'
-                      />
-                    </div>
+                    <Field
+                      id="email"
+                      name="email"
+                      type="email"
+                      className="mt-1 block w-full rounded-md border-gray-300 dark:border-[#4c566a] dark:bg-[#434c5e] dark:text-[#e5e9f0] focus:ring-indigo-500 focus:border-indigo-500"
+                    />
+                    <ErrorMessage name="email" component="div" className="text-red-500 text-xs" />
                   </div>
-                  <div className='w-full md:w-1/2 px-3'>
-                    <label
-                      htmlFor='mobile'
-                      className='mt-2 block text-sm font-medium leading-6 text-gray-900'
-                    >
-                      Mobile
+                  <div>
+                    <label htmlFor="mobile" className="block text-sm font-medium">
+                      {t('auth.mobile') || 'Mobile'}
                     </label>
-                    <div className='mt-2'>
-                      <Field
-                        id='mobile'
-                        name='mobile'
-                        type='text'
-                        autoComplete='mobile'
-                        required
-                        className=' pl-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-700 focus-visible:outline-none focus-visible:ring-blue-600 sm:text-sm sm:leading-6'
-                      />
-                      <ErrorMessage
-                        name='mobile'
-                        component='div'
-                        className='text-red-500 text-sm'
-                      />
-                    </div>
+                    <Field
+                      id="mobile"
+                      name="mobile"
+                      type="text"
+                      className="mt-1 block w-full rounded-md border-gray-300 dark:border-[#4c566a] dark:bg-[#434c5e] dark:text-[#e5e9f0] focus:ring-indigo-500 focus:border-indigo-500"
+                    />
+                    <ErrorMessage name="mobile" component="div" className="text-red-500 text-xs" />
                   </div>
                 </div>
               </div>
-              <div className='p-2 mt-4 mb-1'>
-                <h1 className='font-semibold text-md customFontColorBlack'>
-                  Qualifications and Experiences:
-                </h1>
-              </div>
-              <div className=' bg-white border border-gray-200 p-8 rounded-lg'>
-                <div className='flex flex-wrap -mx-3 mb-4'>
-                  <div className='w-full md:w-1/2 px-3 mb-6 md:mb-0'>
-                    <label
-                      htmlFor='qualifications'
-                      className='mt-2 block text-sm font-medium leading-6 text-gray-900'
-                    >
-                      Qualifications
+              {/* Qualifications and Experience */}
+              <div>
+                <h3 className="font-semibold text-md mb-2">
+                  {t('auth.qualifications') || 'Qualifications and Experience'}
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="qualification" className="block text-sm font-medium">
+                      {t('auth.qualification') || 'Qualification'}
                     </label>
-                    <div className='mt-2'>
-                      <Field
-                        id='qualification'
-                        name='qualification'
-                        type='text'
-                        autoComplete='qualification'
-                        required
-                        className=' pl-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-700 focus-visible:outline-none focus-visible:ring-blue-600 sm:text-sm sm:leading-6'
-                      />
-                      <ErrorMessage
-                        name='qualification'
-                        component='div'
-                        className='text-red-500 text-sm'
-                      />
-                    </div>
+                    <Field
+                      id="qualification"
+                      name="qualification"
+                      type="text"
+                      className="mt-1 block w-full rounded-md border-gray-300 dark:border-[#4c566a] dark:bg-[#434c5e] dark:text-[#e5e9f0] focus:ring-indigo-500 focus:border-indigo-500"
+                    />
+                    <ErrorMessage name="qualification" component="div" className="text-red-500 text-xs" />
                   </div>
-                  <div className='w-full md:w-1/2 px-3'>
-                    <label
-                      htmlFor='subjects'
-                      className='mt-2 block text-sm font-medium leading-6 text-gray-900'
-                    >
-                      Subjects
+                  <div>
+                    <label htmlFor="subjects" className="block text-sm font-medium">
+                      {t('auth.subjects') || 'Subjects'}
                     </label>
-                    <div className='mt-2'>
-                      <Field
-                        id='subjects'
-                        name='subjects'
-                        type='text'
-                        autoComplete='subjects'
-                        required
-                        className=' pl-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-700 focus-visible:outline-none focus-visible:ring-blue-600 sm:text-sm sm:leading-6'
-                      />
-                      <ErrorMessage
-                        name='subjects'
-                        component='div'
-                        className='text-red-500 text-sm'
-                      />
-                    </div>
+                    <Field
+                      id="subjects"
+                      name="subjects"
+                      type="text"
+                      className="mt-1 block w-full rounded-md border-gray-300 dark:border-[#4c566a] dark:bg-[#434c5e] dark:text-[#e5e9f0] focus:ring-indigo-500 focus:border-indigo-500"
+                    />
+                    <ErrorMessage name="subjects" component="div" className="text-red-500 text-xs" />
                   </div>
-                </div>
-                <div className='flex flex-wrap -mx-3 mb-4'>
-                  <div className='w-full md:w-1/2 px-3 mb-6 md:mb-0'>
-                    <label
-                      htmlFor='experience'
-                      className='mt-2 block text-sm font-medium leading-6 text-gray-900'
-                    >
-                      Experience
+                  <div>
+                    <label htmlFor="experience" className="block text-sm font-medium">
+                      {t('auth.experience') || 'Experience'}
                     </label>
-                    <div className='mt-2'>
-                      <Field
-                        id='experience'
-                        name='experience'
-                        type='text'
-                        autoComplete='experience'
-                        required
-                        className=' pl-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-700 focus-visible:outline-none focus-visible:ring-blue-600 sm:text-sm sm:leading-6'
-                      />
-                      <ErrorMessage
-                        name='experience'
-                        component='div'
-                        className='text-red-500 text-sm'
-                      />
-                    </div>
+                    <Field
+                      id="experience"
+                      name="experience"
+                      type="text"
+                      className="mt-1 block w-full rounded-md border-gray-300 dark:border-[#4c566a] dark:bg-[#434c5e] dark:text-[#e5e9f0] focus:ring-indigo-500 focus:border-indigo-500"
+                    />
+                    <ErrorMessage name="experience" component="div" className="text-red-500 text-xs" />
                   </div>
-                  <div className='w-full md:w-1/2 px-3'>
-                    <label
-                      htmlFor='skills'
-                      className='mt-2 block text-sm font-medium leading-6 text-gray-900'
-                    >
-                      Skills
+                  <div>
+                    <label htmlFor="skills" className="block text-sm font-medium">
+                      {t('auth.skills') || 'Skills'}
                     </label>
-                    <div className='mt-2'>
-                      <Field
-                        id='skills'
-                        name='skills'
-                        type='text'
-                        autoComplete='skills'
-                        required
-                        className=' pl-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-700 focus-visible:outline-none focus-visible:ring-blue-600 sm:text-sm sm:leading-6'
-                      />
-                      <ErrorMessage
-                        name='skills'
-                        component='div'
-                        className='text-red-500 text-sm'
-                      />
-                    </div>
+                    <Field
+                      id="skills"
+                      name="skills"
+                      type="text"
+                      className="mt-1 block w-full rounded-md border-gray-300 dark:border-[#4c566a] dark:bg-[#434c5e] dark:text-[#e5e9f0] focus:ring-indigo-500 focus:border-indigo-500"
+                    />
+                    <ErrorMessage name="skills" component="div" className="text-red-500 text-xs" />
                   </div>
-                </div>
-
-                <div className='flex flex-wrap -mx-3 mb-4'>
-                  <div className='w-full md:w-1/2 px-3 mb-6 md:mb-0'>
-                    <label
-                      htmlFor='photo'
-                      className='mt-2 block  text-sm font-medium leading-6 text-gray-900'
-                    >
-                      Photo
+                  <div className="md:col-span-2">
+                    <label htmlFor="about" className="block text-sm font-medium">
+                      {t('auth.about') || 'About'}
                     </label>
-                    <div className='col-span-full'>
-                      <div className='mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 px-6 py-10'>
-                        <div className='text-center'>
-                          {profilePhoto ? (
-                            <img
-                              src={URL.createObjectURL(profilePhoto)}
-                              alt='Selected Photo'
-                              className='mx-auto rounded-md h-40 w-40 object-contain'
-                            />
-                          ) : (
-                            <PhotoIcon
-                              className='mx-auto h-12 w-12 text-gray-300'
-                              aria-hidden='true'
-                            />
-                          )}
-                          <div className='mt-4 flex text-sm leading-6 text-gray-600'>
-                            <label
-                              htmlFor='profile-photo'
-                              className='relative cursor-pointer rounded-md bg-white font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500'
-                            >
-                              {profilePhoto ? "Change file" : "Upload a file"}
-                              <Field
-                                id='profile-photo'
-                                name='profile-photo'
-                                type='file'
-                                onChange={handleFileChange}
-                                required
-                                className='sr-only'
-                              />
-                            </label>
-                            <p className='pl-1'>or drag and drop</p>
-                          </div>
-                          <p className='text-xs leading-5 text-gray-600'>
-                            PNG, JPG, GIF up to 10MB
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className='w-full md:w-1/2 px-3'>
-                    <label
-                      htmlFor='about'
-                      className='mt-2 block text-sm font-medium leading-6 text-gray-900'
-                    >
-                      About
-                    </label>
-                    <div className='mt-2'>
-                      <Field
-                        as='textarea'
-                        id='about'
-                        name='about'
-                        autoComplete='about'
-                        required
-                        className='h-full pl-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-700 focus-visible:outline-none focus-visible:ring-blue-600 sm:text-sm sm:leading-6'
-                      />
-                      <ErrorMessage
-                        name='about'
-                        component='div'
-                        className='text-red-500 text-sm'
-                      />
-                    </div>
+                    <Field
+                      as="textarea"
+                      id="about"
+                      name="about"
+                      rows={3}
+                      className="mt-1 block w-full rounded-md border-gray-300 dark:border-[#4c566a] dark:bg-[#434c5e] dark:text-[#e5e9f0] focus:ring-indigo-500 focus:border-indigo-500"
+                    />
+                    <ErrorMessage name="about" component="div" className="text-red-500 text-xs" />
                   </div>
                 </div>
               </div>
-              <div className='p-2 mt-4 mb-1'>
-                <h1 className='font-semibold text-md customFontColorBlack'>
-                  Certificates
-                </h1>
-              </div>
-              <div className='flex justify-between border border-gray-200 p-8 rounded-lg '>
-                <div className='flex flex-wrap w-full md:w-1/2 -mx-3 mb-4'>
-                  <div className='w-full px-3 mb-6 md:mb-0'>
-                    <label
-                      htmlFor='photo'
-                      className='mt-2 block text-sm font-medium leading-6 text-gray-900'
-                    >
-                      Certificate 1
+              {/* Profile Photo and Certificates */}
+              <div>
+                <h3 className="font-semibold text-md mb-2">
+                  {t('auth.photo') || 'Photo'} & {t('auth.certificate1') || 'Certificates'}
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label htmlFor="profilePhoto" className="block text-sm font-medium">
+                      {t('auth.photo') || 'Photo'}
                     </label>
-                    <div className='col-span-full'>
-                      <div className='mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 px-6 py-10'>
-                        <div className='text-center'>
-                          {certificate ? (
-                            <img
-                              src={URL.createObjectURL(certificate)}
-                              alt='Selected Photo'
-                              className='mx-auto rounded-md h-40 w-40 object-contain'
-                            />
-                          ) : (
-                            <PhotoIcon
-                              className='mx-auto h-12 w-12 text-gray-300'
-                              aria-hidden='true'
-                            />
-                          )}
-                          <div className='mt-4 flex text-sm leading-6 text-gray-600'>
-                            <label
-                              htmlFor='certificate-one'
-                              className='relative cursor-pointer rounded-md bg-white font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500'
-                            >
-                              <span>
-                                {certificate ? "Change file " : "Upload a file"}
-                              </span>
-                              <Field
-                                id='certificate-one'
-                                name='certificate-one'
-                                type='file'
-                                required
-                                onChange={(
-                                  event: React.ChangeEvent<HTMLInputElement>
-                                ) => {
-                                  const file = event.target.files?.[0] || null;
-                                  setCertificateOne(file);
-                                }}
-                                className='sr-only'
-                              />
-                            </label>
-                            <p className='pl-1'>or drag and drop</p>
-                          </div>
-                          <p className='text-xs leading-5 text-gray-600'>
-                            PNG, JPG, GIF up to 10MB
-                          </p>
-                        </div>
-                      </div>
-                    </div>
+                    <input
+                      id="profilePhoto"
+                      name="profilePhoto"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange(setProfilePhoto)}
+                      className="mt-1 block w-full text-sm text-gray-900 dark:text-[#e5e9f0] border border-gray-300 dark:border-[#4c566a] rounded-md cursor-pointer bg-white dark:bg-[#434c5e]"
+                    />
                   </div>
-                </div>
-                <div className='flex flex-wrap w-full md:w-1/2 -mx-3 mb-4'>
-                  <div className='w-full px-3 mb-6 md:mb-0'>
-                    <label
-                      htmlFor='photo'
-                      className='mt-2 block text-sm font-medium leading-6 text-gray-900'
-                    >
-                      Certificate 2
+                  <div>
+                    <label htmlFor="certificateOne" className="block text-sm font-medium">
+                      {t('auth.certificate1') || 'Certificate 1'}
                     </label>
-                    <div className='col-span-full'>
-                      <div className='mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 px-6 py-10'>
-                        <div className='text-center'>
-                          {certificateTwo ? (
-                            <img
-                              src={URL.createObjectURL(certificateTwo)}
-                              alt='Selected Photo'
-                              className='mx-auto rounded-md h-40 w-40 object-contain'
-                            />
-                          ) : (
-                            <PhotoIcon
-                              className='mx-auto h-12 w-12 text-gray-300'
-                              aria-hidden='true'
-                            />
-                          )}
-
-                          <div className='mt-4 flex text-sm leading-6 text-gray-600'>
-                            <label
-                              htmlFor='certificate-two'
-                              className='relative cursor-pointer rounded-md bg-white font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500'
-                            >
-                              <span>
-                                {certificateTwo
-                                  ? "Change file"
-                                  : "Upload a file "}
-                              </span>
-                              <Field
-                                id='certificate-two'
-                                name='certificate-two'
-                                type='file'
-                                onChange={(
-                                  event: React.ChangeEvent<HTMLInputElement>
-                                ) => {
-                                  const file = event.target.files?.[0] || null;
-                                  setCertificateTwo(file);
-                                }}
-                                required
-                                className='sr-only'
-                              />
-                            </label>
-                            <p className='pl-1'>or drag and drop</p>
-                          </div>
-                          <p className='text-xs leading-5 text-gray-600'>
-                            PNG, JPG, GIF up to 10MB
-                          </p>
-                        </div>
-                      </div>
-                    </div>
+                    <input
+                      id="certificateOne"
+                      name="certificateOne"
+                      type="file"
+                      accept="image/*,application/pdf"
+                      onChange={handleFileChange(setCertificateOne)}
+                      className="mt-1 block w-full text-sm text-gray-900 dark:text-[#e5e9f0] border border-gray-300 dark:border-[#4c566a] rounded-md cursor-pointer bg-white dark:bg-[#434c5e]"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="certificateTwo" className="block text-sm font-medium">
+                      {t('auth.certificate2') || 'Certificate 2'}
+                    </label>
+                    <input
+                      id="certificateTwo"
+                      name="certificateTwo"
+                      type="file"
+                      accept="image/*,application/pdf"
+                      onChange={handleFileChange(setCertificateTwo)}
+                      className="mt-1 block w-full text-sm text-gray-900 dark:text-[#e5e9f0] border border-gray-300 dark:border-[#4c566a] rounded-md cursor-pointer bg-white dark:bg-[#434c5e]"
+                    />
                   </div>
                 </div>
               </div>
-
-              <div className='p-2 mt-4 mb-1  '>
-                <h1 className='font-semibold text-md customFontColorBlack'>
-                  Account information's
-                </h1>
-              </div>
-              <div className=' bg-white border border-gray-200 p-8 rounded-lg'>
-                <div className='flex flex-wrap -mx-3 mb-4'>
-                  <div className='w-full md:w-1/2 px-3 mb-6 md:mb-0'>
-                    <label
-                      htmlFor='password'
-                      className='mt-2 block text-sm font-medium leading-6 text-gray-900'
-                    >
-                      Password
+              {/* Account Information */}
+              <div>
+                <h3 className="font-semibold text-md mb-2">
+                  {t('auth.accountInfo') || 'Account information'}
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="password" className="block text-sm font-medium">
+                      {t('auth.password') || 'Password'}
                     </label>
-                    <div className='mt-2'>
-                      <Field
-                        id='password'
-                        name='password'
-                        type='password'
-                        autoComplete='password'
-                        required
-                        className=' pl-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-700 focus-visible:outline-none focus-visible:ring-blue-600 sm:text-sm sm:leading-6'
-                      />
-                      <ErrorMessage
-                        name='password'
-                        component='div'
-                        className='text-red-500 text-sm'
-                      />
-                    </div>
+                    <Field
+                      id="password"
+                      name="password"
+                      type="password"
+                      className="mt-1 block w-full rounded-md border-gray-300 dark:border-[#4c566a] dark:bg-[#434c5e] dark:text-[#e5e9f0] focus:ring-indigo-500 focus:border-indigo-500"
+                    />
+                    <ErrorMessage name="password" component="div" className="text-red-500 text-xs" />
                   </div>
-                  <div className='w-full md:w-1/2 px-3'>
-                    <label
-                      htmlFor='confirmPassword'
-                      className='mt-2 block text-sm font-medium leading-6 text-gray-900'
-                    >
-                      Confirm password
+                  <div>
+                    <label htmlFor="confirmPassword" className="block text-sm font-medium">
+                      {t('auth.confirmPassword') || 'Confirm Password'}
                     </label>
-                    <div className='mt-2'>
-                      <Field
-                        id='confirmPassword'
-                        name='confirmPassword'
-                        type='password'
-                        autoComplete='confirmPassword'
-                        required
-                        className=' pl-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-700 focus-visible:outline-none focus-visible:ring-blue-600 sm:text-sm sm:leading-6'
-                      />
-                      <ErrorMessage
-                        name='confirmPassword'
-                        component='div'
-                        className='text-red-500 text-sm'
-                      />
-                    </div>
+                    <Field
+                      id="confirmPassword"
+                      name="confirmPassword"
+                      type="password"
+                      className="mt-1 block w-full rounded-md border-gray-300 dark:border-[#4c566a] dark:bg-[#434c5e] dark:text-[#e5e9f0] focus:ring-indigo-500 focus:border-indigo-500"
+                    />
+                    <ErrorMessage name="confirmPassword" component="div" className="text-red-500 text-xs" />
                   </div>
                 </div>
               </div>
-              <div className='mt-6 flex items-center justify-end gap-x-6'>
+              {/* Submit button */}
+              <div className="pt-2">
                 <button
-                  type='button'
-                  className='text-sm font-semibold leading-6 text-gray-900'
+                  type="submit"
+                  className="w-full flex justify-center items-center rounded-full bg-blue-600 dark:bg-blue-500 py-2 px-4 text-white font-semibold hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
-                  Cancel
-                </button>
-                <button
-                  type='submit'
-                  className='rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
-                >
-                  Sign up
+                  {t('auth.signUp') || 'Sign up'}
                 </button>
               </div>
             </Form>
-          </Formik>
-        </div>
+          )}
+        </Formik>
       </div>
     </div>
   );
