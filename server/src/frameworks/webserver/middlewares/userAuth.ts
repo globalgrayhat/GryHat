@@ -25,11 +25,14 @@ const jwtAuthMiddleware = (
       payload: JwtPayload;
       expired: boolean;
     };
-  
+
     req.user = payload;
     next();
   } catch (err) {
-    throw new AppError('Session is expired please login again', HttpStatusCodes.FORBIDDEN);
+    throw new AppError(
+      'Session is expired please login again',
+      HttpStatusCodes.FORBIDDEN
+    );
   }
 };
 

@@ -106,6 +106,7 @@ export const Instructor: React.FC = () => {
   const isLoggedIn = useSelector(selectIsLoggedIn);
   const dispatch = useDispatch();
   const instructor = useSelector(selectInstructor);
+  const { t } = useLanguage();
   const fetchInstructor = async () => {
     try {
       const response = await getInstructorDetails();

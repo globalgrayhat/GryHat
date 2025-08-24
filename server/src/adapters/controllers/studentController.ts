@@ -12,9 +12,7 @@ import {
 } from '../../app/usecases/student';
 import { StudentUpdateInfo } from '../../types/studentInterface';
 import { CloudServiceInterface } from '../../app/services/cloudServiceInterface';
-// Dynamically select the storage provider based on configuration. Avoid
-// importing directly from the S3 implementation so that local storage is also
-// supported.
+
 import { CloudServiceImpl } from '../../frameworks/services';
 import {
   blockStudentU,
@@ -29,6 +27,7 @@ import { addContactU } from '../../app/usecases/contact';
 import { ContactInterface } from '../../types/contact';
 import { ContactDbInterface } from '../../app/repositories/contactDbRepository';
 import { ContactRepoImpl } from '../../frameworks/database/mongodb/repositories/contactsRepoMongoDb';
+
 
 const studentController = (
   authServiceInterface: AuthServiceInterface,
@@ -74,12 +73,19 @@ const studentController = (
     async (req: CustomRequest, res: Response) => {
       const studentInfo: StudentUpdateInfo = req.body;
       const studentId: string | undefined = req.user?.Id;
-      const profilePic: Express.Multer.File = req.file as Express.Multer.File;
+      const profilePic: {
+        name: string;
+        key: string;
+        path: string;
+      } = {
+        name: req.file?.originalname as string,
+        key: req.file?.filename as string,
+        path: `uploads/${req.file?.filename as string}`
+      };
       await updateProfileU(
         studentId,
         studentInfo,
         profilePic,
-        cloudService,
         dbRepositoryStudent
       );
       await dbRepositoryCache.clearCache(studentId ?? '');
@@ -96,7 +102,6 @@ const studentController = (
       const studentId: string | undefined = req.user?.Id;
       const studentDetails = await getStudentDetailsU(
         studentId,
-        cloudService,
         dbRepositoryStudent
       );
       const cacheOptions = {

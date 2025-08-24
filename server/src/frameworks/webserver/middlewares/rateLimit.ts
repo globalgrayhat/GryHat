@@ -11,7 +11,7 @@ import { Request } from 'express';
  */
 export const authRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // limit each IP/UA to 5 failed requests per window
+  max: 55, // limit each IP/UA to 5 failed requests per window
   standardHeaders: true,
   legacyHeaders: false,
   skipSuccessfulRequests: true,
@@ -56,7 +56,8 @@ export const videoRateLimiter = rateLimit({
   handler: (_req, res) => {
     res.status(429).json({
       status: 'fail',
-      message: 'Video streaming request limit exceeded. Please try again shortly.'
+      message:
+        'Video streaming request limit exceeded. Please try again shortly.'
     });
   }
 });

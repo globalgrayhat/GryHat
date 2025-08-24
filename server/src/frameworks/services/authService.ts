@@ -29,12 +29,14 @@ export const authService = () => {
 
   const verifyToken = (token: string) => {
     return jwt.verify(token, configKeys.JWT_SECRET);
-  }; 
+  };
 
-  const decodeToken = (token:string)=>{
-    const decodedToken: jwt.JwtPayload | null = jwt.decode(token) as jwt.JwtPayload | null;
-    return decodedToken
-  }
+  const decodeToken = (token: string) => {
+    const decodedToken: jwt.JwtPayload | null = jwt.decode(
+      token
+    ) as jwt.JwtPayload | null;
+    return decodedToken;
+  };
 
   const decodedTokenAndReturnExpireDate = (token: string): number => {
     const decodedToken: any = jwt.decode(token);
@@ -46,7 +48,6 @@ export const authService = () => {
     }
     return expirationTimestamp;
   };
-  
 
   return {
     comparePassword,

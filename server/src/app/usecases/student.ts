@@ -2,7 +2,8 @@ import { StudentsDbInterface } from '../repositories/studentDbRepository';
 import AppError from '../../utils/appError';
 import HttpStatusCodes from '../../constants/HttpStatusCodes';
 import { AuthServiceInterface } from '../services/authServicesInterface';
-import { CloudServiceInterface } from '../services/cloudServiceInterface';
+import dotenv from 'dotenv';
+dotenv.config();
 import {
   StudentInterface,
   StudentUpdateInfo
@@ -52,8 +53,11 @@ export const changePasswordU = async (
 export const updateProfileU = async (
   id: string | undefined,
   studentInfo: StudentUpdateInfo,
-  profilePic: Express.Multer.File,
-  cloudService: ReturnType<CloudServiceInterface>,
+  profilePic: {
+    name: string;
+    key: string;
+    path: string;
+  },
   studentDbRepository: ReturnType<StudentsDbInterface>
 ) => {
   if (!id) {
@@ -66,15 +70,28 @@ export const updateProfileU = async (
     );
   }
   if (profilePic) {
-    const response = await cloudService.upload(profilePic);
-    studentInfo.profilePic = response;
+    console.log('profilePic', profilePic);
+    const FinalStudentInfo = {
+      ...studentInfo,
+      profilePic: {
+        name: profilePic.name,
+        key: profilePic.key,
+        url: `http://localhost:${process.env.PORT}/${profilePic.path}`
+      }
+    };
+    console.log('FinalStudentInfo', FinalStudentInfo);
+    const response = await studentDbRepository.updateProfile(
+      id,
+      FinalStudentInfo
+    );
+    console.log('response', response);
+    return response;
   }
-  await studentDbRepository.updateProfile(id, studentInfo);
+  return await studentDbRepository.updateProfile(id, studentInfo);
 };
 
 export const getStudentDetailsU = async (
   id: string | undefined,
-  cloudService: ReturnType<CloudServiceInterface>,
   studentDbRepository: ReturnType<StudentsDbInterface>
 ) => {
   if (!id) {
@@ -86,9 +103,7 @@ export const getStudentDetailsU = async (
   const studentDetails: StudentInterface | null =
     await studentDbRepository.getStudent(id);
   if (studentDetails?.profilePic?.key) {
-    studentDetails.profilePic.url = await cloudService.getFile(
-      studentDetails.profilePic.key
-    );
+    studentDetails.profilePic.url = `http://localhost:${process.env.PORT}/uploads/${studentDetails.profilePic.key}`;
   }
   if (studentDetails) {
     studentDetails.password = 'no password';

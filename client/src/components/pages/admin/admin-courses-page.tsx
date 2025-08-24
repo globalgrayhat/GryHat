@@ -64,8 +64,8 @@ const AdminCoursesPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className='bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700'>
-                {Array.isArray(courses?.data) && courses.data.length > 0 ? (
-                  courses.data.map((course: CourseInterface) => (
+                {Array.isArray(courses?.data) && courses?.data?.length && courses?.data?.length > 0 ? (
+                  courses?.data?.map((course: CourseInterface) => (
                     <tr key={course._id} className='hover:bg-gray-50 dark:hover:bg-gray-800'>
                       <td className='px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100'>
                         {course.title}
@@ -99,9 +99,9 @@ const AdminCoursesPage: React.FC = () => {
               </tbody>
             </table>
           </CardBody>
-          <CardFooter className='border-t border-blue-gray-50 p-4 flex justify-end'>
+          {/* <CardFooter className='border-t border-blue-gray-50 p-4 flex justify-end'>
             {/* Pagination placeholder */}
-          </CardFooter>
+          {/* </CardFooter> */}
         </Card>
       )}
     </div>
