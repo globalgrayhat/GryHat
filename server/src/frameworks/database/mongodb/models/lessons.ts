@@ -1,7 +1,7 @@
 import { Schema, model } from 'mongoose';
 
 const MediaSchema = new Schema({
-  key: {
+  url: {
     type: String,
     required: true,
     trim: true
@@ -12,7 +12,6 @@ const MediaSchema = new Schema({
     trim: true
   }
 });
-
 
 const LessonSchema = new Schema({
   title: {
@@ -44,9 +43,9 @@ const LessonSchema = new Schema({
     ref: 'course',
     required: true
   },
-  about:{
-   type:String,
-   required:true
+  about: {
+    type: String,
+    required: true
   },
   media: {
     type: [MediaSchema]

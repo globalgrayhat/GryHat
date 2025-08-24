@@ -6,8 +6,6 @@ import { instructorDbRepository } from '../../../app/repositories/instructorDbRe
 import instructorController from '../../../adapters/controllers/instructorController';
 import { authService } from '../../../frameworks/services/authService';
 import { authServiceInterface } from '../../../app/services/authServicesInterface';
-import { cloudServiceInterface } from '../../../app/services/cloudServiceInterface';
-import { CloudServiceImpl } from '../../../frameworks/services';
 import roleCheckMiddleware from '../middlewares/roleCheckMiddleware';
 import { UserRole } from '../../../constants/enums';
 import jwtAuthMiddleware from '../middlewares/userAuth';
@@ -25,9 +23,7 @@ const instructorRouter = () => {
     courseDbRepository,
     courseRepositoryMongodb,
     sendEmailServiceInterface,
-    sendEmailService,
-    cloudServiceInterface,
-    CloudServiceImpl
+    sendEmailService
   );
   //* Instructor management
   router.get('/view-instructor-requests', controller.getInstructorRequests);

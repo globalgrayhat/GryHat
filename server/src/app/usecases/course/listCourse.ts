@@ -2,10 +2,8 @@ import HttpStatusCodes from '../../../constants/HttpStatusCodes';
 import AppError from '../../../utils/appError';
 import { CourseDbRepositoryInterface } from '../../repositories/courseDbRepository';
 import { CourseInterface } from '@src/types/courseInterface';
-import { CloudServiceInterface } from '@src/app/services/cloudServiceInterface';
 
 export const getAllCourseU = async (
-  cloudService: ReturnType<CloudServiceInterface>,
   courseDbRepository: ReturnType<CourseDbRepositoryInterface>
 ) => {
   const courses: CourseInterface[] | null =
@@ -14,7 +12,7 @@ export const getAllCourseU = async (
   await Promise.all(
     courses.map(async (course) => {
       if (course.thumbnail) {
-        course.thumbnailUrl = await cloudService.getFile(course.thumbnail.key);
+        course.thumbnailUrl = course.thumbnail.url;
       }
     })
   );
@@ -23,7 +21,6 @@ export const getAllCourseU = async (
 
 export const getCourseByIdU = async (
   courseId: string,
-  cloudService: ReturnType<CloudServiceInterface>,
   courseDbRepository: ReturnType<CourseDbRepositoryInterface>
 ) => {
   if (!courseId) {
@@ -35,30 +32,20 @@ export const getCourseByIdU = async (
   const course: CourseInterface | null = await courseDbRepository.getCourseById(
     courseId
   );
-  // if(course){
-  //   course.introductionUrl=" "
-  // }
+
   if (course) {
     if (course.thumbnail) {
-      const thumbnail = await cloudService.getFile(course.thumbnail.key);
-      course.thumbnailUrl = thumbnail;
+      course.thumbnailUrl = course.thumbnail.url;
     }
     if (course.guidelines) {
-      const guidelines = await cloudService.getFile(course.guidelines.key);
-      course.guidelinesUrl = guidelines;
+      course.guidelinesUrl = course.guidelines.url;
     }
-    // if(course.introduction){
-    //   const introduction = await cloudService.getFile(course.introduction.key)
-    //   console.log(introduction)
-    //   course.introductionUrl = introduction
-    // }
   }
   return course;
 };
 
 export const getCourseByStudentU = async (
   studentId: string | undefined,
-  cloudService: ReturnType<CloudServiceInterface>,
   courseDbRepository: ReturnType<CourseDbRepositoryInterface>
 ) => {
   if (!studentId) {
@@ -69,7 +56,7 @@ export const getCourseByStudentU = async (
   await Promise.all(
     courses.map(async (course) => {
       if (course.thumbnail) {
-        course.thumbnailUrl = await cloudService.getFile(course.thumbnail.key);
+        course.thumbnailUrl = course.thumbnail.url;
       }
     })
   );

@@ -3,7 +3,6 @@ export interface StudentInterface {
   firstName: string;
   lastName: string;
   profilePic?: {
-    key?: string;
     name: string;
     url?: string;
   };
@@ -22,7 +21,6 @@ export interface StudentUpdateInfo {
   mobile?: string;
   profilePic?: {
     name: string;
-    key?: string;
     url?: string;
   };
 }

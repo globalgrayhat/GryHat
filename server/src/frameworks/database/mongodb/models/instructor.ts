@@ -1,19 +1,14 @@
-import mongoose, { Schema, model } from 'mongoose';
+import { Schema, model } from 'mongoose';
 
 import { Certificate } from '../../../../types/instructorInterface';
 
 interface ProfilePic {
-  name: string;
-  key?: string;
+  name?: string;
   url?: string;
 }
 
 const ProfileSchema = new Schema<ProfilePic>({
   name: {
-    type: String,
-    required: true
-  },
-  key: {
     type: String
   },
   url: {
@@ -25,12 +20,12 @@ const instructorSchema = new Schema({
   firstName: {
     type: String,
     required: true,
-    trim: true,
+    trim: true
   },
   lastName: {
     type: String,
     required: true,
-    trim: true,
+    trim: true
   },
   email: {
     type: String,
@@ -40,59 +35,58 @@ const instructorSchema = new Schema({
     lowercase: true,
     match: [
       /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/,
-      'Please enter a valid email',
-    ],
+      'Please enter a valid email'
+    ]
   },
   profilePic: {
     type: ProfileSchema,
-    required: true,
+    required: true
   },
-  certificates:{
-    type:Array<Certificate>,
-    required:true
-
+  certificates: {
+    type: Array<Certificate>,
+    required: true
   },
   mobile: {
     type: String,
     required: true,
     trim: true,
     unique: true,
-    match: [/^[0-9]{10}$/, 'Please enter a valid 10-digit mobile number'],
+    match: [/^[0-9]{10}$/, 'Please enter a valid 10-digit mobile number']
   },
   qualification: {
     type: String,
-    required: true,
+    required: true
   },
   subjects: {
     type: Array<string>,
-    required: true,
+    required: true
   },
   experience: {
     type: String,
-    required: true,
+    required: true
   },
   skills: {
     type: String,
-    required: true,
+    required: true
   },
   about: {
     type: String,
-    required: true,
+    required: true
   },
   password: {
     type: String,
     required: true,
-    minlength: 8,
+    minlength: 8
   },
   isVerified: {
     type: Boolean,
-    default: false,
+    default: false
   },
   coursesCreated: [
     {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Courses',
-    },
+      type: Schema.Types.ObjectId,
+      ref: 'Course'
+    }
   ],
   rejected: { type: Boolean, default: false },
   rejectedReason: { type: String, default: '' },
@@ -100,12 +94,12 @@ const instructorSchema = new Schema({
   blockedReason: { type: String, default: '' },
   dateJoined: {
     type: Date,
-    default: Date.now,
+    default: Date.now
   },
   profileUrl: {
     type: String,
-    default:"",
-  },
+    default: ''
+  }
 });
 
 const Instructor = model('Instructors', instructorSchema, 'instructor');

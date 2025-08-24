@@ -15,9 +15,6 @@ import { SendEmailServiceInterface } from '../../app/services/sendEmailServiceIn
 import { InstructorDbInterface } from '../../app/repositories/instructorDbRepository';
 import { InstructorRepositoryMongoDb } from '../../frameworks/database/mongodb/repositories/instructorRepoMongoDb';
 import { CustomRequest } from '../../types/customRequest';
-import { CloudServiceInterface } from '../../app/services/cloudServiceInterface';
-// Use the provider-aware service factory rather than directly referencing S3.
-import { CloudServiceImpl } from '../../frameworks/services';
 import {
   changePasswordU,
   getStudentsForInstructorsU,
@@ -36,9 +33,7 @@ const instructorController = (
   courseDbRepository: CourseDbRepositoryInterface,
   courseDbRepositoryImpl: CourseRepositoryMongoDbInterface,
   emailServiceInterface: SendEmailServiceInterface,
-  emailServiceImpl: SendEmailService,
-  cloudServiceInterface: CloudServiceInterface,
-  cloudServiceImpl: CloudServiceImpl
+  emailServiceImpl: SendEmailService
 ) => {
   const authService = authServiceInterface(authServiceImpl());
   const dbRepositoryInstructor = instructorDbRepository(
@@ -46,7 +41,6 @@ const instructorController = (
   );
   const dbRepositoryCourse = courseDbRepository(courseDbRepositoryImpl());
   const emailService = emailServiceInterface(emailServiceImpl());
-  const cloudService = cloudServiceInterface(cloudServiceImpl());
 
   //? INSTRUCTOR MANAGEMENT
   const getInstructorRequests = asyncHandler(
@@ -91,10 +85,7 @@ const instructorController = (
   });
 
   const getAllInstructor = asyncHandler(async (req: Request, res: Response) => {
-    const instructors = await getAllInstructors(
-      cloudService,
-      dbRepositoryInstructor
-    );
+    const instructors = await getAllInstructors(dbRepositoryInstructor);
     res.json({
       status: 'success',
       message: 'Successfully fetched all instructor information',
@@ -134,10 +125,7 @@ const instructorController = (
 
   const getBlockedInstructor = asyncHandler(
     async (req: Request, res: Response) => {
-      const response = await getBlockedInstructors(
-        cloudService,
-        dbRepositoryInstructor
-      );
+      const response = await getBlockedInstructors(dbRepositoryInstructor);
       res.json({
         status: 'success',
         message: 'Successfully fetched blocked instructors',
@@ -151,7 +139,6 @@ const instructorController = (
       let instructorId = req.params.instructorId;
       const response = await getInstructorByIdUseCase(
         instructorId,
-        cloudService,
         dbRepositoryInstructor
       );
       res.json({
@@ -185,7 +172,6 @@ const instructorController = (
         instructorId,
         instructorInfo,
         undefined,
-        cloudService,
         dbRepositoryInstructor
       );
       res.json({
@@ -220,7 +206,6 @@ const instructorController = (
       const instructorId: string | undefined = req.user?.Id;
       const students = await getStudentsForInstructorsU(
         instructorId,
-        cloudService,
         dbRepositoryCourse
       );
       res.status(200).json({
@@ -236,7 +221,6 @@ const instructorController = (
       const instructorId = req.user?.Id;
       const instructor = await getInstructorByIdUseCase(
         instructorId ?? '',
-        cloudService,
         dbRepositoryInstructor
       );
       res.status(200).json({

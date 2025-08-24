@@ -3,7 +3,6 @@ import AppError from '../../utils/appError';
 import HttpStatusCodes from '../../constants/HttpStatusCodes';
 import { AuthServiceInterface } from '../services/authServicesInterface';
 import { SavedInstructorInterface } from '@src/types/instructorInterface';
-import { CloudServiceInterface } from '../services/cloudServiceInterface';
 import { CourseDbRepositoryInterface } from '../repositories/courseDbRepository';
 
 export const changePasswordU = async (
@@ -50,7 +49,6 @@ export const updateProfileU = async (
   id: string | undefined,
   instructorInfo: SavedInstructorInterface,
   profilePic: Express.Multer.File | undefined,
-  cloudService: ReturnType<CloudServiceInterface>,
   instructorDbRepository: ReturnType<InstructorDbInterface>
 ) => {
   if (!id) {
@@ -66,15 +64,16 @@ export const updateProfileU = async (
   // pre-process profile pictures (e.g. upload locally) before calling this
   // usecase, in which case it will pass undefined here.
   if (profilePic) {
-    const response = await cloudService.upload(profilePic);
-    instructorInfo.profilePic = response;
+    instructorInfo.profilePic = {
+      name: profilePic.originalname,
+      url: `http://localhost:${process.env.PORT}/uploads/${profilePic.filename}`
+    };
   }
   await instructorDbRepository.updateProfile(id, instructorInfo);
 };
 
 export const getStudentsForInstructorsU = async (
   instructorId: string|undefined,
-  cloudService: ReturnType<CloudServiceInterface>,
   courseDbRepository: ReturnType<CourseDbRepositoryInterface>
 ) => {
   if (!instructorId) {
@@ -88,9 +87,8 @@ export const getStudentsForInstructorsU = async (
   );
   await Promise.all(
     students.map(async (student) => {
-      if (student.profilePic.key) {
-        student.profileUrl = ""
-        student.profileUrl = await cloudService.getFile(student.profilePic.key);
+      if (student.profilePic.url) {
+        student.profileUrl = student.profilePic.url ?? '';
       }
     })
   );

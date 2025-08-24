@@ -2,7 +2,6 @@ import mongoose, { Schema, model, Document } from 'mongoose';
 
 interface ProfilePic {
   name: string;
-  key?: string;
   url?: string;
 }
 interface IStudent extends Document {
@@ -24,9 +23,6 @@ const ProfileSchema = new Schema<ProfilePic>({
   name: {
     type: String,
     required: true
-  },
-  key: {
-    type: String
   },
   url: {
     type: String
@@ -62,11 +58,10 @@ const studentSchema = new Schema<IStudent>({
   mobile: {
     type: String,
     required: function (this: IStudent) {
-      return !this.isGoogleUser; // Required for non-Google users
+      return !this.isGoogleUser;
     },
     trim: true,
-    // unique:true,
-    sparse: true, // Allow multiple null values
+    sparse: true,
     match: [/^[0-9]{10}$/, 'Please enter a valid 10-digit mobile number']
   },
   interests: {

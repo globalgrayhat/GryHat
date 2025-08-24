@@ -1,7 +1,6 @@
 import HttpStatusCodes from '../../../constants/HttpStatusCodes';
 import AppError from '../../../utils/appError';
 import { CreateLessonInterface } from '../../../types/lesson';
-import { CloudServiceInterface } from '@src/app/services/cloudServiceInterface';
 import { QuizDbInterface } from '@src/app/repositories/quizDbRepository';
 import { LessonDbRepositoryInterface } from '@src/app/repositories/lessonDbRepository';
 import * as ffprobePath from 'ffprobe-static';
@@ -13,7 +12,6 @@ export const editLessonsU = async (
   lessonId: string,
   lesson: CreateLessonInterface,
   lessonDbRepository: ReturnType<LessonDbRepositoryInterface>,
-  cloudService: ReturnType<CloudServiceInterface>,
   quizDbRepository: ReturnType<QuizDbInterface>
 ) => {
   if (!lesson) {
@@ -26,7 +24,7 @@ export const editLessonsU = async (
     const videoFile = media[0];
     const tempFilePath = './temp_video.mp4';
     const ab = videoFile.buffer.buffer.slice(
-      videoFile.buffer.byteOffset, 
+      videoFile.buffer.byteOffset,
       videoFile.buffer.byteOffset + videoFile.buffer.byteLength
     );
     const uint8Array = new Uint8Array(ab);
@@ -53,16 +51,20 @@ export const editLessonsU = async (
       console.error('Error while getting video duration:', error);
     }
   }
-  lesson.media=[]
+  lesson.media = [];
   if (media && media.length > 0) {
     const uploadPromises = media.map(async (file) => {
       if (file.mimetype === 'application/pdf') {
-        const studyMaterial = await cloudService.upload(file);
-        lesson.media.push(studyMaterial);
+        lesson.media.push({
+          name: file.originalname,
+          url: `http://localhost:${process.env.PORT}/uploads/${file.filename}`
+        });
         isStudyMaterialUpdated = true;
       } else {
-        const lessonVideo = await cloudService.upload(file);
-        lesson.media.push(lessonVideo);
+        lesson.media.push({
+          name: file.originalname,
+          url: `http://localhost:${process.env.PORT}/uploads/${file.filename}`
+        });
         isLessonVideoUpdated = true;
       }
     });
@@ -79,13 +81,11 @@ export const editLessonsU = async (
       const videoObject = response.media.find(
         (item) => item.name === 'lessonVideo'
       );
-      await cloudService.removeFile(videoObject?.key ?? '');
     }
     if (isStudyMaterialUpdated && oldLesson?.media) {
       const materialObject = response.media.find(
         (item) => item.name === 'materialFile'
       );
-      await cloudService.removeFile(materialObject?.key ?? '');
     }
   }
 };

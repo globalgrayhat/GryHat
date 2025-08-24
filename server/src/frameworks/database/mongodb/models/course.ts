@@ -1,20 +1,12 @@
-import mongoose, { Schema, model } from 'mongoose';
+import { Schema, model } from 'mongoose';
 import { AddCourseInfoInterface } from '@src/types/courseInterface';
 
 const FileSchema = new Schema({
-  name: {
-    type: String,
-    required: true
-  },
-  key: {
-    type: String,
-    required: true
-  },
   url: {
     type: String
   }
 });
-const courseSchema = new mongoose.Schema({
+const courseSchema = new Schema({
   title: {
     type: String,
     required: true,
@@ -22,7 +14,8 @@ const courseSchema = new mongoose.Schema({
     maxlength: 100
   },
   instructorId: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
+    ref: 'Instructor',
     required: true
   },
   duration: {
@@ -31,7 +24,8 @@ const courseSchema = new mongoose.Schema({
     min: 0
   },
   category: {
-    type: String,
+    type: Schema.Types.ObjectId,
+    ref: 'Category',
     required: true
   },
   level: {
@@ -47,7 +41,7 @@ const courseSchema = new mongoose.Schema({
     required: function (this: AddCourseInfoInterface) {
       return this.isPaid;
     },
-    min: 0,
+    min: 0
   },
   isPaid: {
     type: Boolean,
@@ -73,17 +67,9 @@ const courseSchema = new mongoose.Schema({
     type: FileSchema,
     required: true
   },
-  thumbnailUrl: {
-    type: String,
-    default: ''
-  },
   guidelines: {
     type: FileSchema,
     required: true
-  },
-  guidelinesUrl: {
-    type: String,
-    default: ''
   },
   introduction: {
     type: FileSchema,
@@ -91,7 +77,7 @@ const courseSchema = new mongoose.Schema({
   },
   coursesEnrolled: [
     {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: 'students'
     }
   ],
@@ -116,23 +102,6 @@ const courseSchema = new mongoose.Schema({
     default: 0
   }
 });
-
-// courseSchema.index(
-//   {
-//     title: 'text',
-//     category: 'text',
-//     level: 'text',
-//     price: 'text'
-//   },
-//   {
-//     weights: {
-//       title: 4,
-//       category: 3,
-//       level: 2,
-//       price: 1
-//     }
-//   }
-// );
 
 const Course = model('Course', courseSchema, 'course');
 export default Course;

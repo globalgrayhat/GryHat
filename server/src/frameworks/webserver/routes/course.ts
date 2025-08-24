@@ -59,7 +59,7 @@ const courseRouter = (redisClient: RedisClient) => {
 
   router.get(
     '/get-all-courses',
-    cachingMiddleware(redisClient, 'all-courses'), 
+    cachingMiddleware(redisClient, 'all-courses'),
     controller.getAllCourses
   );
 

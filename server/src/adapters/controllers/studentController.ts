@@ -11,9 +11,7 @@ import {
   updateProfileU
 } from '../../app/usecases/student';
 import { StudentUpdateInfo } from '../../types/studentInterface';
-import { CloudServiceInterface } from '../../app/services/cloudServiceInterface';
 
-import { CloudServiceImpl } from '../../frameworks/services';
 import {
   blockStudentU,
   getAllBlockedStudentsU,
@@ -28,7 +26,6 @@ import { ContactInterface } from '../../types/contact';
 import { ContactDbInterface } from '../../app/repositories/contactDbRepository';
 import { ContactRepoImpl } from '../../frameworks/database/mongodb/repositories/contactsRepoMongoDb';
 
-
 const studentController = (
   authServiceInterface: AuthServiceInterface,
   authServiceImpl: AuthService,
@@ -36,8 +33,6 @@ const studentController = (
   studentDbRepositoryImpl: StudentRepositoryMongoDB,
   contactDbRepository: ContactDbInterface,
   contactDbRepositoryImpl: ContactRepoImpl,
-  cloudServiceInterface: CloudServiceInterface,
-  cloudServiceImpl: CloudServiceImpl,
   cacheDbRepository: CacheRepositoryInterface,
   cacheDbRepositoryImpl: RedisRepositoryImpl,
   cacheClient: RedisClient
@@ -49,7 +44,6 @@ const studentController = (
   const dbRepositoryContact = contactDbRepository(contactDbRepositoryImpl());
 
   const authService = authServiceInterface(authServiceImpl());
-  const cloudService = cloudServiceInterface(cloudServiceImpl());
   const changePassword = asyncHandler(
     async (req: CustomRequest, res: Response) => {
       const passwordInfo: { currentPassword: string; newPassword: string } =
@@ -119,7 +113,7 @@ const studentController = (
   );
 
   const getAllStudents = asyncHandler(async (req: Request, res: Response) => {
-    const students = await getAllStudentsU(cloudService, dbRepositoryStudent);
+    const students = await getAllStudentsU(dbRepositoryStudent);
     res.status(200).json({
       status: 'success',
       message: 'Successfully retrieved all student details',
@@ -150,10 +144,7 @@ const studentController = (
 
   const getAllBlockedStudents = asyncHandler(
     async (req: Request, res: Response) => {
-      const students = await getAllBlockedStudentsU(
-        cloudService,
-        dbRepositoryStudent
-      );
+      const students = await getAllBlockedStudentsU(dbRepositoryStudent);
       res.status(200).json({
         status: 'success',
         message: 'Successfully unblocked student ',

@@ -2,7 +2,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 
 interface PaymentI extends Document {
   paymentId: string;
-  studentId:string;
+  studentId: string;
   courseId: string;
   amount: number;
   currency: string;
@@ -13,7 +13,7 @@ interface PaymentI extends Document {
 
 const paymentSchema: Schema<PaymentI> = new Schema({
   paymentId: { type: String, required: true },
-  studentId:{ type: String, required: true },
+  studentId: { type: String, required: true },
   courseId: { type: String, required: true },
   amount: { type: Number, required: true },
   currency: { type: String, required: true },
@@ -22,10 +22,6 @@ const paymentSchema: Schema<PaymentI> = new Schema({
   createdAt: { type: Date, required: true, default: Date.now }
 });
 
-const Payment = mongoose.model<PaymentI>(
-  'Payment',
-  paymentSchema,
-  'payment'
-);
+const Payment = mongoose.model<PaymentI>('Payment', paymentSchema, 'payment');
 
 export default Payment;

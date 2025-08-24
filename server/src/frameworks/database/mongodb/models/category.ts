@@ -6,6 +6,12 @@ const categorySchema = new Schema({
     required: true,
     unique: true
   },
+  courses: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: 'Course'
+    }
+  ],
   description: {
     type: String,
     required: true
@@ -22,4 +28,4 @@ const categorySchema = new Schema({
 
 const Category = model('Category', categorySchema);
 
-export default Category
+export default Category;

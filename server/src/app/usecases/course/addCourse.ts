@@ -2,36 +2,35 @@ import { CourseDbRepositoryInterface } from '../../repositories/courseDbReposito
 import HttpStatusCodes from '../../../constants/HttpStatusCodes';
 import { AddCourseInfoInterface } from '../../../types/courseInterface';
 import AppError from '../../../utils/appError';
-import { CloudServiceInterface } from '@src/app/services/cloudServiceInterface';
 
 export const addCourses = async (
   instructorId: string | undefined,
   courseInfo: AddCourseInfoInterface,
   files: Express.Multer.File[],
-  cloudService: ReturnType<CloudServiceInterface>,
   courseDbRepository: ReturnType<CourseDbRepositoryInterface>
 ) => {
   if (!instructorId || !courseInfo || !files || files.length === 0) {
     throw new AppError('Invalid input data', HttpStatusCodes.BAD_REQUEST);
   }
-  console.log(files);
 
   const uploadPromises = files.map(async (file) => {
-    let uploadedFile;
-
     if (file.mimetype === 'application/pdf') {
-      uploadedFile = await cloudService.upload(file);
-      courseInfo.guidelines = uploadedFile;
+      courseInfo.guidelines = {
+        name: file.originalname,
+        url: `http://localhost:${process.env.PORT}/uploads/${file.filename}`
+      };
     }
-
     if (file.mimetype === 'video/mp4') {
-      uploadedFile = await cloudService.upload(file);
-      courseInfo.introduction = uploadedFile;
+      courseInfo.introduction = {
+        name: file.originalname,
+        url: `http://localhost:${process.env.PORT}/uploads/${file.filename}`
+      };
     }
-
     if (file.mimetype.includes('image')) {
-      uploadedFile = await cloudService.upload(file);
-      courseInfo.thumbnail = uploadedFile;
+      courseInfo.thumbnail = {
+        name: file.originalname,
+        url: `http://localhost:${process.env.PORT}/uploads/${file.filename}`
+      };
     }
   });
 
@@ -48,7 +47,6 @@ export const addCourses = async (
   if (typeof courseInfo.requirements === 'string') {
     courseInfo.requirements = courseInfo.requirements.split(',');
   }
-  console.log(courseInfo)
   const courseId = await courseDbRepository.addCourse(courseInfo);
 
   if (!courseId) {
@@ -57,6 +55,5 @@ export const addCourses = async (
       HttpStatusCodes.INTERNAL_SERVER_ERROR
     );
   }
-
   return courseId;
 };

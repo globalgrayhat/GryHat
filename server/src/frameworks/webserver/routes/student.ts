@@ -4,8 +4,6 @@ import { studentDbRepository } from '../../../app/repositories/studentDbReposito
 import { studentRepositoryMongoDB } from '../../../frameworks/database/mongodb/repositories/studentsRepoMongoDb';
 import { authService } from '../../../frameworks/services/authService';
 import { authServiceInterface } from '../../../app/services/authServicesInterface';
-import { cloudServiceInterface } from '../../../app/services/cloudServiceInterface';
-import { CloudServiceImpl } from '../../../frameworks/services';
 import upload from '../middlewares/multer';
 import { RedisClient } from '@src/app';
 import { cachingMiddleware } from '../middlewares/redisCaching';
@@ -26,8 +24,6 @@ const studentRouter = (redisClient: RedisClient) => {
     studentRepositoryMongoDB,
     contactDbInterface,
     contactRepositoryMongodb,
-    cloudServiceInterface,
-    CloudServiceImpl,
     cacheRepositoryInterface,
     redisCacheRepository,
     redisClient

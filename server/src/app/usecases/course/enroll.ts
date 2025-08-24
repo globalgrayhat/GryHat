@@ -2,7 +2,6 @@ import { CourseDbRepositoryInterface } from '../../repositories/courseDbReposito
 import HttpStatusCodes from '../../../constants/HttpStatusCodes';
 import AppError from '../../../utils/appError';
 import { PaymentInterface } from '@src/app/repositories/paymentDbRepository';
-import { PaymentInfo } from '@src/types/payment';
 
 export const enrollStudentU = async (
   courseId: string,

@@ -1,7 +1,6 @@
 import HttpStatusCodes from '../../../constants/HttpStatusCodes';
 import AppError from '../../../utils/appError';
 import { CreateLessonInterface } from '../../../types/lesson';
-import { CloudServiceInterface } from '@src/app/services/cloudServiceInterface';
 import { QuizDbInterface } from '@src/app/repositories/quizDbRepository';
 import { LessonDbRepositoryInterface } from '@src/app/repositories/lessonDbRepository';
 import * as ffprobePath from 'ffprobe-static';
@@ -14,7 +13,6 @@ export const addLessonsU = async (
   instructorId: string | undefined,
   lesson: CreateLessonInterface,
   lessonDbRepository: ReturnType<LessonDbRepositoryInterface>,
-  cloudService: ReturnType<CloudServiceInterface>,
   quizDbRepository: ReturnType<QuizDbInterface>
 ) => {
   if (!courseId) {
@@ -70,9 +68,10 @@ export const addLessonsU = async (
   }
 
   if (media) {
-    lesson.media = await Promise.all(
-      media.map(async (files) => await cloudService.upload(files))
-    );
+    lesson.media = media.map((file) => ({
+      name: file.originalname,
+      url: `http://localhost:${process.env.PORT}/uploads/${file.filename}`
+    }));
   }
   const lessonId = await lessonDbRepository.addLesson(
     courseId,

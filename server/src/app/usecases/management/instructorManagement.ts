@@ -2,7 +2,7 @@ import HttpStatusCodes from '../../../constants/HttpStatusCodes';
 import AppError from '../../../utils/appError';
 import { SendEmailService } from '@src/frameworks/services/sendEmailService';
 import { InstructorDbInterface } from '@src/app/repositories/instructorDbRepository';
-import { CloudServiceInterface } from '@src/app/services/cloudServiceInterface';
+
 export const getAllInstructorRequests = async (
   instructorRepository: ReturnType<InstructorDbInterface>
 ) => {
@@ -68,16 +68,13 @@ export const rejectInstructorRequest = async (
 };
 
 export const getAllInstructors = async (
-  cloudService: ReturnType<CloudServiceInterface>,
   instructorRepository: ReturnType<InstructorDbInterface>
 ) => {
   const instructors = await instructorRepository.getAllInstructors();
   await Promise.all(
     instructors.map(async (instructor) => {
       if (instructor.profilePic) {
-        instructor.profileUrl = await cloudService.getFile(
-          instructor.profilePic.key ?? ''
-        );
+        instructor.profileUrl = instructor.profilePic.url ?? '';
       }
     })
   );
@@ -114,16 +111,13 @@ export const unblockInstructors = async (
 };
 
 export const getBlockedInstructors = async (
-  cloudService: ReturnType<CloudServiceInterface>,
   instructorRepository: ReturnType<InstructorDbInterface>
 ) => {
   const blockedInstructors = await instructorRepository.getBlockedInstructors();
   await Promise.all(
     blockedInstructors.map(async (instructor) => {
       if (instructor.profilePic) {
-        instructor.profileUrl = await cloudService.getFile(
-          instructor.profilePic.key ?? ''
-        );
+        instructor.profileUrl = instructor.profilePic.url ?? '';
       }
     })
   );
@@ -132,7 +126,6 @@ export const getBlockedInstructors = async (
 
 export const getInstructorByIdUseCase = async (
   instructorId: string,
-  cloudService: ReturnType<CloudServiceInterface>,
   instructorRepository: ReturnType<InstructorDbInterface>
 ) => {
   if (!instructorId) {
@@ -140,8 +133,7 @@ export const getInstructorByIdUseCase = async (
   }
   const instructor = await instructorRepository.getInstructorById(instructorId);
   if (instructor?.profilePic.key) {
-    const profilePic = await cloudService.getFile(instructor?.profilePic.key);
-    instructor.profileUrl = profilePic;
+    instructor.profileUrl = instructor?.profilePic.url ?? '';
   }
   if (instructor) {
     instructor.password = 'no password';

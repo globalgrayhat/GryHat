@@ -9,15 +9,15 @@ const adminSchema = new Schema({
     lowercase: true,
     match: [
       /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/,
-      'Please enter a valid email',
-    ],
+      'Please enter a valid email'
+    ]
   },
 
   password: {
     type: String,
     required: true,
-    minlength: 4,
-  },
+    minlength: 4
+  }
 });
 
 const Admin = model('Admin', adminSchema, 'admin');

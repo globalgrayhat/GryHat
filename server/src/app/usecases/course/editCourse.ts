@@ -2,14 +2,13 @@ import { CourseDbRepositoryInterface } from '../../repositories/courseDbReposito
 import HttpStatusCodes from '../../../constants/HttpStatusCodes';
 import { EditCourseInfo } from '../../../types/courseInterface';
 import AppError from '../../../utils/appError';
-import { CloudServiceInterface } from '@src/app/services/cloudServiceInterface';
+import fs from 'fs';
 
 export const editCourseU = async (
   courseId: string,
   instructorId: string | undefined,
   files: Express.Multer.File[],
   courseInfo: EditCourseInfo,
-  cloudService: ReturnType<CloudServiceInterface>,
   courseDbRepository: ReturnType<CourseDbRepositoryInterface>
 ) => {
   let isThumbnailUpdated = false,
@@ -37,12 +36,16 @@ export const editCourseU = async (
   if (files && files.length > 0) {
     const uploadPromises = files.map(async (file) => {
       if (file.mimetype === 'application/pdf') {
-        const guidelines = await cloudService.upload(file);
-        courseInfo.guidelines = guidelines;
+        courseInfo.guidelines = {
+          name: file.originalname,
+          url: `http://localhost:${process.env.PORT}/uploads/${file.filename}`
+        };
         isGuideLinesUpdated = true;
       } else {
-        const thumbnail = await cloudService.upload(file);
-        courseInfo.thumbnail = thumbnail;
+        courseInfo.thumbnail = {
+          name: file.originalname,
+          url: `http://localhost:${process.env.PORT}/uploads/${file.filename}`
+        };
         isThumbnailUpdated = true;
       }
     });
@@ -66,10 +69,10 @@ export const editCourseU = async (
   const response = await courseDbRepository.editCourse(courseId, courseInfo);
   if (response) {
     if (isGuideLinesUpdated && oldCourse?.guidelines) {
-      await cloudService.removeFile(oldCourse.guidelines.key);
+      fs.unlinkSync(oldCourse.guidelines.url);
     }
     if (isThumbnailUpdated && oldCourse?.thumbnail) {
-      await cloudService.removeFile(oldCourse.thumbnail.key);
+      fs.unlinkSync(oldCourse.thumbnail.url);
     }
   }
 };

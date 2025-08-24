@@ -102,8 +102,8 @@ export const getStudentDetailsU = async (
   }
   const studentDetails: StudentInterface | null =
     await studentDbRepository.getStudent(id);
-  if (studentDetails?.profilePic?.key) {
-    studentDetails.profilePic.url = `http://localhost:${process.env.PORT}/uploads/${studentDetails.profilePic.key}`;
+  if (studentDetails?.profilePic?.url) {
+    studentDetails.profilePic.url = `http://localhost:${process.env.PORT}/uploads/${studentDetails.profilePic.url}`;
   }
   if (studentDetails) {
     studentDetails.password = 'no password';

@@ -38,23 +38,23 @@ export const categoryRepositoryMongodb = () => {
   };
 
   const getCourseCountByCategory = async () => {
-    const courses = await Category.aggregate( [
+    const courses = await Category.aggregate([
       {
-        $lookup:{
-          from:'course',
-          localField:'name',
-          foreignField:'category',
-          as:'courseDetails'
+        $lookup: {
+          from: 'course',
+          localField: 'name',
+          foreignField: 'category',
+          as: 'courseDetails'
         }
       },
       {
         $project: {
-          name: 1, 
-          courseCount: { $size: '$courseDetails' } 
+          name: 1,
+          courseCount: { $size: '$courseDetails' }
         }
       }
     ]);
-    return courses
+    return courses;
   };
 
   return {

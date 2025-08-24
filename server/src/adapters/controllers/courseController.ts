@@ -86,8 +86,7 @@ const courseController = (
       const course: AddCourseInfoInterface = req.body;
       const files: Express.Multer.File[] = req.files as Express.Multer.File[];
       const instructorId = req.user?.Id;
-      // Always store images (thumbnails) locally regardless of global
-      // storage settings. Separate image files from others.
+
       const localService = localStorageService();
       const remainingFiles: Express.Multer.File[] = [];
       await Promise.all(
@@ -105,7 +104,6 @@ const courseController = (
         instructorId,
         course,
         remainingFiles,
-        cloudService,
         dbRepositoryCourse
       );
       res.status(201).json({
@@ -141,7 +139,6 @@ const courseController = (
       instructorId,
       remainingFiles,
       course,
-      cloudService,
       dbRepositoryCourse
     );
     res.status(200).json({
@@ -152,7 +149,7 @@ const courseController = (
   });
 
   const getAllCourses = asyncHandler(async (req: Request, res: Response) => {
-    const courses = await getAllCourseU(cloudService, dbRepositoryCourse);
+    const courses = await getAllCourseU(dbRepositoryCourse);
     const cacheOptions = {
       key: `all-courses`,
       expireTimeSec: 600,
@@ -169,12 +166,7 @@ const courseController = (
   const getIndividualCourse = asyncHandler(
     async (req: Request, res: Response) => {
       const courseId: string = req.params.courseId;
-      const course = await getCourseByIdU(
-        courseId,
-        cloudService,
-        dbRepositoryCourse
-      );
-      console.log(course)
+      const course = await getCourseByIdU(courseId, dbRepositoryCourse);
       res.status(200).json({
         status: 'success',
         message: 'Successfully retrieved the course',
@@ -188,7 +180,6 @@ const courseController = (
       const instructorId = req.user?.Id;
       const courses = await getCourseByInstructorU(
         instructorId,
-        cloudService,
         dbRepositoryCourse
       );
       res.status(200).json({
@@ -235,7 +226,6 @@ const courseController = (
       instructorId,
       lesson,
       dbRepositoryLesson,
-      cloudService,
       dbRepositoryQuiz
     );
     res.status(200).json({
@@ -256,7 +246,6 @@ const courseController = (
       lessonId,
       lesson,
       dbRepositoryLesson,
-      cloudService,
       dbRepositoryQuiz
     );
     res.status(200).json({
@@ -409,7 +398,6 @@ const courseController = (
       const studentId: string = req.user?.Id ?? '';
       const courses = await getRecommendedCourseByStudentU(
         studentId,
-        cloudService,
         dbRepositoryCourse
       );
       res.status(200).json({
@@ -422,10 +410,7 @@ const courseController = (
 
   const getTrendingCourses = asyncHandler(
     async (req: Request, res: Response) => {
-      const courses = await getTrendingCourseU(
-        cloudService,
-        dbRepositoryCourse
-      );
+      const courses = await getTrendingCourseU(dbRepositoryCourse);
       res.status(200).json({
         status: 'success',
         message: 'Successfully retrieved trending courses',
@@ -437,11 +422,7 @@ const courseController = (
   const getCourseByStudent = asyncHandler(
     async (req: CustomRequest, res: Response) => {
       const studentId: string | undefined = req.user?.Id;
-      const courses = await getCourseByStudentU(
-        studentId,
-        cloudService,
-        dbRepositoryCourse
-      );
+      const courses = await getCourseByStudentU(studentId, dbRepositoryCourse);
       res.status(200).json({
         status: 'success',
         message: 'Successfully retrieved courses based on students',
@@ -452,11 +433,10 @@ const courseController = (
 
   const searchCourse = asyncHandler(async (req: Request, res: Response) => {
     const { search, filter } = req.query as { search: string; filter: string };
-    const key = search.trim()===""?search:filter
+    const key = search.trim() === '' ? search : filter;
     const searchResult = await searchCourseU(
       search,
       filter,
-      cloudService,
       dbRepositoryCourse
     );
     if (searchResult.length) {
