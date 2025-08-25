@@ -74,7 +74,7 @@ export const getAllInstructors = async (
   await Promise.all(
     instructors.map(async (instructor) => {
       if (instructor.profilePic) {
-        instructor.profileUrl = instructor.profilePic.url ?? '';
+        instructor.profileUrl = instructor.profilePic.url;
       }
     })
   );
@@ -132,8 +132,8 @@ export const getInstructorByIdUseCase = async (
     throw new AppError('Invalid instructor id', HttpStatusCodes.BAD_REQUEST);
   }
   const instructor = await instructorRepository.getInstructorById(instructorId);
-  if (instructor?.profilePic.key) {
-    instructor.profileUrl = instructor?.profilePic.url ?? '';
+  if (instructor?.profilePic) {
+    instructor.profileUrl = instructor?.profilePic.url;
   }
   if (instructor) {
     instructor.password = 'no password';

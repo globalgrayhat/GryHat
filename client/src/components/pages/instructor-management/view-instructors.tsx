@@ -134,6 +134,7 @@ const ViewInstructors: React.FC = () => {
                 },
                 index
               ) => {
+                console.log(profileUrl);
                 const isLast = index === instructors.length - 1;
                 const classes = isLast
                   ? "p-4"

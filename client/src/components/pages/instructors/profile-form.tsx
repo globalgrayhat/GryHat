@@ -60,7 +60,7 @@ const ProfileForm: React.FC<Props> = ({ editMode, setEditMode }) => {
         about: instructor?.about || "",
       });
     }
-    setProfileUrl(instructor?.profileUrl ?? "");
+    setProfileUrl(instructor?.profilePic?.url ?? "");
   }, [instructor]);
 
   useEffect(() => {

@@ -73,7 +73,7 @@ const ViewInstructor: React.FC = (props: Props) => {
                 <Avatar
                   className='h-32 w-32 mx-auto sm:mt-5'
                   src={
-                    instructor?.profileUrl ??
+                    instructor?.profilePic?.url ??
                     "https://img.freepik.com/free-icon/user_318-159711.jpg"
                   }
                   alt='avatar'

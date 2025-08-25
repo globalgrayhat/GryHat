@@ -74,7 +74,8 @@ const studentSchema = new Schema<IStudent>({
     required: function (this: IStudent) {
       return !this.isGoogleUser;
     },
-    minlength: 8
+    minlength: 8,
+    select: false
   },
   dateJoined: {
     type: Date,

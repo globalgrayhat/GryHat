@@ -29,8 +29,6 @@ const routes = (app: Application, redisClient: RedisClient) => {
   app.use('/api/instructors', instructorRouter());
   app.use('/api/payments', jwtAuthMiddleware, paymentRouter());
   app.use('/api/students', studentRouter(redisClient));
-  // Storage configuration routes (admin only). Protect with JWT auth; role check
-  // occurs within the router itself.
   app.use('/api/storage-config', jwtAuthMiddleware, storageConfigRouter);
 };
 

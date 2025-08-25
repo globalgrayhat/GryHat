@@ -7,12 +7,18 @@ import routes from './frameworks/webserver/routes';
 import connection from './frameworks/database/redis/connection';
 import colors from 'colors.ts';
 import errorHandlingMiddleware from './frameworks/webserver/middlewares/errorHandling';
-import configKeys from './config'; 
+import configKeys from './config';
 import AppError from './utils/appError';
-import { ClientToServerEvents, InterServerEvents, ServerToClientEvents, SocketData } from './types/socketInterfaces';
+import {
+  ClientToServerEvents,
+  InterServerEvents,
+  ServerToClientEvents,
+  SocketData
+} from './types/socketInterfaces';
 import { Server } from 'socket.io';
 import socketConfig from './frameworks/websocket/socket';
 import { authService } from './frameworks/services/authService';
+import { swaggerUi, swaggerSpec } from './swagger';
 
 colors?.enable();
 
@@ -20,17 +26,23 @@ const app: Application = express();
 const server = http.createServer(app);
 
 //* web socket connection
-const io = new Server<ClientToServerEvents,ServerToClientEvents,InterServerEvents,SocketData>(server,{
-  cors:{
-      origin:configKeys.ORIGIN_PORT,
-      methods:["GET","POST"]
-  } 
+const io = new Server<
+  ClientToServerEvents,
+  ServerToClientEvents,
+  InterServerEvents,
+  SocketData
+>(server, {
+  cors: {
+    origin: configKeys.ORIGIN_PORT,
+    methods: ['GET', 'POST']
+  }
 });
 
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-socketConfig(io,authService())  
+socketConfig(io, authService());
 
-//* connecting mongoDb 
+//* connecting mongoDb
 connectToMongoDb();
 
 //* connection to redis

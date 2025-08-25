@@ -24,15 +24,9 @@ import { AdminDbInterface } from '@src/app/repositories/adminDbRepository';
 import { AdminRepositoryMongoDb } from '@src/frameworks/database/mongodb/repositories/adminRepoMongoDb';
 import { RefreshTokenDbInterface } from '@src/app/repositories/refreshTokenDBRepository';
 import { RefreshTokenRepositoryMongoDb } from '@src/frameworks/database/mongodb/repositories/refreshTokenRepoMongoDb';
-// Import from the service index rather than directly from S3. This allows
-// swapping implementations via configuration.
-import { CloudServiceImpl } from '@src/frameworks/services';
-import { CloudServiceInterface } from '@src/app/services/cloudServiceInterface';
 const authController = (
   authServiceInterface: AuthServiceInterface,
   authServiceImpl: AuthService,
-  cloudServiceInterface:CloudServiceInterface,
-  CloudServiceImpl:CloudServiceImpl,
   studentDbRepository: StudentsDbInterface,
   studentDbRepositoryImpl: StudentRepositoryMongoDB,
   instructorDbRepository: InstructorDbInterface,
@@ -53,7 +47,6 @@ const authController = (
     refreshTokenDbRepositoryImpl()
   );
   const authService = authServiceInterface(authServiceImpl());
-  const cloudService = cloudServiceInterface(CloudServiceImpl())
   const googleAuthService = googleAuthServiceInterface(googleAuthServiceImpl());
 
   //? STUDENT
@@ -105,19 +98,19 @@ const authController = (
       accessToken,
       refreshToken
     });
-  }); 
+  });
 
   //? INSTRUCTOR
   const registerInstructor = asyncHandler(
     async (req: Request, res: Response) => {
-      const files: Express.Multer.File[] = req.files as Express.Multer.File[];
+      const files: { [fieldname: string]: Express.Multer.File[] } =
+        req.files as { [fieldname: string]: Express.Multer.File[] };
       const instructor: InstructorInterface = req.body;
       await instructorRegister(
         instructor,
         files,
         dbRepositoryInstructor,
-        authService,
-        cloudService
+        authService
       );
       res.status(200).json({
         status: 'success',

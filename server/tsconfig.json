@@ -87,7 +87,7 @@
       "src/**/*.ts",
       "spec/**/*.ts",
       "build.ts"
-    ],
+, "src/swagger.ts"    ],
     "exclude": [
       "src/public/"
     ]

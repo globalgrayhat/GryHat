@@ -25,39 +25,40 @@ const instructorRouter = () => {
     sendEmailServiceInterface,
     sendEmailService
   );
-  //* Instructor management
+
   router.get('/view-instructor-requests', controller.getInstructorRequests);
-
-  router.patch(
-    '/accept-instructor-request/:instructorId',
-    controller.verifyInstructor
-  );
-
-  router.put('/reject-instructor-request', controller.rejectRequest);
-
   router.get('/get-all-instructors', controller.getAllInstructor);
-
-  router.patch(
-    '/get-all-instructors/block-instructors',
-    controller.blockInstructor
-  );
-
-  router.patch(
+  router.get(
     '/get-all-instructors/unblock-instructors/:instructorId',
     controller.unblockInstructor
   );
-
   router.get('/get-blocked-instructors', controller.getBlockedInstructor);
-
   router.get('/view-instructor/:instructorId', controller.getInstructorById);
-
   router.get(
     '/get-instructor-details',
     jwtAuthMiddleware,
     roleCheckMiddleware(UserRole.Instructor),
     controller.getInstructorDetails
   );
-
+  router.get(
+    '/get-all-instructors/block-instructors',
+    controller.blockInstructor
+  );
+  router.get(
+    '/get-students-by-instructor',
+    jwtAuthMiddleware,
+    controller.getStudentsForInstructors
+  );
+  router.patch(
+    '/accept-instructor-request/:instructorId',
+    controller.verifyInstructor
+  );
+  router.patch(
+    '/change-password',
+    jwtAuthMiddleware,
+    roleCheckMiddleware(UserRole.Instructor),
+    controller.changePassword
+  );
   router.put(
     '/update-profile',
     jwtAuthMiddleware,
@@ -65,19 +66,7 @@ const instructorRouter = () => {
     roleCheckMiddleware(UserRole.Instructor),
     controller.updateProfile
   );
-
-  router.patch(
-    '/change-password',
-    jwtAuthMiddleware,
-    roleCheckMiddleware(UserRole.Instructor),
-    controller.changePassword
-  );
-
-  router.get(
-    '/get-students-by-instructor',
-    jwtAuthMiddleware,
-    controller.getStudentsForInstructors
-  );
+  router.put('/reject-instructor-request', controller.rejectRequest);
 
   return router;
 };
