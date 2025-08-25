@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
 import { CloudServiceInterface } from '../../app/services/cloudServiceInterface';
-// Select the appropriate storage backend (S3 or local) from the service index.
 import { CloudServiceImpl } from '../../frameworks/services';
 import fs from 'fs';
 import { storageConfigRepoMongoDb } from '../../frameworks/database/mongodb/repositories/storageConfigRepoMongoDb';
@@ -9,91 +8,110 @@ import { storageConfigDbRepository } from '../../app/repositories/storageConfigD
 import { StorageProvider } from '../../constants/enums';
 
 /**
+ * Helper to send JSON responses with consistent structure.
+ */
+const sendJsonResponse = (
+  res: Response,
+  statusCode: number,
+  status: 'success' | 'fail',
+  message: string,
+  data: any = null
+) => {
+  res.status(statusCode).json({ status, message, data });
+};
+
+/**
+ * Helper to stream local files supporting HTTP range requests.
+ */
+const streamLocalFile = async (
+  res: Response,
+  filePath: string,
+  contentType = 'video/mp4'
+) => {
+  const stat = await fs.promises.stat(filePath);
+  const fileSize = stat.size;
+  const range = res.req.headers.range;
+
+  if (range) {
+    // Parse range header: e.g. "bytes=500-999"
+    const parts = range.replace(/bytes=/, '').split('-');
+    const start = parseInt(parts[0], 10);
+    const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+
+    if (start >= fileSize || end >= fileSize || start > end) {
+      // Invalid range; respond with 416 Range Not Satisfiable
+      res.writeHead(416, { 'Content-Range': `bytes */${fileSize}` });
+      return res.end();
+    }
+
+    const chunkSize = end - start + 1;
+    const fileStream = fs.createReadStream(filePath, { start, end });
+
+    res.writeHead(206, {
+      'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+      'Accept-Ranges': 'bytes',
+      'Content-Length': chunkSize,
+      'Content-Type': contentType,
+    });
+
+    fileStream.pipe(res);
+  } else {
+    // No range header; stream entire file
+    res.writeHead(200, {
+      'Content-Length': fileSize,
+      'Content-Type': contentType,
+    });
+
+    fs.createReadStream(filePath).pipe(res);
+  }
+};
+
+/**
  * Controller for video streaming. Depending on the configured storage provider,
- * this handler either streams the file directly (for local storage), or
- * responds with a URL that the client can use to fetch the video (for S3
- * or external providers such as YouTube/Vimeo). Streaming local files
- * supports HTTP range requests to enable efficient playback.
+ * streams local files with range support, returns pre-signed URLs for S3,
+ * or direct URLs for external providers (e.g., YouTube/Vimeo).
  */
 const videoStreamController = (
   cloudServiceInterface: CloudServiceInterface,
   cloudServiceImpl: CloudServiceImpl
 ) => {
   const cloudService = cloudServiceInterface(cloudServiceImpl());
-  // Repository to look up the current storage provider
   const repository = storageConfigDbRepository(storageConfigRepoMongoDb());
 
   const streamVideo = asyncHandler(async (req: Request, res: Response) => {
     const videoFileId = req.params.videoFileId;
+
     if (!videoFileId) {
-      res.status(400).json({
-        status: 'fail',
-        message: 'Missing video file identifier'
-      });
-      return;
+      return sendJsonResponse(res, 400, 'fail', 'Missing video file identifier');
     }
-    // Determine which storage provider is active
+
     const config = await repository.getConfig();
     const provider = config?.provider || StorageProvider.S3;
 
-    // When using local storage, stream the file directly with support for range requests
-    if (provider === StorageProvider.Local) {
-      // Retrieve absolute path on disk
-      const filePath = await cloudService.getFile(videoFileId);
-      // Determine file size to honour range requests
-      const stat = await fs.promises.stat(filePath);
-      const fileSize = stat.size;
-      const range = req.headers.range;
-      const contentType = 'video/mp4'; // default MIME type; can be enhanced to detect based on extension
-      if (range) {
-        // Example: "bytes=500-"
-        const parts = range.replace(/bytes=/, '').split('-');
-        const start = parseInt(parts[0], 10);
-        // If end is not specified, stream to end of file
-        const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
-        const chunkSize = end - start + 1;
-        const fileStream = fs.createReadStream(filePath, { start, end });
-        res.writeHead(206, {
-          'Content-Range': `bytes ${start}-${end}/${fileSize}`,
-          'Accept-Ranges': 'bytes',
-          'Content-Length': chunkSize,
-          'Content-Type': contentType
-        });
-        fileStream.pipe(res);
-      } else {
-        // No range header; send the entire file
-        res.writeHead(200, {
-          'Content-Length': fileSize,
-          'Content-Type': contentType
-        });
-        fs.createReadStream(filePath).pipe(res);
+    switch (provider) {
+      case StorageProvider.Local: {
+        // Stream local file with range request support
+        const filePath = await cloudService.getFile(videoFileId);
+        await streamLocalFile(res, filePath);
+        break;
       }
-      return;
-    }
 
-    // For S3 storage, return a CloudFront or pre‑signed URL for the client to fetch
-    if (provider === StorageProvider.S3) {
-      const url = await cloudService.getCloudFrontUrl(videoFileId);
-      res.status(200).json({
-        status: 'success',
-        message: 'Retrieved pre‑signed URL',
-        data: url
-      });
-      return;
-    }
+      case StorageProvider.S3: {
+        // Return pre-signed CloudFront URL
+        const url = await cloudService.getCloudFrontUrl(videoFileId);
+        sendJsonResponse(res, 200, 'success', 'Retrieved pre-signed URL', url);
+        break;
+      }
 
-    // For providers that rely on external video platforms (YouTube/Vimeo),
-    // simply return the key itself which should already be a URL. Clients
-    // can embed the video using the returned URL.
-    res.status(200).json({
-      status: 'success',
-      message: 'Retrieved external video URL',
-      data: videoFileId
-    });
+      default: {
+        // External providers (YouTube/Vimeo): return URL key
+        sendJsonResponse(res, 200, 'success', 'Retrieved external video URL', videoFileId);
+        break;
+      }
+    }
   });
-  return {
-    streamVideo
-  };
+
+  return { streamVideo };
 };
 
 export default videoStreamController;

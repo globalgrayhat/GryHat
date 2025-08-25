@@ -7,28 +7,34 @@ import AppError from '../../../utils/appError';
 import { InstructorDbInterface } from '../../../app/repositories/instructorDbRepository';
 import { AuthServiceInterface } from '../../../app/services/authServicesInterface';
 import { RefreshTokenDbInterface } from '../../../app/repositories/refreshTokenDBRepository';
-import { UploadedFileInterface } from '@src/types/common';
 import { CloudServiceInterface } from '@src/app/services/cloudServiceInterface';
 import { UserRole } from '../../../constants/enums';
 
+// 👇 Helper: Upload a file if it exists
+const uploadFileIfExists = async (
+  file: Express.Multer.File | undefined,
+  cloudService: ReturnType<CloudServiceInterface>
+) => {
+  return file ? await cloudService.upload(file) : null;
+};
+
 export const instructorRegister = async (
   instructor: InstructorInterface,
-  files: Express.Multer.File[],
+  files: {
+    profilePic?: Express.Multer.File[];
+    certificates?: Express.Multer.File[];
+  },
   instructorRepository: ReturnType<InstructorDbInterface>,
   authService: ReturnType<AuthServiceInterface>,
   cloudService: ReturnType<CloudServiceInterface>
 ) => {
-  console.log(files);
-  instructor.certificates=[]
-  // Use object destructuring and default value
-  const { password = '', email = '' }: InstructorInterface = instructor;
+  instructor.certificates = [];
+
+  const { password = '', email = '' } = instructor;
   instructor.email = email.toLowerCase();
 
-  // Check if the email is already registered
-  const isEmailAlreadyRegistered = await instructorRepository.getInstructorByEmail(
-    instructor.email
-  );
-
+  // ✅ Check if email already exists
+  const isEmailAlreadyRegistered = await instructorRepository.getInstructorByEmail(instructor.email);
   if (isEmailAlreadyRegistered) {
     throw new AppError(
       'Instructor with the same email already exists..!',
@@ -36,26 +42,24 @@ export const instructorRegister = async (
     );
   }
 
+  // ✅ Upload profile picture
+  const profileFile = files.profilePic?.[0];
+  const uploadedProfile = await uploadFileIfExists(profileFile, cloudService);
+  instructor.profilePic = uploadedProfile || { name: '', url: '' };
 
-  for (const file of files) {
-    let uploadedFile;
-
-    if (file.originalname === 'profilePic') {
-      uploadedFile = await cloudService.upload(file);
-      instructor.profilePic = uploadedFile;
-    } else {
-      uploadedFile = await cloudService.upload(file);
-      instructor.certificates.push(uploadedFile);
-    }
+  // ✅ Upload certificates
+  const certificateFiles = files.certificates || [];
+  for (const cert of certificateFiles) {
+    const uploadedCert = await cloudService.upload(cert);
+    instructor.certificates.push(uploadedCert);
   }
 
-  // Hash the password if provided
+  // ✅ Hash password
   if (password) {
     instructor.password = await authService.hashPassword(password);
   }
-  console.log(instructor)
 
-  // Add instructor to the repository
+  // ✅ Save instructor to DB
   const response = await instructorRepository.addInstructor(instructor);
 
   return response
@@ -71,44 +75,52 @@ export const instructorLogin = async (
   authService: ReturnType<AuthServiceInterface>
 ) => {
   const instructor: SavedInstructorInterface | null =
-    await instructorRepository.getInstructorByEmail(email);
+    await instructorRepository.getInstructorByEmail(email.toLowerCase());
+
   if (!instructor) {
     throw new AppError(
       "Instructor doesn't exist, please register",
       HttpStatusCodes.UNAUTHORIZED
     );
   }
+
   if (!instructor.isVerified) {
     throw new AppError(
-      'Your details is under verification please try again later',
+      'Your details are under verification. Please try again later.',
       HttpStatusCodes.UNAUTHORIZED
     );
   }
+
   const isPasswordCorrect = await authService.comparePassword(
     password,
     instructor.password
   );
+
   if (!isPasswordCorrect) {
     throw new AppError(
-      'Sorry, your password is incorrect. Please try again',
+      'Incorrect password. Please try again.',
       HttpStatusCodes.UNAUTHORIZED
     );
   }
+
   const payload = {
     Id: instructor._id,
     email: instructor.email,
     role: UserRole.Instructor
   };
+
   await refreshTokenRepository.deleteRefreshToken(instructor._id);
+
   const accessToken = authService.generateToken(payload);
   const refreshToken = authService.generateRefreshToken(payload);
-  const expirationDate =
-    authService.decodedTokenAndReturnExpireDate(refreshToken);
+  const expirationDate = authService.decodedTokenAndReturnExpireDate(refreshToken);
+
   await refreshTokenRepository.saveRefreshToken(
     instructor._id,
     refreshToken,
     expirationDate
   );
+
   return {
     accessToken,
     refreshToken

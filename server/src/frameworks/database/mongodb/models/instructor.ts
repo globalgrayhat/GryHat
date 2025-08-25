@@ -1,19 +1,23 @@
 import { Schema, model } from 'mongoose';
 
-import { Certificate } from '../../../../types/instructorInterface';
-
 interface ProfilePic {
   name?: string;
   url?: string;
 }
 
+interface Certificate {
+  name: string;
+  url: string;
+}
+
 const ProfileSchema = new Schema<ProfilePic>({
-  name: {
-    type: String
-  },
-  url: {
-    type: String
-  }
+  name: { type: String },
+  url: { type: String }
+});
+
+const CertificateSchema = new Schema<Certificate>({
+  name: { type: String, required: true },
+  url: { type: String, required: true }
 });
 
 const instructorSchema = new Schema({
@@ -40,11 +44,11 @@ const instructorSchema = new Schema({
   },
   profilePic: {
     type: ProfileSchema,
-    required: true
+    required: [true, 'Profile picture is required']
   },
   certificates: {
-    type: Array<Certificate>,
-    required: true
+    type: [CertificateSchema],
+    required: [true, 'At least one certificate is required']
   },
   mobile: {
     type: String,
@@ -53,54 +57,26 @@ const instructorSchema = new Schema({
     unique: true,
     match: [/^[0-9]{10}$/, 'Please enter a valid 10-digit mobile number']
   },
-  qualification: {
-    type: String,
-    required: true
-  },
-  subjects: {
-    type: Array<string>,
-    required: true
-  },
-  experience: {
-    type: String,
-    required: true
-  },
-  skills: {
-    type: String,
-    required: true
-  },
-  about: {
-    type: String,
-    required: true
-  },
-  password: {
-    type: String,
-    required: true,
-    minlength: 8
-  },
-  isVerified: {
-    type: Boolean,
-    default: false
-  },
+  qualification: { type: String, required: true },
+  subjects: { type: [String], required: true },
+  experience: { type: String, required: true },
+  skills: { type: String, required: true },
+  about: { type: String, required: true },
+  password: { type: String, required: true, minlength: 8 },
+  isVerified: { type: Boolean, default: false },
   coursesCreated: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: 'Course'
-    }
+    { type: Schema.Types.ObjectId, ref: 'Course' }
   ],
   rejected: { type: Boolean, default: false },
   rejectedReason: { type: String, default: '' },
   isBlocked: { type: Boolean, default: false },
   blockedReason: { type: String, default: '' },
-  dateJoined: {
-    type: Date,
-    default: Date.now
-  },
-  profileUrl: {
-    type: String,
-    default: ''
-  }
+  dateJoined: { type: Date, default: Date.now },
+  profileUrl: { type: String, default: '' }
 });
+
+instructorSchema.index({ email: 1 });
+instructorSchema.index({ mobile: 1 });
 
 const Instructor = model('Instructors', instructorSchema, 'instructor');
 

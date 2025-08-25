@@ -1,37 +1,36 @@
 import { StorageProvider } from '../../../constants/enums';
-import { StorageConfig, StorageCredentials } from '../../../types/storageConfig';
+import { StorageConfig } from '../../../types/storageConfig';
 import { StorageConfigDbRepository } from '../../repositories/storageConfigDbRepository';
 
 /**
- * Use case for updating the storage configuration. Only administrators should
- * invoke this operation. The caller is responsible for validating the
- * credentials (e.g. verifying that access keys correspond to a real
- * provider) before passing them here.
- *
- * @param config The new storage configuration to persist.
- * @param repository The storage configuration repository.
- * @returns The persisted configuration.
+ * Use case for updating the media storage configuration.
+ * This operation should only be invoked by system administrators.
+ * 
+ * @param config - New storage settings to persist.
+ * @param repository - The storage config repository (injected).
+ * @returns The saved configuration after normalization.
  */
 export const updateStorageConfigU = async (
   config: StorageConfig,
   repository: StorageConfigDbRepository
 ): Promise<StorageConfig> => {
-  // For local provider we ensure credentials is undefined to avoid storing
-  // unnecessary empty object. For cloud providers we rely on the provided
-  // credentials as-is.
+  const isLocal = config.provider === StorageProvider.Local;
+
+  // Avoid persisting unnecessary credentials for local storage.
   const normalizedConfig: StorageConfig = {
     provider: config.provider,
-    credentials:
-      config.provider === StorageProvider.Local ? undefined : config.credentials
+    credentials: isLocal ? undefined : config.credentials
   };
+
   return await repository.upsertConfig(normalizedConfig);
 };
 
 /**
- * Use case for retrieving the current storage configuration. This may be
- * necessary for displaying the current settings in an admin UI. If no
- * configuration exists, null is returned so the caller can decide on
- * defaults.
+ * Use case for retrieving the currently active storage configuration.
+ * This is useful for admin dashboards, upload services, or diagnostics.
+ * 
+ * @param repository - The storage config repository (injected).
+ * @returns The active storage configuration, or null if none exists.
  */
 export const getStorageConfigU = async (
   repository: StorageConfigDbRepository

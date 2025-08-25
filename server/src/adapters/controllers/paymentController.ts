@@ -18,33 +18,45 @@ const paymentController = (
   const paymentService = paymentServiceInterface(paymentServiceImpl());
   const dbRepositoryCourse = courseDbInterface(courseDbImpl());
 
+  /**
+   * Unified response sender to avoid repetitive response formatting.
+   *
+   * @param res Express Response object
+   * @param data Data to send in response
+   * @param message Optional response message (default: 'Success')
+   * @param statusCode HTTP status code (default: 200)
+   */
+  const sendResponse = (
+    res: Response,
+    data: any,
+    message = 'Success',
+    statusCode = 200
+  ) => {
+    return res.status(statusCode).json({
+      status: 'success',
+      message,
+      data
+    });
+  };
+
+  // Get payment configuration (e.g., Stripe config)
   const getConfig = asyncHandler(async (req: Request, res: Response) => {
     const config = getConfigU(paymentService);
-    res.status(200).json({
-      status: 'success',
-      message: 'Successfully completed payment',
-      data: config
-    });
+    sendResponse(res, config, 'Successfully retrieved payment configuration');
   });
 
-  const createPaymentIntent = asyncHandler(
-    async (req: Request, res: Response) => {
-      const { courseId }: { courseId: string } = req.body;
-      const response = await createPaymentIntentU(
-        courseId,
-        dbRepositoryCourse,
-        paymentService
-      );
-      const { client_secret } = response;
-      res.status(200).json({
-        status: 'success',
-        message: 'Successfully completed payment',
-        data: {
-          clientSecret: client_secret
-        }
-      });
-    }
-  );
+  // Create a payment intent for a specific course
+  const createPaymentIntent = asyncHandler(async (req: Request, res: Response) => {
+    const { courseId }: { courseId: string } = req.body;
+    const response = await createPaymentIntentU(
+      courseId,
+      dbRepositoryCourse,
+      paymentService
+    );
+    const { client_secret } = response;
+
+    sendResponse(res, { clientSecret: client_secret }, 'Payment intent created successfully');
+  });
 
   return {
     getConfig,

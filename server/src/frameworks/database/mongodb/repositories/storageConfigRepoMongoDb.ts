@@ -1,50 +1,49 @@
-import StorageConfigModel, {
-  StorageConfigDocument
-} from '../models/storageConfig';
+import StorageConfigModel from '../models/storageConfig';
 import { StorageProvider } from '../../../../constants/enums';
-import { StorageConfig, StorageCredentials } from '../../../../types/storageConfig';
+import { StorageConfig } from '../../../../types/storageConfig';
 
 /**
- * MongoDB repository for interacting with the storage configuration. The
- * configuration is stored as a single document in the `StorageConfig` collection.
- * These helper functions encapsulate the persistence logic and hide
- * implementation details from the rest of the application.
+ * MongoDB-based implementation of the storage configuration repository.
+ * Ensures a single configuration document is managed centrally.
+ * Automatically defaults to `local` storage if no configuration is present.
  */
 export const storageConfigRepoMongoDb = () => {
   /**
-   * Retrieves the current storage configuration. If no configuration has been
-   * explicitly saved, a default is returned. The default uses the S3 provider
-   * and pulls credentials from environment variables via the config module.
+   * Fetch the current storage configuration from the database.
+   * If no configuration exists, defaults to `local` provider with no credentials.
+   *
+   * @returns Storage configuration object.
    */
-  const getConfig = async (): Promise<StorageConfig | null> => {
-    const doc = await StorageConfigModel.findOne().lean<StorageConfigDocument | null>();
-    if (!doc) {
-      return null;
-    }
+  const getConfig = async (): Promise<StorageConfig> => {
+    const doc = await StorageConfigModel.findOne().lean();
+
     return {
-      provider: doc.provider as StorageProvider,
-      credentials: doc.credentials ?? undefined
+      provider: doc?.provider ?? StorageProvider.Local,
+      credentials: doc?.credentials ?? undefined
     };
   };
 
   /**
-   * Creates or updates the storage configuration. Only one configuration
-   * document is stored, so subsequent calls will overwrite the previous
-   * configuration. When updating, all fields are replaced to ensure
-   * consistency. Partial updates should be performed by the caller prior to
-   * invocation.
+   * Insert or update the storage configuration.
+   * If a config already exists, it will be completely replaced with the new one.
    *
-   * @param config The new storage configuration to persist.
+   * @param config The new configuration object to save.
+   * @returns The saved configuration object.
    */
   const upsertConfig = async (config: StorageConfig): Promise<StorageConfig> => {
     await StorageConfigModel.findOneAndUpdate(
-      {},
+      {}, // Always operate on the single config document
       {
         provider: config.provider,
-        credentials: config.credentials ?? {}
+        credentials: config.provider === StorageProvider.Local ? undefined : config.credentials
       },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
+      {
+        upsert: true,
+        new: true,
+        setDefaultsOnInsert: true
+      }
     );
+
     return config;
   };
 
@@ -54,4 +53,4 @@ export const storageConfigRepoMongoDb = () => {
   };
 };
 
-export type StorageConfigRepoMongoDb = typeof storageConfigRepoMongoDb;
+export type StorageConfigRepoMongoDb = ReturnType<typeof storageConfigRepoMongoDb>;

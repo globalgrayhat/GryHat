@@ -1,27 +1,30 @@
 import { StorageConfig } from '../../types/storageConfig';
 
 /**
- * Repository interface for persisting and retrieving the storage configuration.
- * Use dependency injection to pass in a concrete implementation at runtime.
+ * Abstract interface for accessing the storage configuration repository.
+ * Used by use cases to avoid hardcoding the DB implementation.
  */
 export type StorageConfigDbRepository = {
-  /** Returns the current storage configuration or null if none exists. */
+  /**
+   * Get the current storage configuration.
+   * Returns `null` if no config is found.
+   */
   getConfig: () => Promise<StorageConfig | null>;
-  /** Inserts or updates the storage configuration. */
+
+  /**
+   * Insert or update the current storage configuration.
+   */
   upsertConfig: (config: StorageConfig) => Promise<StorageConfig>;
 };
 
 /**
- * Factory for creating the repository from a concrete implementation. This
- * indirection enables mocking during testing and decouples usecases from
- * database-specific details.
+ * Factory function that wraps a concrete implementation (e.g., MongoDB).
+ * Promotes loose coupling and easier testing/mocking.
  */
 export const storageConfigDbRepository = (repository: {
   getConfig: () => Promise<StorageConfig | null>;
   upsertConfig: (config: StorageConfig) => Promise<StorageConfig>;
-}): StorageConfigDbRepository => {
-  return {
-    getConfig: repository.getConfig,
-    upsertConfig: repository.upsertConfig
-  };
-};
+}): StorageConfigDbRepository => ({
+  getConfig: repository.getConfig,
+  upsertConfig: repository.upsertConfig
+});

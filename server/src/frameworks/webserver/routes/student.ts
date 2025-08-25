@@ -1,10 +1,10 @@
 import express from 'express';
-import studentController from '../../.././adapters/controllers/studentController';
+import studentController from '../../../adapters/controllers/studentController';
 import { studentDbRepository } from '../../../app/repositories/studentDbRepository';
 import { studentRepositoryMongoDB } from '../../../frameworks/database/mongodb/repositories/studentsRepoMongoDb';
 import { authService } from '../../../frameworks/services/authService';
 import { authServiceInterface } from '../../../app/services/authServicesInterface';
-import upload from '../middlewares/multer';
+import upload from '../middlewares/multer';  // Importing multer middleware
 import { RedisClient } from '@src/app';
 import { cachingMiddleware } from '../middlewares/redisCaching';
 import { redisCacheRepository } from '../../../frameworks/database/redis/redisCacheRepository';
@@ -28,6 +28,7 @@ const studentRouter = (redisClient: RedisClient) => {
     redisCacheRepository,
     redisClient
   );
+
   router.patch(
     '/change-password',
     jwtAuthMiddleware,
@@ -37,7 +38,7 @@ const studentRouter = (redisClient: RedisClient) => {
   router.put(
     '/update-profile',
     jwtAuthMiddleware,
-    upload.single('image'),
+    upload.single('image'),  // Correct use of .single() method
     controller.updateProfile
   );
 
@@ -75,4 +76,5 @@ const studentRouter = (redisClient: RedisClient) => {
 
   return router;
 };
+
 export default studentRouter;

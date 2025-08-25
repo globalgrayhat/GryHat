@@ -13,6 +13,7 @@ import { paymentRepositoryMongodb } from '../../../frameworks/database/mongodb/r
 import {  categoryDbInterface } from '../../../app/repositories/categoryDbRepository';
 import { categoryRepositoryMongodb } from '../../../frameworks/database/mongodb/repositories/categoryRepoMongoDb';
 
+
 const adminRouter = () => {
   const router = express.Router();
   const controller = adminController(
@@ -31,7 +32,8 @@ const adminRouter = () => {
   );
 
   router.get("/dashboard-details",controller.getDashBoardDetails)
- 
+  router.get('/storage-config', controller.getStorageConfig);
+  router.put('/storage-config', controller.updateStorageConfig);
   router.get('/graph-data',controller.getGraphDetails)
 
   return router;

@@ -9,9 +9,20 @@ import { authServiceInterface } from '../../../app/services/authServicesInterfac
 import roleCheckMiddleware from '../middlewares/roleCheckMiddleware';
 import { UserRole } from '../../../constants/enums';
 import jwtAuthMiddleware from '../middlewares/userAuth';
-import upload from '../middlewares/multer';
+import multer from 'multer';
 import { courseDbRepository } from '../../../app/repositories/courseDbRepository';
 import { courseRepositoryMongodb } from '../../../frameworks/database/mongodb/repositories/courseReposMongoDb';
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/');
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + '-' + file.originalname);
+  },
+});
+
+const upload = multer({ storage: storage });
 
 const instructorRouter = () => {
   const router = express.Router();
@@ -25,38 +36,16 @@ const instructorRouter = () => {
     sendEmailServiceInterface,
     sendEmailService
   );
-  //* Instructor management
+
   router.get('/view-instructor-requests', controller.getInstructorRequests);
-
-  router.patch(
-    '/accept-instructor-request/:instructorId',
-    controller.verifyInstructor
-  );
-
+  router.patch('/accept-instructor-request/:instructorId', controller.verifyInstructor);
   router.put('/reject-instructor-request', controller.rejectRequest);
-
   router.get('/get-all-instructors', controller.getAllInstructor);
-
-  router.patch(
-    '/get-all-instructors/block-instructors',
-    controller.blockInstructor
-  );
-
-  router.patch(
-    '/get-all-instructors/unblock-instructors/:instructorId',
-    controller.unblockInstructor
-  );
-
+  router.patch('/get-all-instructors/block-instructors', controller.blockInstructor);
+  router.patch('/get-all-instructors/unblock-instructors/:instructorId', controller.unblockInstructor);
   router.get('/get-blocked-instructors', controller.getBlockedInstructor);
-
   router.get('/view-instructor/:instructorId', controller.getInstructorById);
-
-  router.get(
-    '/get-instructor-details',
-    jwtAuthMiddleware,
-    roleCheckMiddleware(UserRole.Instructor),
-    controller.getInstructorDetails
-  );
+  router.get('/get-instructor-details', jwtAuthMiddleware, roleCheckMiddleware(UserRole.Instructor), controller.getInstructorDetails);
 
   router.put(
     '/update-profile',
@@ -66,18 +55,8 @@ const instructorRouter = () => {
     controller.updateProfile
   );
 
-  router.patch(
-    '/change-password',
-    jwtAuthMiddleware,
-    roleCheckMiddleware(UserRole.Instructor),
-    controller.changePassword
-  );
-
-  router.get(
-    '/get-students-by-instructor',
-    jwtAuthMiddleware,
-    controller.getStudentsForInstructors
-  );
+  router.patch('/change-password', jwtAuthMiddleware, roleCheckMiddleware(UserRole.Instructor), controller.changePassword);
+  router.get('/get-students-by-instructor', jwtAuthMiddleware, controller.getStudentsForInstructors);
 
   return router;
 };

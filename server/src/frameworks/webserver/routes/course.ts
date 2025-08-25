@@ -6,7 +6,7 @@ import roleCheckMiddleware from '../middlewares/roleCheckMiddleware';
 import { UserRole } from '../../../constants/enums';
 import { cloudServiceInterface } from '../../../app/services/cloudServiceInterface';
 import { CloudServiceImpl } from '../../../frameworks/services';
-import upload from '../middlewares/multer';
+import multer from 'multer';
 import { quizDbRepository } from '../../../app/repositories/quizDbRepository';
 import { quizRepositoryMongodb } from '../../../frameworks/database/mongodb/repositories/quizzDbRepository';
 import { lessonDbRepository } from '../../../app/repositories/lessonDbRepository';
@@ -20,6 +20,17 @@ import { redisCacheRepository } from '../../../frameworks/database/redis/redisCa
 import { cacheRepositoryInterface } from '../../../app/repositories/cachedRepoInterface';
 import { RedisClient } from '../../../app';
 import { cachingMiddleware } from '../middlewares/redisCaching';
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/');
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + '-' + file.originalname);
+  },
+});
+
+const upload = multer({ storage: storage });
 
 const courseRouter = (redisClient: RedisClient) => {
   const router = express.Router();
@@ -40,7 +51,7 @@ const courseRouter = (redisClient: RedisClient) => {
     redisCacheRepository,
     redisClient
   );
-  //* Add course
+
   router.post(
     '/instructors/add-course',
     jwtAuthMiddleware,
@@ -64,7 +75,6 @@ const courseRouter = (redisClient: RedisClient) => {
   );
 
   router.get('/get-course/:courseId', controller.getIndividualCourse);
-
   router.get(
     '/get-course-by-instructor',
     jwtAuthMiddleware,
@@ -94,7 +104,6 @@ const courseRouter = (redisClient: RedisClient) => {
   );
 
   router.get('/get-lessons-by-id/:lessonId', controller.getLessonById);
-
   router.get('/get-quizzes-by-lesson/:lessonId', controller.getQuizzesByLesson);
 
   router.post(
@@ -160,4 +169,5 @@ const courseRouter = (redisClient: RedisClient) => {
 
   return router;
 };
+
 export default courseRouter;

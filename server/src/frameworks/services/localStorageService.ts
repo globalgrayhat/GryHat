@@ -3,54 +3,66 @@ import path from 'path';
 import crypto from 'crypto';
 
 /**
- * A service for storing files on the local filesystem. The API surface
- * intentionally mirrors that of the S3 service so that callers can remain
- * agnostic of where their files are persisted. Files are written to an
- * `uploads` directory relative to the project root. When adding more complex
- * features (e.g. resumable uploads), replace these implementations with
- * calls to an appropriate library such as `tus-node-server`.
+ * خدمة لتخزين الملفات في النظام المحلي.
+ * محاكاة لـ S3 API للمرونة.
  */
 export const localStorageService = () => {
-  const uploadDir = path.resolve(process.cwd(), 'uploads');
+  const uploadDir = path.resolve(process.cwd(), 'uploads');  // تحديد المجلد الذي سيتم فيه تخزين الملفات
 
   /**
-   * Generates a random file name to avoid collisions. The original file
-   * extension is preserved where possible.
+   * توليد اسم ملف عشوائي لتجنب التصادم.
+   * يتم الاحتفاظ بالامتداد الأصلي للملف.
    */
-  const generateFilename = (originalName: string) => {
+  const generateFilename = (originalName: string): string => {
     const randomString = crypto.randomBytes(16).toString('hex');
     const ext = path.extname(originalName);
     return `${randomString}${ext}`;
   };
 
   /**
-   * Writes a file buffer to disk and returns its key. Consumers should treat
-   * the returned key as an opaque value and should not rely on its format.
+   * التحقق من حجم الملف إذا كان يتجاوز الحد المسموح به (10 ميجابايت في هذه الحالة).
    */
-  const uploadFile = async (file: Express.Multer.File) => {
-    await fs.promises.mkdir(uploadDir, { recursive: true });
-    const filename = generateFilename(file.originalname);
-    const filePath = path.join(uploadDir, filename);
-    // Node's Buffer may be based on SharedArrayBuffer which can cause
-    // type mismatch errors with the fs typings. Convert to a Uint8Array
-    // explicitly so that it satisfies the ArrayBufferView constraint.
-    const arrayBuffer = file.buffer.buffer.slice(
-      file.buffer.byteOffset,
-      file.buffer.byteOffset + file.buffer.byteLength
-    );
-    const uint8 = new Uint8Array(arrayBuffer);
-    await fs.promises.writeFile(filePath, uint8);
-    return {
-      name: file.originalname,
-      key: filename
-    };
+  const checkFileSize = (file: Express.Multer.File) => {
+    const MAX_SIZE = 10 * 1024 * 1024;  // 10 ميجابايت بالبايت
+    if (file.size > MAX_SIZE) {
+      throw new Error('File is too large. Maximum size is 10MB');
+    }
   };
 
   /**
-   * Uploads a file and immediately returns a relative URL that clients can use
-   * to download the file. For local storage this simply prepends a public
-   * `/uploads` prefix to the key. In production you might serve the static
-   * files via a separate static file server.
+   * رفع الملف إلى النظام المحلي وإرجاع اسم الملف.
+   */
+  const uploadFile = async (file: Express.Multer.File) => {
+    // التأكد من أن الملف والـ Buffer موجودان
+    if (!file || !file.buffer) {
+      throw new Error('File or file buffer is undefined');
+    }
+
+    // التحقق من حجم الملف
+    checkFileSize(file);
+
+    await fs.promises.mkdir(uploadDir, { recursive: true });
+    const filename = generateFilename(file.originalname);
+    const filePath = path.join(uploadDir, filename);
+
+    // تحويل Buffer إلى Uint8Array قبل الكتابة
+    const uint8 = new Uint8Array(file.buffer);
+
+    try {
+      // كتابة الملف إلى الخادم
+      await fs.promises.writeFile(filePath, uint8);
+      return {
+        name: file.originalname,
+        key: filename
+      };
+    } catch (error) {
+      console.error('Error writing file:', error);
+      throw new Error('Error saving the file to the server');
+    }
+  };
+
+  /**
+   * رفع الملف وإرجاع URL للوصول إلى الملف.
    */
   const uploadAndGetUrl = async (file: Express.Multer.File) => {
     const result = await uploadFile(file);
@@ -61,18 +73,14 @@ export const localStorageService = () => {
   };
 
   /**
-   * Returns the absolute path to a file on disk given its key. The consumer
-   * should handle reading the file contents or streaming it. No existence
-   * checks are performed here.
+   * إرجاع المسار المطلق للملف باستخدام المفتاح الخاص به.
    */
   const getFile = async (fileKey: string) => {
     return path.join(uploadDir, fileKey);
   };
 
   /**
-   * Returns a readable stream for a given file key. This enables efficient
-   * streaming of large video files over HTTP. If the file does not exist,
-   * the underlying call will throw.
+   * إرجاع تدفق القراءة لملف الفيديو (مفيد لبث الفيديو).
    */
   const getVideoStream = async (key: string): Promise<NodeJS.ReadableStream> => {
     const filePath = path.join(uploadDir, key);
@@ -80,24 +88,21 @@ export const localStorageService = () => {
   };
 
   /**
-   * For local storage there is no CloudFront distribution. We still return
-   * a URL relative to the `/uploads` directory so that callers can treat it
-   * uniformly with other providers.
+   * بالنسبة للتخزين المحلي، لا يوجد URL لـ CloudFront، بل نستخدم المسار النسبي.
    */
-  const getCloudFrontUrl = async (fileKey: string) => {
+  const getCloudFrontUrl = async (fileKey: string): Promise<string> => {
     return `/uploads/${fileKey}`;
   };
 
   /**
-   * Deletes a file from the filesystem. If the file does not exist, the
-   * promise resolves without throwing.
+   * حذف الملف من النظام المحلي.
    */
   const removeFile = async (fileKey: string) => {
     const filePath = path.join(uploadDir, fileKey);
     try {
       await fs.promises.unlink(filePath);
-    } catch {
-      /* silently ignore missing files */
+    } catch (err) {
+      console.error('File not found:', err);
     }
   };
 

@@ -24,15 +24,20 @@ import { AdminDbInterface } from '@src/app/repositories/adminDbRepository';
 import { AdminRepositoryMongoDb } from '@src/frameworks/database/mongodb/repositories/adminRepoMongoDb';
 import { RefreshTokenDbInterface } from '@src/app/repositories/refreshTokenDBRepository';
 import { RefreshTokenRepositoryMongoDb } from '@src/frameworks/database/mongodb/repositories/refreshTokenRepoMongoDb';
-// Import from the service index rather than directly from S3. This allows
-// swapping implementations via configuration.
+// Import cloud service interface and implementation (e.g., S3)
 import { CloudServiceImpl } from '@src/frameworks/services';
 import { CloudServiceInterface } from '@src/app/services/cloudServiceInterface';
+
+/**
+ * Factory function to create the auth controller.
+ * It accepts all service/repository interfaces and implementations as dependencies.
+ * This promotes flexibility and easier testing/mocking.
+ */
 const authController = (
   authServiceInterface: AuthServiceInterface,
   authServiceImpl: AuthService,
-  cloudServiceInterface:CloudServiceInterface,
-  CloudServiceImpl:CloudServiceImpl,
+  cloudServiceInterface: CloudServiceInterface,
+  CloudServiceImpl: CloudServiceImpl,
   studentDbRepository: StudentsDbInterface,
   studentDbRepositoryImpl: StudentRepositoryMongoDB,
   instructorDbRepository: InstructorDbInterface,
@@ -44,19 +49,82 @@ const authController = (
   refreshTokenDbRepository: RefreshTokenDbInterface,
   refreshTokenDbRepositoryImpl: RefreshTokenRepositoryMongoDb
 ) => {
+  // Instantiate repositories and services using the passed implementations
   const dbRepositoryUser = studentDbRepository(studentDbRepositoryImpl());
-  const dbRepositoryInstructor = instructorDbRepository(
-    instructorDbRepositoryImpl()
-  );
+  const dbRepositoryInstructor = instructorDbRepository(instructorDbRepositoryImpl());
   const dbRepositoryAdmin = adminDbRepository(adminDbRepositoryImpl());
-  const dbRepositoryRefreshToken = refreshTokenDbRepository(
-    refreshTokenDbRepositoryImpl()
-  );
+  const dbRepositoryRefreshToken = refreshTokenDbRepository(refreshTokenDbRepositoryImpl());
+
   const authService = authServiceInterface(authServiceImpl());
-  const cloudService = cloudServiceInterface(CloudServiceImpl())
+  const cloudService = cloudServiceInterface(CloudServiceImpl());
   const googleAuthService = googleAuthServiceInterface(googleAuthServiceImpl());
 
-  //? STUDENT
+  /**
+   * Unified response sender to reduce code duplication.
+   * Sends JSON response with standardized format.
+   *
+   * @param res - Express Response object
+   * @param statusCode - HTTP status code
+   * @param message - Message describing the response
+   * @param data - Additional data to include in the response (e.g., tokens)
+   */
+  const sendResponse = (
+    res: Response,
+    statusCode: number,
+    message: string,
+    data: Record<string, any> = {}
+  ) => {
+    return res.status(statusCode).json({
+      status: statusCode >= 400 ? 'error' : 'success',
+      message,
+      ...data
+    });
+  };
+
+  /**
+   * Helper function to handle login logic for student, instructor, and admin.
+   * This avoids duplicating the same login flow.
+   *
+   * @param req - Express Request object
+   * @param res - Express Response object
+   * @param loginFn - The login use case function to call
+   * @param userRepo - The relevant user repository
+   * @param successMessage - Message to send on successful login
+   */
+  const handleLogin = async (
+    req: Request,
+    res: Response,
+    loginFn: (
+      email: string,
+      password: string,
+      userRepo: any,
+      refreshTokenRepo: any,
+      authService: any
+    ) => Promise<{ accessToken: string; refreshToken: string }>,
+    userRepo: any,
+    successMessage: string
+  ) => {
+    try {
+      const { email, password } = req.body;
+      const { accessToken, refreshToken } = await loginFn(
+        email,
+        password,
+        userRepo,
+        dbRepositoryRefreshToken,
+        authService
+      );
+      sendResponse(res, 200, successMessage, { accessToken, refreshToken });
+    } catch (error) {
+      sendResponse(res, 500, 'Error during login', { error: error.message });
+    }
+  };
+
+  // ================= STUDENT =================
+
+  /**
+   * Register a new student.
+   * Calls the studentRegister use case and sends back tokens on success.
+   */
   const registerStudent = asyncHandler(async (req: Request, res: Response) => {
     const student: StudentRegisterInterface = req.body;
     const { accessToken, refreshToken } = await studentRegister(
@@ -65,53 +133,76 @@ const authController = (
       dbRepositoryRefreshToken,
       authService
     );
-    res.status(200).json({
-      status: 'success',
-      message: 'Successfully registered the user',
+    sendResponse(res, 200, 'Successfully registered the user', {
       accessToken,
       refreshToken
     });
   });
 
-  const loginStudent = asyncHandler(async (req: Request, res: Response) => {
-    const { email, password }: { email: string; password: string } = req.body;
-    const { accessToken, refreshToken } = await studentLogin(
-      email,
-      password,
-      dbRepositoryUser,
-      dbRepositoryRefreshToken,
-      authService
-    );
-    res.status(200).json({
-      status: 'success',
-      message: 'User logged in successfully',
-      accessToken,
-      refreshToken
-    });
-  });
+  /**
+   * Student login handler using unified login helper.
+   */
+  const loginStudent = asyncHandler(async (req: Request, res: Response) =>
+    handleLogin(req, res, studentLogin, dbRepositoryUser, 'User logged in successfully')
+  );
 
+  /**
+   * Login with Google for student.
+   * Uses Google Auth service and returns tokens.
+   */
   const loginWithGoogle = asyncHandler(async (req: Request, res: Response) => {
     const { credential }: { credential: string } = req.body;
-    const { accessToken, refreshToken } = await signInWithGoogle(
-      credential,
-      googleAuthService,
-      dbRepositoryUser,
-      dbRepositoryRefreshToken,
-      authService
-    );
-    res.status(200).json({
-      status: 'success',
-      message: 'Successfully logged in with google',
-      accessToken,
-      refreshToken
-    });
-  }); 
+    if (!credential) {
+      sendResponse(res, 400, 'Google login credential is missing');
+      return;
+    }
 
-  //? INSTRUCTOR
-  const registerInstructor = asyncHandler(
-    async (req: Request, res: Response) => {
-      const files: Express.Multer.File[] = req.files as Express.Multer.File[];
-      const instructor: InstructorInterface = req.body;
+    try {
+      const { accessToken, refreshToken } = await signInWithGoogle(
+        credential,
+        googleAuthService,
+        dbRepositoryUser,
+        dbRepositoryRefreshToken,
+        authService
+      );
+      sendResponse(res, 200, 'Successfully logged in with Google', {
+        accessToken,
+        refreshToken
+      });
+    } catch (error) {
+      sendResponse(res, 500, 'Error during Google login', { error: error.message });
+    }
+  });
+
+  // =============== INSTRUCTOR ===============
+
+  /**
+   * Register a new instructor.
+   * Handles file uploads and calls instructorRegister use case.
+   * Sends a pending verification message.
+   */
+  const registerInstructor = asyncHandler(async (req: Request, res: Response) => {
+    const files = req.files as {
+      profilePic?: Express.Multer.File[];
+      certificates?: Express.Multer.File[];
+    };
+
+    if (!files || !files.profilePic || !files.certificates) {
+      sendResponse(res, 400, 'Profile picture and certificates are required');
+      return;
+    }
+
+    const instructor: InstructorInterface = req.body;
+
+    try {
+      // رفع الصورة الشخصية
+      const profilePicUpload = await cloudService.uploadAndGetUrl(files.profilePic[0]);
+
+      // رفع الشهادات بشكل متوازي
+      const certificatesUploads = await Promise.all(
+        files.certificates.map(cert => cloudService.uploadAndGetUrl(cert))
+      );
+
       await instructorRegister(
         instructor,
         files,
@@ -119,48 +210,34 @@ const authController = (
         authService,
         cloudService
       );
-      res.status(200).json({
-        status: 'success',
-        message:
-          'Your registration is pending verification by the administrators.You will receive an email once your registration is approved'
-      });
+
+      sendResponse(
+        res,
+        200,
+        'Your registration is pending verification by the administrators. You will receive an email once your registration is approved'
+      );
+    } catch (error) {
+      sendResponse(res, 500, 'Error during instructor registration', { error: error.message });
     }
+  });
+
+  /**
+   * Instructor login handler using unified login helper.
+   */
+  const loginInstructor = asyncHandler(async (req: Request, res: Response) =>
+    handleLogin(req, res, instructorLogin, dbRepositoryInstructor, 'Instructor logged in successfully')
   );
-  const loginInstructor = asyncHandler(async (req: Request, res: Response) => {
-    const { email, password }: { email: string; password: string } = req.body;
-    const { accessToken, refreshToken } = await instructorLogin(
-      email,
-      password,
-      dbRepositoryInstructor,
-      dbRepositoryRefreshToken,
-      authService
-    );
-    res.status(200).json({
-      status: 'success',
-      message: 'Instructor logged in successfully',
-      accessToken,
-      refreshToken
-    });
-  });
 
-  //? ADMIN
-  const loginAdmin = asyncHandler(async (req: Request, res: Response) => {
-    const { email, password }: { email: string; password: string } = req.body;
-    const { accessToken, refreshToken } = await adminLogin(
-      email,
-      password,
-      dbRepositoryAdmin,
-      dbRepositoryRefreshToken,
-      authService
-    );
-    res.status(200).json({
-      status: 'success',
-      message: 'Successfully logged in ',
-      accessToken,
-      refreshToken
-    });
-  });
+  // ================== ADMIN ==================
 
+  /**
+   * Admin login handler using unified login helper.
+   */
+  const loginAdmin = asyncHandler(async (req: Request, res: Response) =>
+    handleLogin(req, res, adminLogin, dbRepositoryAdmin, 'Successfully logged in')
+  );
+
+  // Export controller methods
   return {
     loginStudent,
     registerStudent,

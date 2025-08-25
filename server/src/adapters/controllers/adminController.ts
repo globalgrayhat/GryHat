@@ -17,6 +17,11 @@ import { PaymentImplInterface } from '../../frameworks/database/mongodb/reposito
 import { CategoryDbInterface } from '../../app/repositories/categoryDbRepository';
 import { CategoryRepoMongodbInterface } from '../../frameworks/database/mongodb/repositories/categoryRepoMongoDb';
 
+import { storageConfigDbRepository } from '../../app/repositories/storageConfigDbRepository';
+import { storageConfigRepoMongoDb } from '../../frameworks/database/mongodb/repositories/storageConfigRepoMongoDb';
+
+import { updateStorageConfigU, getStorageConfigU } from '../../app/usecases/admin/updateStorageConfig';
+
 const adminController = (
   adminDbRepository: AdminDbInterface,
   adminDbRepositoryImpl: AdminRepositoryMongoDb,
@@ -31,48 +36,66 @@ const adminController = (
   categoryDbRepository: CategoryDbInterface,
   categoryDbRepositoryImpl: CategoryRepoMongodbInterface
 ) => {
-  const dbRepositoryAdmin = adminDbRepository(adminDbRepositoryImpl());
-  const dbRepositoryCourse = courseDbRepository(courseDbRepositoryImpl());
-  const dbRepositoryInstructor = instructorDbRepository(
-    instructorDbRepositoryImpl()
-  );
-  const dbRepositoryStudent = studentDbRepository(studentDbRepositoryImpl());
-  const dbRepositoryPayment = paymentDbRepository(paymentDbRepositoryImpl());
-  const dbRepositoryCategory = categoryDbRepository(categoryDbRepositoryImpl());
+  // Instantiate all repositories once
+  const repositories = {
+    admin: adminDbRepository(adminDbRepositoryImpl()),
+    course: courseDbRepository(courseDbRepositoryImpl()),
+    instructor: instructorDbRepository(instructorDbRepositoryImpl()),
+    student: studentDbRepository(studentDbRepositoryImpl()),
+    payment: paymentDbRepository(paymentDbRepositoryImpl()),
+    category: categoryDbRepository(categoryDbRepositoryImpl()),
+    storageConfig: storageConfigDbRepository(storageConfigRepoMongoDb())
+  };
 
-  const getDashBoardDetails = asyncHandler(
-    async (req: Request, res: Response) => {
-      const response = await getDashBoardDetailsU(
-        dbRepositoryCourse,
-        dbRepositoryInstructor,
-        dbRepositoryStudent,
-        dbRepositoryPayment
-      );
+  const sendResponse = (
+    res: Response,
+    data: any,
+    message = 'Success',
+    statusCode = 200
+  ) => {
+    return res.status(statusCode).json({
+      status: 'success',
+      message,
+      data
+    });
+  };
 
-      res.status(200).json({
-        status: 'success',
-        message: 'Successfully retrieved dashboard details',
-        data: response
-      });
-    }
-  );
+  const getDashBoardDetails = asyncHandler(async (req: Request, res: Response) => {
+    const data = await getDashBoardDetailsU(
+      repositories.course,
+      repositories.instructor,
+      repositories.student,
+      repositories.payment
+    );
+    sendResponse(res, data, 'Successfully retrieved dashboard details');
+  });
 
   const getGraphDetails = asyncHandler(async (req: Request, res: Response) => {
-    const response = await getGraphDetailsU(
-      dbRepositoryCourse,
-      dbRepositoryCategory,
-      dbRepositoryPayment
+    const data = await getGraphDetailsU(
+      repositories.course,
+      repositories.category,
+      repositories.payment
     );
-    res.status(200).json({
-      status: 'success',
-      message: 'Successfully retrieved graph details',
-      data: response
-    });
+    sendResponse(res, data, 'Successfully retrieved graph details');
+  });
+
+
+  const getStorageConfig = asyncHandler(async (req: Request, res: Response) => {
+    const config = await getStorageConfigU(repositories.storageConfig);
+    sendResponse(res, config, 'Current storage configuration');
+  });
+
+  const updateStorageConfig = asyncHandler(async (req: Request, res: Response) => {
+    const { provider, credentials } = req.body;
+    const updatedConfig = await updateStorageConfigU({ provider, credentials }, repositories.storageConfig);
+    sendResponse(res, updatedConfig, 'Storage configuration updated');
   });
 
   return {
     getDashBoardDetails,
-    getGraphDetails
+    getGraphDetails,
+    getStorageConfig,
+    updateStorageConfig
   };
 };
 
