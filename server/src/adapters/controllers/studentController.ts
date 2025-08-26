@@ -69,12 +69,10 @@ const studentController = (
       const studentId: string | undefined = req.user?.Id;
       const profilePic: {
         name: string;
-        key: string;
         path: string;
       } = {
         name: req.file?.originalname as string,
-        key: req.file?.filename as string,
-        path: `uploads/${req.file?.filename as string}`
+        path: req.file?.filename as string
       };
       await updateProfileU(
         studentId,

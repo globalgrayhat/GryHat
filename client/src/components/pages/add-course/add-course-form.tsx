@@ -41,16 +41,17 @@ const CombinedForm: React.FC = () => {
   const [categories, setCategories] = useState<ApiResponseCategory[] | null>(
     null
   );
-
+  const [loading, setLoading] = useState(false);
   const handleFormSubmit = async (
     values: CourseFormValues,
     { resetForm }: FormikHelpers<CourseFormValues>
   ) => {
     try {
+      setLoading(true);
       const formData = new FormData();
-      guidelines && formData.append("files", guidelines);
-      thumbnail && formData.append("files", thumbnail);
-      introduction && formData.append("files",introduction)
+      guidelines && formData.append("guidelines", guidelines);
+      thumbnail && formData.append("thumbnail", thumbnail);
+      introduction && formData.append("introduction",introduction)
       Object.keys(values).forEach((key) => formData.append(key, values[key]));
       const response = await addCourse(formData);
       toast.success(response.data.message, {
@@ -64,6 +65,8 @@ const CombinedForm: React.FC = () => {
       toast.error(error.data.message, {
         position: toast.POSITION.BOTTOM_RIGHT,
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -83,6 +86,14 @@ const CombinedForm: React.FC = () => {
   const handlePaid = () => {
     setPaid(!paid);
   };
+ 
+  if (loading) {
+    return (
+    <div className='flex justify-center items-center h-screen'>
+      <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
+    </div>
+    )
+  }
 
   return (
     <div className='mb-20'>
@@ -151,8 +162,9 @@ const CombinedForm: React.FC = () => {
                     name='category'
                     className='pl-2 block w-80 rounded-md border-0 py-2.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-700 focus-visible:outline-none focus-visible:ring-blue-600 sm:text-sm sm:leading-6'
                   >
+                    <option value=''>Select Category</option>
                     {categories?.map(({ _id, name }, index) => (
-                      <option selected={index === 0} key={_id}>
+                      <option selected={index === 0} key={_id} value={_id}>
                         {name}
                       </option>
                     ))}

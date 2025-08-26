@@ -7,7 +7,7 @@ import fs from 'fs';
 export const editCourseU = async (
   courseId: string,
   instructorId: string | undefined,
-  files: Express.Multer.File[],
+  files: { [fieldname: string]: Express.Multer.File[] },
   courseInfo: EditCourseInfo,
   courseDbRepository: ReturnType<CourseDbRepositoryInterface>
 ) => {
@@ -33,8 +33,8 @@ export const editCourseU = async (
   }
   const oldCourse = await courseDbRepository.getCourseById(courseId);
 
-  if (files && files.length > 0) {
-    const uploadPromises = files.map(async (file) => {
+  if (files && files.guidelines && files.guidelines.length > 0) {
+    const uploadPromises = files.guidelines.map(async (file) => {
       if (file.mimetype === 'application/pdf') {
         courseInfo.guidelines = {
           name: file.originalname,

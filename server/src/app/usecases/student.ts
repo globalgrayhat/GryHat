@@ -32,7 +32,7 @@ export const changePasswordU = async (
   }
   const isPasswordCorrect = await authService.comparePassword(
     password.currentPassword,
-    student?.password
+    student?.password || ''
   );
   if (!isPasswordCorrect) {
     throw new AppError(
@@ -55,7 +55,6 @@ export const updateProfileU = async (
   studentInfo: StudentUpdateInfo,
   profilePic: {
     name: string;
-    key: string;
     path: string;
   },
   studentDbRepository: ReturnType<StudentsDbInterface>
@@ -75,16 +74,15 @@ export const updateProfileU = async (
       ...studentInfo,
       profilePic: {
         name: profilePic.name,
-        key: profilePic.key,
-        url: `http://localhost:${process.env.PORT}/${profilePic.path}`
+        url: profilePic.path
       }
     };
     console.log('FinalStudentInfo', FinalStudentInfo);
-    const response = await studentDbRepository.updateProfile(
-      id,
-      FinalStudentInfo
-    );
-    console.log('response', response);
+    const response = await studentDbRepository
+      .updateProfile(id, FinalStudentInfo)
+      .then((res) => {
+        console.log('res', res);
+      });
     return response;
   }
   return await studentDbRepository.updateProfile(id, studentInfo);

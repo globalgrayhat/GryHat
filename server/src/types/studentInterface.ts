@@ -7,11 +7,14 @@ export interface StudentInterface {
     url?: string;
   };
   email: string;
-  mobile: number;
-  password: string;
+  mobile?: string;
+  password?: string;
+  interests: Array<string>;
+  coursesEnrolled: Array<string>;
+  dateJoined: Date;
   isGoogleUser: boolean;
-  isBlocked:boolean
-  profileUrl:string;
+  isBlocked: boolean;
+  blockedReason: string;
 }
 
 export interface StudentUpdateInfo {

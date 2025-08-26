@@ -4,8 +4,6 @@ import { courseRepositoryMongodb } from '../../../frameworks/database/mongodb/re
 import { courseDbRepository } from '../../../app/repositories/courseDbRepository';
 import roleCheckMiddleware from '../middlewares/roleCheckMiddleware';
 import { UserRole } from '../../../constants/enums';
-import { cloudServiceInterface } from '../../../app/services/cloudServiceInterface';
-import { CloudServiceImpl } from '../../../frameworks/services';
 import upload from '../middlewares/multer';
 import { quizDbRepository } from '../../../app/repositories/quizDbRepository';
 import { quizRepositoryMongodb } from '../../../frameworks/database/mongodb/repositories/quizzDbRepository';
@@ -24,8 +22,6 @@ import { cachingMiddleware } from '../middlewares/redisCaching';
 const courseRouter = (redisClient: RedisClient) => {
   const router = express.Router();
   const controller = courseController(
-    cloudServiceInterface,
-    CloudServiceImpl,
     courseDbRepository,
     courseRepositoryMongodb,
     quizDbRepository,
@@ -40,12 +36,15 @@ const courseRouter = (redisClient: RedisClient) => {
     redisCacheRepository,
     redisClient
   );
-  //* Add course
   router.post(
     '/instructors/add-course',
     jwtAuthMiddleware,
     roleCheckMiddleware(UserRole.Instructor),
-    upload.array('files'),
+    upload.fields([
+      { name: 'guidelines', maxCount: 1 },
+      { name: 'introduction', maxCount: 1 },
+      { name: 'thumbnail', maxCount: 1 }
+    ]),
     controller.addCourse
   );
 

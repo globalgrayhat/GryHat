@@ -2,8 +2,13 @@ import { Schema, model } from 'mongoose';
 import { AddCourseInfoInterface } from '@src/types/courseInterface';
 
 const FileSchema = new Schema({
+  name: {
+    type: String,
+    required: true
+  },
   url: {
-    type: String
+    type: String,
+    required: true
   }
 });
 const courseSchema = new Schema({

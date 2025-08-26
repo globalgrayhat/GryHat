@@ -28,7 +28,6 @@ export const instructorRegister = async (
     );
   }
 
-  // Handle profilePic field
   if (files.profilePic && files.profilePic.length > 0) {
     const profilePicFile = files.profilePic[0];
     instructor.profilePic = {
@@ -37,7 +36,6 @@ export const instructorRegister = async (
     };
   }
 
-  // Handle certificates field
   if (files.certificates && files.certificates.length > 0) {
     for (const certificateFile of files.certificates) {
       instructor.certificates.push({

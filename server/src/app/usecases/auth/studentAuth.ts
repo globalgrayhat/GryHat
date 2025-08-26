@@ -64,7 +64,7 @@ export const studentLogin = async (
   }
   const isPasswordCorrect = await authService.comparePassword(
     password,
-    student.password
+    student.password || ''
   );
   if (!isPasswordCorrect) {
     throw new AppError(
