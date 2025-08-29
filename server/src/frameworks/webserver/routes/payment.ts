@@ -15,7 +15,7 @@ const controller = paymentController(
 
 /**
  * @swagger
- * /payments/stripe/config:
+ * /api/payments/stripe/config:
  *   get:
  *     tags: [Payments, Stripe]
  *     summary: Get Stripe publishable key
@@ -35,11 +35,11 @@ const controller = paymentController(
  *               $ref: '#/components/schemas/ApiResponseError'
  */
 // Stripe endpoints
-router.get('/payments/stripe/config', controller.getConfig);
+router.get('/stripe/config', controller.getConfig);
 
 /**
  * @swagger
- * /payments/stripe/create-payment-intent:
+ * /api/payments/stripe/create-payment-intent:
  *   post:
  *     tags: [Payments, Stripe]
  *     summary: Create Stripe PaymentIntent for a course
@@ -74,11 +74,11 @@ router.get('/payments/stripe/config', controller.getConfig);
  *             schema:
  *               $ref: '#/components/schemas/ApiResponseError'
  */
-router.post('/payments/stripe/create-payment-intent', controller.createPaymentIntent);
+router.post('/stripe/create-payment-intent', controller.createPaymentIntent);
 
 /**
  * @swagger
- * /payments/myfatoorah/create-invoice:
+ * /api/payments/myfatoorah/create-invoice:
  *   post:
  *     tags: [Payments, MyFatoorah]
  *     summary: Create MyFatoorah invoice link for a course (KWD)
@@ -120,11 +120,11 @@ router.post('/payments/stripe/create-payment-intent', controller.createPaymentIn
  *               $ref: '#/components/schemas/ApiResponseError'
  */
 // MyFatoorah endpoints
-router.post('/payments/myfatoorah/create-invoice', controller.createMFInvoice);
+router.post('/myfatoorah/create-invoice', controller.createMFInvoice);
 
 /**
  * @swagger
- * /payments/myfatoorah/status:
+ * /api/payments/myfatoorah/status:
  *   post:
  *     tags: [Payments, MyFatoorah]
  *     summary: Get MyFatoorah payment status
@@ -164,11 +164,11 @@ router.post('/payments/myfatoorah/create-invoice', controller.createMFInvoice);
  *             schema:
  *               $ref: '#/components/schemas/ApiResponseError'
  */
-router.post('/payments/myfatoorah/status', controller.getMFStatus);
+router.post('/myfatoorah/status', controller.getMFStatus);
 
 /**
  * @swagger
- * /payments/myfatoorah/methods:
+ * /api/payments/myfatoorah/methods:
  *   get:
  *     tags: [Payments, MyFatoorah]
  *     summary: List available MyFatoorah methods for a course price
@@ -200,11 +200,11 @@ router.post('/payments/myfatoorah/status', controller.getMFStatus);
  *             schema:
  *               $ref: '#/components/schemas/ApiResponseError'
  */
-router.get('/payments/myfatoorah/methods', controller.listMFMethods);
+router.get('/myfatoorah/methods', controller.listMFMethods);
 
 /**
  * @swagger
- * /payments/create:
+ * /api/payments/create:
  *   post:
  *     tags: [Payments]
  *     summary: Unified payment entrypoint (Stripe or MyFatoorah)
@@ -254,6 +254,6 @@ router.get('/payments/myfatoorah/methods', controller.listMFMethods);
  *             schema:
  *               $ref: '#/components/schemas/ApiResponseError'
  */
-router.post('/payments/create', controller.createPayment);
+router.post('/create', controller.createPayment);
 
 export default router;

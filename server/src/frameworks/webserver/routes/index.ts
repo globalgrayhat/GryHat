@@ -3,16 +3,17 @@ import authRouter from './auth';
 import adminRouter from './admin';
 import courseRouter from './course';
 import instructorRouter from './instructor';
-import { RedisClient } from '../../../app';
-import jwtAuthMiddleware from '../middlewares/userAuth';
-import roleCheckMiddleware from '../middlewares/roleCheckMiddleware';
-import { UserRole } from '../../../constants/enums';
 import videoStreamRouter from './videoStream';
 import refreshRouter from './refresh';
 import paymentRouter from './payment';
 import categoryRouter from './category';
 import studentRouter from './student';
 import storageConfigRouter from './storageConfig';
+
+import jwtAuthMiddleware from '../middlewares/userAuth';
+import roleCheckMiddleware from '../middlewares/roleCheckMiddleware';
+import { UserRole } from '../../../constants/enums';
+import { RedisClient } from '../../../app';
 
 /**
  * @swagger
@@ -31,7 +32,7 @@ import storageConfigRouter from './storageConfig';
  *     description: Video streaming
  *   - name: Instructor
  *     description: Instructor related routes
- *   - name: Payment
+ *   - name: Payments
  *     description: Payment routes
  *   - name: Student
  *     description: Student related routes
@@ -50,7 +51,7 @@ import storageConfigRouter from './storageConfig';
  */
 
 const routes = (app: Application, redisClient: RedisClient) => {
-  // ---------- GrayHat root & health ----------
+  // ---------- Root ----------
   /**
    * @swagger
    * /:
@@ -80,7 +81,7 @@ const routes = (app: Application, redisClient: RedisClient) => {
     res.status(200).json({
       platform: 'GrayHat',
       status: 'ok',
-      version: '1.0'
+      version: '1.0',
     });
   });
 
@@ -113,7 +114,7 @@ const routes = (app: Application, redisClient: RedisClient) => {
     res.status(200).json({
       platform: 'GrayHat',
       status: 'healthy',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   });
 
@@ -139,9 +140,9 @@ const routes = (app: Application, redisClient: RedisClient) => {
    * @swagger
    * /api/admin:
    *   description: Admin routes, accessible only to Admin users
+   *   tags: [Admin]
    *   security:
    *     - bearerAuth: []
-   *   tags: [Admin]
    */
   app.use(
     '/api/admin',
@@ -154,7 +155,7 @@ const routes = (app: Application, redisClient: RedisClient) => {
   /**
    * @swagger
    * /api/category:
-   *   description: Category management routes (public or restricted based on implementation)
+   *   description: Category management routes
    *   tags: [Category]
    */
   app.use('/api/category', categoryRouter());
@@ -191,9 +192,9 @@ const routes = (app: Application, redisClient: RedisClient) => {
    * @swagger
    * /api/payments:
    *   description: Payment related routes, secured with JWT
+   *   tags: [Payments]
    *   security:
    *     - bearerAuth: []
-   *   tags: [Payment]
    */
   app.use('/api/payments', jwtAuthMiddleware, paymentRouter);
 
@@ -201,7 +202,7 @@ const routes = (app: Application, redisClient: RedisClient) => {
   /**
    * @swagger
    * /api/students:
-   *   description: Student related routes, may use redis client for caching or data
+   *   description: Student related routes
    *   tags: [Student]
    */
   app.use('/api/students', studentRouter(redisClient));
@@ -210,10 +211,10 @@ const routes = (app: Application, redisClient: RedisClient) => {
   /**
    * @swagger
    * /api/storage-config:
-   *   description: Storage configuration routes, secured with JWT
+   *   description: Storage configuration routes
+   *   tags: [StorageConfig]
    *   security:
    *     - bearerAuth: []
-   *   tags: [StorageConfig]
    */
   app.use('/api/storage-config', jwtAuthMiddleware, storageConfigRouter);
 };
