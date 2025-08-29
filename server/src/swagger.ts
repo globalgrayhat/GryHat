@@ -7,15 +7,33 @@ const options = {
     info: {
       title: 'GryHat API',
       version: '1.0.0',
-      description: 'API documentation for GryHat'
+      description: 'API documentation for GryHat - E-Learning Platform'
     },
     servers: [
       {
-        url: 'http://localhost:3000'
+        url: 'http://localhost:5000', // ← غيّر هذا إذا كانت البورت مختلفة
+        description: 'Local development server'
+      }
+    ],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT'
+        }
+      }
+    },
+    security: [
+      {
+        bearerAuth: []
       }
     ]
   },
-  apis: ['./routes/*.ts']
+  apis: [
+    './src/frameworks/webserver/routes/*.ts',
+    './src/adapters/controllers/*.ts' 
+  ]
 };
 
 const swaggerSpec = swaggerJSDoc(options);

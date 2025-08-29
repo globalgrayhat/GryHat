@@ -85,6 +85,8 @@ const ar = {
     subjects: "المواد",
     experience: "الخبرة",
     skills: "المهارات",
+    blockedTitle: "محظور",
+    blockedMessage: "لقد تم حظر حسابك. يرجى الاتصال بالدعم للحصول على المساعدة.",
     about: "نبذة عنك",
     photo: "صورة",
     certificate: "شهادة",

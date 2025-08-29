@@ -13,8 +13,8 @@ import { adminRepoMongoDb } from '../../../frameworks/database/mongodb/repositor
 import { refreshTokenDbRepository } from '../../../app/repositories/refreshTokenDBRepository';
 import { refreshTokenRepositoryMongoDB } from '../../../frameworks/database/mongodb/repositories/refreshTokenRepoMongoDb';
 import upload from '../middlewares/multer';
-// Import rate limiter middleware to protect login routes
 import { authRateLimiter } from '../middlewares/rateLimit';
+
 const authRouter = () => {
   const router = express.Router();
 
@@ -33,10 +33,108 @@ const authRouter = () => {
     refreshTokenRepositoryMongoDB
   );
 
+  /**
+   * @swagger
+   * /api/auth/student-register:
+   *   post:
+   *     summary: Register a new student
+   *     tags: [Auth]
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               name:
+   *                 type: string
+   *               email:
+   *                 type: string
+   *               password:
+   *                 type: string
+   *     responses:
+   *       201:
+   *         description: Student registered successfully
+   */
   router.post('/student-register', controller.registerStudent);
+
+  /**
+   * @swagger
+   * /api/auth/student-login:
+   *   post:
+   *     summary: Login as a student
+   *     tags: [Auth]
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               email:
+   *                 type: string
+   *               password:
+   *                 type: string
+   *     responses:
+   *       200:
+   *         description: Successful login
+   */
   router.post('/student-login', authRateLimiter, controller.loginStudent);
+
+  /**
+   * @swagger
+   * /api/auth/login-with-google:
+   *   post:
+   *     summary: Login with Google OAuth
+   *     tags: [Auth]
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               token:
+   *                 type: string
+   *     responses:
+   *       200:
+   *         description: Successful login with Google
+   */
   router.post('/login-with-google', controller.loginWithGoogle);
 
+  /**
+   * @swagger
+   * /api/auth/instructor/instructor-register:
+   *   post:
+   *     summary: Register a new instructor
+   *     tags: [Auth]
+   *     consumes:
+   *       - multipart/form-data
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         multipart/form-data:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               name:
+   *                 type: string
+   *               email:
+   *                 type: string
+   *               password:
+   *                 type: string
+   *               profilePic:
+   *                 type: string
+   *                 format: binary
+   *               certificates:
+   *                 type: array
+   *                 items:
+   *                   type: string
+   *                   format: binary
+   *     responses:
+   *       201:
+   *         description: Instructor registered successfully
+   */
   router.post(
     '/instructor/instructor-register',
     upload.fields([
@@ -45,12 +143,55 @@ const authRouter = () => {
     ]),
     controller.registerInstructor
   );
+
+  /**
+   * @swagger
+   * /api/auth/instructor/instructor-login:
+   *   post:
+   *     summary: Login as an instructor
+   *     tags: [Auth]
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               email:
+   *                 type: string
+   *               password:
+   *                 type: string
+   *     responses:
+   *       200:
+   *         description: Instructor logged in successfully
+   */
   router.post(
     '/instructor/instructor-login',
     authRateLimiter,
     controller.loginInstructor
   );
 
+  /**
+   * @swagger
+   * /api/auth/admin/admin-login:
+   *   post:
+   *     summary: Login as admin
+   *     tags: [Auth]
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               email:
+   *                 type: string
+   *               password:
+   *                 type: string
+   *     responses:
+   *       200:
+   *         description: Admin logged in successfully
+   */
   router.post('/admin/admin-login', authRateLimiter, controller.loginAdmin);
 
   return router;
