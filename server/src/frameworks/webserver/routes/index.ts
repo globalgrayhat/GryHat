@@ -17,6 +17,8 @@ import storageConfigRouter from './storageConfig';
 /**
  * @swagger
  * tags:
+ *   - name: GrayHat
+ *     description: GrayHat platform root & health endpoints
  *   - name: Auth
  *     description: Authentication routes
  *   - name: Admin
@@ -48,6 +50,74 @@ import storageConfigRouter from './storageConfig';
  */
 
 const routes = (app: Application, redisClient: RedisClient) => {
+  // ---------- GrayHat root & health ----------
+  /**
+   * @swagger
+   * /:
+   *   get:
+   *     tags: [GrayHat]
+   *     summary: GrayHat root
+   *     description: Returns GrayHat platform banner and basic info.
+   *     responses:
+   *       200:
+   *         description: Root info
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 platform:
+   *                   type: string
+   *                   example: GrayHat
+   *                 status:
+   *                   type: string
+   *                   example: ok
+   *                 version:
+   *                   type: string
+   *                   example: "1.0"
+   */
+  app.get('/', (_req, res) => {
+    res.status(200).json({
+      platform: 'GrayHat',
+      status: 'ok',
+      version: '1.0'
+    });
+  });
+
+  /**
+   * @swagger
+   * /api/health:
+   *   get:
+   *     tags: [GrayHat]
+   *     summary: GrayHat health check
+   *     description: Simple liveness probe for GrayHat platform.
+   *     responses:
+   *       200:
+   *         description: Service is healthy
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 platform:
+   *                   type: string
+   *                   example: GrayHat
+   *                 status:
+   *                   type: string
+   *                   example: healthy
+   *                 timestamp:
+   *                   type: string
+   *                   format: date-time
+   */
+  app.get('/api/health', (_req, res) => {
+    res.status(200).json({
+      platform: 'GrayHat',
+      status: 'healthy',
+      timestamp: new Date().toISOString()
+    });
+  });
+
+  // ---------- Auth ----------
   /**
    * @swagger
    * /api/auth:
@@ -64,6 +134,7 @@ const routes = (app: Application, redisClient: RedisClient) => {
    */
   app.use('/api/all/refresh-token', refreshRouter());
 
+  // ---------- Admin ----------
   /**
    * @swagger
    * /api/admin:
@@ -79,6 +150,7 @@ const routes = (app: Application, redisClient: RedisClient) => {
     adminRouter()
   );
 
+  // ---------- Category ----------
   /**
    * @swagger
    * /api/category:
@@ -87,6 +159,7 @@ const routes = (app: Application, redisClient: RedisClient) => {
    */
   app.use('/api/category', categoryRouter());
 
+  // ---------- Courses ----------
   /**
    * @swagger
    * /api/courses:
@@ -95,6 +168,7 @@ const routes = (app: Application, redisClient: RedisClient) => {
    */
   app.use('/api/courses', courseRouter(redisClient));
 
+  // ---------- Video Streaming ----------
   /**
    * @swagger
    * /api/video-streaming:
@@ -103,6 +177,7 @@ const routes = (app: Application, redisClient: RedisClient) => {
    */
   app.use('/api/video-streaming', videoStreamRouter());
 
+  // ---------- Instructors ----------
   /**
    * @swagger
    * /api/instructors:
@@ -111,6 +186,7 @@ const routes = (app: Application, redisClient: RedisClient) => {
    */
   app.use('/api/instructors', instructorRouter());
 
+  // ---------- Payments ----------
   /**
    * @swagger
    * /api/payments:
@@ -119,8 +195,9 @@ const routes = (app: Application, redisClient: RedisClient) => {
    *     - bearerAuth: []
    *   tags: [Payment]
    */
-  app.use('/api/payments', jwtAuthMiddleware, paymentRouter());
+  app.use('/api/payments', jwtAuthMiddleware, paymentRouter);
 
+  // ---------- Students ----------
   /**
    * @swagger
    * /api/students:
@@ -129,6 +206,7 @@ const routes = (app: Application, redisClient: RedisClient) => {
    */
   app.use('/api/students', studentRouter(redisClient));
 
+  // ---------- Storage Config ----------
   /**
    * @swagger
    * /api/storage-config:
