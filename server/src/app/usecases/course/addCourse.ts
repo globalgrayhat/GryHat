@@ -1,59 +1,89 @@
-import { CourseDbRepositoryInterface } from '../../repositories/courseDbRepository';
 import HttpStatusCodes from '../../../constants/HttpStatusCodes';
-import { AddCourseInfoInterface } from '../../../types/courseInterface';
 import AppError from '../../../utils/appError';
+import type { AddCourseInfoInterface } from '../../../types/courseInterface';
+import type { CourseDbRepositoryInterface } from '../../repositories/courseDbRepository';
+import { cloudServiceInterface } from '../../services/cloudServiceInterface';
+import { arraysPatch, pickFile, toStringArray } from './_helpers';
 
 export const addCourses = async (
   instructorId: string | undefined,
   courseInfo: AddCourseInfoInterface,
-  files: Express.Multer.File[],
-  courseDbRepository: ReturnType<CourseDbRepositoryInterface>
+  files: Record<string, Express.Multer.File[]> | undefined,
+  courseDbRepository: ReturnType<CourseDbRepositoryInterface>,
+  cloudService: ReturnType<typeof cloudServiceInterface>
 ) => {
-  if (!instructorId || !courseInfo || !files || files.length === 0) {
+  if (!instructorId || !courseInfo) {
     throw new AppError('Invalid input data', HttpStatusCodes.BAD_REQUEST);
   }
 
-  const uploadPromises = files.map(async (file) => {
-    if (file.mimetype === 'application/pdf') {
-      courseInfo.guidelines = {
-        name: file.originalname,
-        url: `http://localhost:${process.env.PORT}/uploads/${file.filename}`
-      };
+  const basePayload: any = {
+    instructorId,
+    title: courseInfo.title,
+    duration: Number(courseInfo.duration || 0),
+    category: courseInfo.categoryId,
+    subcategory: courseInfo.subcategoryId || undefined,
+    level: courseInfo.level,
+    tags: toStringArray(courseInfo.tags),
+    price: Number(courseInfo.price || 0),
+    isPaid: String(courseInfo.isPaid).toLowerCase() === 'true',
+    about: courseInfo.about || courseInfo.description || courseInfo.title || 'About',
+    description: courseInfo.description || '',
+    syllabus: toStringArray(courseInfo.syllabus),
+    requirements: toStringArray(courseInfo.requirements),
+    videoSource: courseInfo.videoSource || 'local',
+    videoUrl: courseInfo.videoUrl,
+    status: 'draft'
+  };
+
+  if (!basePayload.title || !basePayload.category || !basePayload.level) {
+    throw new AppError('Missing required fields (title/categoryId/level)', HttpStatusCodes.BAD_REQUEST);
+  }
+
+  const createdId = await courseDbRepository.addCourse(basePayload);
+  if (!createdId) {
+    throw new AppError('Unable to add course', HttpStatusCodes.INTERNAL_SERVER_ERROR);
+  }
+
+  const patch: any = {};
+
+  const thumbnailFile = pickFile(files, 'thumbnail');
+  if (thumbnailFile) {
+    const up = await cloudService.uploadAndGetUrl(thumbnailFile);
+    patch.thumbnail = { name: thumbnailFile.originalname, key: up.key, url: up.url };
+  }
+
+  const guidelinesFile = pickFile(files, 'guidelines');
+  if (guidelinesFile) {
+    const up = await cloudService.uploadAndGetUrl(guidelinesFile);
+    patch.guidelines = { name: guidelinesFile.originalname, key: up.key, url: up.url };
+  }
+
+  if (courseInfo.introductionKey) {
+    patch.introduction = { name: 'introduction', key: courseInfo.introductionKey, url: courseInfo.introductionKey };
+  } else {
+    const introductionFile = pickFile(files, 'introduction');
+    if (introductionFile) {
+      const up = await cloudService.uploadAndGetUrl(introductionFile);
+      patch.introduction = { name: introductionFile.originalname, key: up.key, url: up.url };
+    } else if (
+      (courseInfo.videoSource === 'youtube' || courseInfo.videoSource === 'vimeo') &&
+      courseInfo.videoUrl
+    ) {
+      patch.introduction = { name: 'remote-video', url: courseInfo.videoUrl };
     }
-    if (file.mimetype === 'video/mp4') {
-      courseInfo.introduction = {
-        name: file.originalname,
-        url: `http://localhost:${process.env.PORT}/uploads/${file.filename}`
-      };
-    }
-    if (file.mimetype.includes('image')) {
-      courseInfo.thumbnail = {
-        name: file.originalname,
-        url: `http://localhost:${process.env.PORT}/uploads/${file.filename}`
-      };
-    }
-  });
-
-  await Promise.all(uploadPromises);
-
-  courseInfo.instructorId = instructorId;
-
-  if (typeof courseInfo.tags === 'string') {
-    courseInfo.tags = courseInfo.tags.split(',');
   }
-  if (typeof courseInfo.syllabus === 'string') {
-    courseInfo.syllabus = courseInfo.syllabus.split(',');
-  }
-  if (typeof courseInfo.requirements === 'string') {
-    courseInfo.requirements = courseInfo.requirements.split(',');
-  }
-  const courseId = await courseDbRepository.addCourse(courseInfo);
 
-  if (!courseId) {
-    throw new AppError(
-      'Unable to add course',
-      HttpStatusCodes.INTERNAL_SERVER_ERROR
-    );
+  Object.assign(patch, arraysPatch({
+    tags: courseInfo.tags,
+    syllabus: courseInfo.syllabus,
+    requirements: courseInfo.requirements,
+  }));
+
+  if (Object.keys(patch).length) {
+    await courseDbRepository.editCourse(String(createdId), patch);
   }
-  return courseId;
+
+  return createdId;
 };
+
+export default addCourses;

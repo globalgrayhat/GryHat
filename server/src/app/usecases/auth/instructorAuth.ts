@@ -32,7 +32,7 @@ export const instructorRegister = async (
     const profilePicFile = files.profilePic[0];
     instructor.profilePic = {
       name: profilePicFile.originalname,
-      url: `http://localhost:${process.env.PORT}/uploads/${profilePicFile.filename}`
+      url: `http://localhost:${process.env.PORT}/uploads/registration/anonymous/profile-pics/${profilePicFile.filename}`
     };
   }
 
@@ -40,7 +40,7 @@ export const instructorRegister = async (
     for (const certificateFile of files.certificates) {
       instructor.certificates.push({
         name: certificateFile.originalname,
-        url: `http://localhost:${process.env.PORT}/uploads/${certificateFile.filename}`
+        url: `http://localhost:${process.env.PORT}/uploads/registration/anonymous/certificates/${certificateFile.filename}`
       });
     }
   }

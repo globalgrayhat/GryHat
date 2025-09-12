@@ -9,10 +9,9 @@ import { AuthService } from '../services/authService';
 import AppError from '../../utils/appError';
 import HttpStatusCodes from '../../constants/HttpStatusCodes';
 
- const socketConfig = (
-  io: Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>,
+ const socketConfig = (io: Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>,
   authService: ReturnType<AuthService>
-) => { 
+, _authService?: unknown) => { 
   io.use((socket, next) => {
     if (socket.handshake.query && socket.handshake.query.token) {
       const res: any = authService.verifyToken(socket.handshake.query.token as string);

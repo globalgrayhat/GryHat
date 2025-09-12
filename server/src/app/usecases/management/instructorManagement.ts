@@ -24,14 +24,21 @@ export const acceptInstructorRequest = async (
   const response = await instructorRepository.acceptInstructorRequest(
     instructorId
   );
-  if (response) {
-    emailService.sendEmail(
-      response.email,
+  // Mongoose models return Document instances which do not expose custom
+  // properties like `email` on the type. Cast to any to access these fields
+  // safely. Optionally call toObject() when available to get a plain object.
+  const responseObj: any = response && typeof (response as any).toObject === 'function'
+    ? (response as any).toObject()
+    : (response as any);
+  if (responseObj) {
+    // Use the casted object to access the email property
+    await emailService.sendEmail(
+      responseObj.email,
       'Successfully verified your profile',
       'You are verified'
     );
   }
-  return response;
+  return responseObj;
 };
 
 export const rejectInstructorRequest = async (
@@ -57,28 +64,37 @@ export const rejectInstructorRequest = async (
     instructorId,
     reason
   );
-  if (response) {
-    emailService.sendEmail(
-      response.email,
+  const responseObj: any = response && typeof (response as any).toObject === 'function'
+    ? (response as any).toObject()
+    : (response as any);
+  if (responseObj) {
+    await emailService.sendEmail(
+      responseObj.email,
       'Sorry your request is rejected',
       reason
     );
   }
-  return response;
+  return responseObj;
 };
 
 export const getAllInstructors = async (
   instructorRepository: ReturnType<InstructorDbInterface>
 ) => {
   const instructors = await instructorRepository.getAllInstructors();
-  await Promise.all(
-    instructors.map(async (instructor) => {
-      if (instructor.profilePic) {
-        instructor.profileUrl = instructor.profilePic.url;
-      }
-    })
-  );
-  return instructors;
+  // Convert each instructor document into a plain object to access dynamic
+  // properties like profilePic and assign computed profileUrl. Without this
+  // cast TypeScript complains that these properties do not exist on the
+  // Document type returned by Mongoose.
+  const instructorsObj = instructors.map((inst) => {
+    const instructor: any = typeof (inst as any).toObject === 'function'
+      ? (inst as any).toObject()
+      : (inst as any);
+    if (instructor.profilePic) {
+      instructor.profileUrl = instructor.profilePic.url;
+    }
+    return instructor;
+  });
+  return instructorsObj;
 };
 
 export const blockInstructors = async (
@@ -114,14 +130,16 @@ export const getBlockedInstructors = async (
   instructorRepository: ReturnType<InstructorDbInterface>
 ) => {
   const blockedInstructors = await instructorRepository.getBlockedInstructors();
-  await Promise.all(
-    blockedInstructors.map(async (instructor) => {
-      if (instructor.profilePic) {
-        instructor.profileUrl = instructor.profilePic.url ?? '';
-      }
-    })
-  );
-  return blockedInstructors;
+  const blockedObjs = blockedInstructors.map((inst) => {
+    const instructor: any = typeof (inst as any).toObject === 'function'
+      ? (inst as any).toObject()
+      : (inst as any);
+    if (instructor.profilePic) {
+      instructor.profileUrl = instructor.profilePic.url ?? '';
+    }
+    return instructor;
+  });
+  return blockedObjs;
 };
 
 export const getInstructorByIdUseCase = async (
@@ -131,9 +149,12 @@ export const getInstructorByIdUseCase = async (
   if (!instructorId) {
     throw new AppError('Invalid instructor id', HttpStatusCodes.BAD_REQUEST);
   }
-  const instructor = await instructorRepository.getInstructorById(instructorId);
+  const result = await instructorRepository.getInstructorById(instructorId);
+  const instructor: any = result && typeof (result as any).toObject === 'function'
+    ? (result as any).toObject()
+    : (result as any);
   if (instructor?.profilePic) {
-    instructor.profileUrl = instructor?.profilePic.url;
+    instructor.profileUrl = instructor.profilePic.url;
   }
   if (instructor) {
     instructor.password = 'no password';

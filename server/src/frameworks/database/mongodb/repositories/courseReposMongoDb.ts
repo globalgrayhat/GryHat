@@ -9,7 +9,10 @@ import {
 
 export const courseRepositoryMongodb = () => {
   const addCourse = async (courseInfo: AddCourseInfoInterface) => {
-    const newCourse = new Course(courseInfo);
+      const normalized: any = { ...courseInfo };
+  if (!normalized.category && normalized.categoryId) normalized.category = normalized.categoryId;
+  if (!normalized.about) normalized.about = normalized.description || normalized.title || 'About';
+const newCourse = new Course(normalized);
     newCourse.price ? (newCourse.isPaid = true) : (newCourse.isPaid = false);
     const { _id: courseId } = await newCourse.save();
     return courseId;

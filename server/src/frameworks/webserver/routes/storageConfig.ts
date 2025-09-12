@@ -1,86 +1,77 @@
+// server/src/frameworks/webserver/routes/storageConfig.ts
 import express from 'express';
+import storageConfigController from '../../../adapters/controllers/storageConfigController';
+import { storageConfigDbRepository } from '../../../app/repositories/storageConfigDbRepository';
+import { storageConfigRepoMongoDb } from '../../../frameworks/database/mongodb/repositories/storageConfigRepoMongoDb';
 import roleCheckMiddleware from '../middlewares/roleCheckMiddleware';
 import { UserRole } from '../../../constants/enums';
-import { storageConfigController } from '../../../adapters/controllers/storageConfigController';
 
-/**
- * @swagger
- * tags:
- *   name: StorageConfig
- *   description: API for managing storage configuration (Admin only)
- */
+const storageConfigRouter = express.Router();
 
-const router = express.Router();
-
-const controller = storageConfigController();
+const controller = storageConfigController(
+  storageConfigDbRepository,
+  storageConfigRepoMongoDb
+);
 
 /**
  * @swagger
  * /api/storage-config:
  *   get:
  *     summary: Get current storage configuration
- *     tags: [StorageConfig]
+ *     tags: [Storage Configuration]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: Returns the current storage configuration.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 storageType:
- *                   type: string
- *                   description: The type of storage configured (e.g., 'local', 's3').
- *                 bucketName:
- *                   type: string
- *                   description: Name of the storage bucket if applicable.
- *                 region:
- *                   type: string
- *                   description: Storage region (if applicable).
- *       401:
- *         description: Unauthorized - user not authenticated.
- *       403:
- *         description: Forbidden - user is not an admin.
+ *         description: Storage configuration retrieved successfully
  */
-router.get('/', roleCheckMiddleware(UserRole.Admin), controller.getConfig);
+storageConfigRouter.get(
+  '/',
+  roleCheckMiddleware(UserRole.Admin),
+  controller.getConfig
+);
 
 /**
  * @swagger
  * /api/storage-config:
  *   put:
  *     summary: Update storage configuration
- *     tags: [StorageConfig]
+ *     tags: [Storage Configuration]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
- *       description: New storage configuration data
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
  *             properties:
- *               storageType:
+ *               provider:
  *                 type: string
- *                 example: "s3"
- *               bucketName:
- *                 type: string
- *                 example: "my-bucket"
- *               region:
- *                 type: string
- *                 example: "us-east-1"
+ *                 enum: [local, s3, google_drive, dropbox, vimeo]
+ *               credentials:
+ *                 type: object
+ *                 properties:
+ *                   accessKeyId:
+ *                     type: string
+ *                   secretAccessKey:
+ *                     type: string
+ *                   region:
+ *                     type: string
+ *                   bucketName:
+ *                     type: string
+ *                   cloudFrontDistributionId:
+ *                     type: string
+ *                   cloudFrontDomainName:
+ *                     type: string
  *     responses:
  *       200:
- *         description: Storage configuration updated successfully.
- *       400:
- *         description: Invalid input data.
- *       401:
- *         description: Unauthorized - user not authenticated.
- *       403:
- *         description: Forbidden - user is not an admin.
+ *         description: Storage configuration updated successfully
  */
-router.put('/', roleCheckMiddleware(UserRole.Admin), controller.updateConfig);
+storageConfigRouter.put(
+  '/',
+  roleCheckMiddleware(UserRole.Admin),
+  controller.updateConfig
+);
 
-export default router;
+export default storageConfigRouter;

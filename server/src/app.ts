@@ -4,11 +4,12 @@ import { Server } from 'socket.io';
 import path from 'path';
 import connectToMongoDb from './frameworks/database/mongodb/connection';
 import connection from './frameworks/database/redis/connection';
-
+import { createTusServer } from './frameworks/webserver/middlewares/tusServer';
 import serverConfig from './frameworks/webserver/server';
 import expressConfig from './frameworks/webserver/express';
 import routes from './frameworks/webserver/routes';
 import errorHandlingMiddleware from './frameworks/webserver/middlewares/errorHandling';
+import jwtAuthMiddleware  from './frameworks/webserver/middlewares/userAuth';
 
 import socketConfig from './frameworks/websocket/socket';
 import { authService } from './frameworks/services/authService';
@@ -67,7 +68,13 @@ const mountSwagger = (app: Application) => {
   app.get(`${path}.json`, (_req, res) => res.status(200).json(swaggerSpec));
 };
 app.use(express.static(path.join(__dirname, 'public')));
+// Create TUS server
+const tusServer = createTusServer();
 
+// Add TUS upload endpoint with authentication
+app.use('/api/uploads', jwtAuthMiddleware, (req: any, res: any) => {
+  tusServer.handle(req, res);
+});
 //* web socket connection
 const io = new Server(server, {
   cors: {

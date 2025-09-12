@@ -17,7 +17,9 @@ export enum UserRole {
   /** Instructors can create and manage courses and lessons. */
   Instructor = 'instructor',
   /** Students can enrol in courses and view content. */
-  Student = 'student'
+  Student = 'student',
+  /** Owners have higher privileges than admins and can manage critical operations. */
+  Owner = 'owner'
 }
 
 /**
@@ -43,3 +45,6 @@ export enum StorageProvider {
  * `StorageProvider` since not all sources involve uploading.
  */
 export const VideoSource = StorageProvider;
+
+// Extend roles with owner for GrayHat v2.0
+export const AdditionalRoleOwner = 'owner';

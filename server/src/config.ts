@@ -7,6 +7,13 @@ dotenv.config();
  * Centralized configuration object to be used across the application
  */
 const configKeys = {
+  /** Optional Redis username for ACL-enabled servers */
+  REDIS_USERNAME: process.env.REDIS_USERNAME,
+  /** Optional Redis password */
+  REDIS_PASSWORD: process.env.REDIS_PASSWORD,
+  /** Disable Redis entirely and use in-memory cache instead */
+  REDIS_DISABLE: process.env.REDIS_DISABLE,
+
   /** MongoDB connection URI */
   MONGO_DB_URL: process.env.DATABASE as string,
 
@@ -15,6 +22,9 @@ const configKeys = {
 
   /** MongoDB database name */
   DB_NAME: process.env.DB_NAME,
+
+  /** Base directory for file uploads */
+  UPLOAD_PATH: process.env.UPLOAD_PATH || './uploads',
 
   /** JWT access token secret */
   JWT_SECRET: process.env.JWT_SECRET as string,
@@ -127,6 +137,43 @@ const configKeys = {
    * Kept here for backwards compatibility only.
    */
   // STORAGE_PROVIDER: process.env.STORAGE_PROVIDER || 's3',
+  STORAGE_PROVIDER: process.env.STORAGE_PROVIDER || 'local',
+TUS_UPLOAD_PATH: process.env.TUS_UPLOAD_PATH || './uploads/tus',
+MULTER_UPLOAD_PATH: process.env.MULTER_UPLOAD_PATH || './uploads/multer',
+MAX_LIGHT_FILE_SIZE: parseInt(process.env.MAX_LIGHT_FILE_SIZE || '2097152'),
+  /** Maximum allowed size for profile picture uploads (default: 5MB) */
+  MAX_PROFILE_PIC_SIZE: parseInt(process.env.MAX_PROFILE_PIC_SIZE || '5242880'),
+
+  /** Maximum allowed size for certificate uploads (default: 10MB) */
+  /**
+   * Maximum allowed size for certificate uploads.
+   * Default is 100MB (104857600 bytes) to accommodate large scanned documents or PDFs.
+   */
+  MAX_CERTIFICATE_FILE_SIZE: parseInt(process.env.MAX_CERTIFICATE_FILE_SIZE || '104857600'),
+
+  /**
+   * Base directory for storing files uploaded during registration (e.g. profile
+   * pictures and certificates). Separates these assets from LMS course
+   * materials. Defaults to './uploads/registration'.
+   */
+  REGISTRATION_UPLOAD_PATH: process.env.REGISTRATION_UPLOAD_PATH || './uploads/registration',
+
+  /**
+   * Base directory for storing LMS course resources (videos, documents, etc.).
+   * Defaults to './uploads/courses'. Separate from registration assets.
+   */
+  LMS_UPLOAD_PATH: process.env.LMS_UPLOAD_PATH || './uploads/courses',
+
+  /** Maximum allowed size for generic LMS file uploads (default: 6GB) */
+  MAX_LMS_FILE_SIZE: parseInt(process.env.MAX_LMS_FILE_SIZE || String(6 * 1024 * 1024 * 1024)),
+
+  /** Maximum allowed size for LMS document uploads (default: 1GB) */
+  MAX_LMS_DOCUMENT_SIZE: parseInt(process.env.MAX_LMS_DOCUMENT_SIZE || String(1 * 1024 * 1024 * 1024)),
+  GOOGLE_DRIVE_CLIENT_ID: process.env.GOOGLE_DRIVE_CLIENT_ID,
+  GOOGLE_DRIVE_CLIENT_SECRET: process.env.GOOGLE_DRIVE_CLIENT_SECRET,
+  GOOGLE_DRIVE_REDIRECT_URI: process.env.GOOGLE_DRIVE_REDIRECT_URI,
+  DROPBOX_ACCESS_TOKEN: process.env.DROPBOX_ACCESS_TOKEN,
+  VIMEO_ACCESS_TOKEN: process.env.VIMEO_ACCESS_TOKEN,
 };
 
 export default configKeys;
