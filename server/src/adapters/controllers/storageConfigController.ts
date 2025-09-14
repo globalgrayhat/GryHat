@@ -1,3 +1,4 @@
+import { ok, created, fail, err } from '../../shared/http/respond';
 import { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
 import {
@@ -13,7 +14,7 @@ const storageConfigController = (
 ) => {
   const dbRepository = storageConfigDbRepository(storageConfigDbRepositoryImpl());
 
-  const getConfig = asyncHandler(async (req: Request, res: Response) => {
+  const getConfig = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const config = await getStorageConfigU(dbRepository);
     res.json({
       status: 'success',
@@ -22,7 +23,7 @@ const storageConfigController = (
     });
   });
 
-  const updateConfig = asyncHandler(async (req: Request, res: Response) => {
+  const updateConfig = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const configData = req.body;
     const updatedConfig = await updateStorageConfigU(configData, dbRepository);
     res.json({

@@ -1,3 +1,4 @@
+import { ok, created, fail, err } from '../../shared/http/respond';
 import { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
 import { UserDbRepository } from '../../app/repositories/userDbRepository';
@@ -15,24 +16,16 @@ const userManagementController = () => {
   const repo = userDbRepository(userRepoMongoDb());
 
   // Promote a user to a new role
-  const promote = asyncHandler(async (req: Request, res: Response) => {
+  const promote = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const { userId, role } = req.body as { userId: string; role: string };
     const result = await promoteUser(userId, role, repo);
-    res.status(200).json({
-      status: 'success',
-      message: 'User role updated successfully',
-      data: result
-    });
+    ok(res, 'User role updated successfully', result);
   });
 
   // Retrieve a list of all users
-  const listUsers = asyncHandler(async (_req: Request, res: Response) => {
+  const listUsers = asyncHandler(async (_req: Request, res: Response): Promise<void> => {
     const users = await repo.getAllUsers();
-    res.status(200).json({
-      status: 'success',
-      message: 'Users fetched successfully',
-      data: users
-    });
+    ok(res, 'Users fetched successfully', users);
   });
 
   return {

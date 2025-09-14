@@ -14,7 +14,6 @@ export const CloudServiceImpl = () => {
   const selectService = async () => {
     const config = await repository.getConfig();
 
-    // ✅ Default to Local if no config
     if (!config) return localStorageService();
 
     if (config.provider === StorageProvider.Local) {

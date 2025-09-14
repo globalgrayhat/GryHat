@@ -1,3 +1,6 @@
+// server/src/adapters/controllers/courseController.ts
+
+import { ok, created, fail } from '../../shared/http/respond';
 import { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
 
@@ -58,6 +61,10 @@ import AppError from '../../utils/appError';
 // If your app exports RedisClient type
 import { RedisClient } from '../../app';
 
+/**
+ * Course controller (thin): delegates to use-cases and keeps responses uniform.
+ * Adds cache invalidation to ensure UI sees updates immediately after mutations.
+ */
 const courseController = (
   courseDbRepository: CourseDbRepositoryInterface,
   courseDbRepositoryImpl: CourseRepositoryMongoDbInterface,
@@ -84,26 +91,62 @@ const courseController = (
   // Cloud service (S3/Local is picked dynamically by DB config)
   const cloud = cloudServiceInterface(CloudServiceImpl());
 
+  /** ---------------------- Cache helpers (DRY) ---------------------- */
+
+  // Safely delete a cache key if repository supports it
+  const cacheDel = async (key: string) => {
+    try {
+      // many custom repos expose `del`; keep optional-chaining to avoid runtime error
+      await (dbRepositoryCache as any)?.del?.(key);
+    } catch {
+      /* ignore cache errors */
+    }
+  };
+
+  // Refresh "all-courses" cache after any mutation to make updates visible immediately
+  const refreshAllCoursesCache = async () => {
+    try {
+      await cacheDel('all-courses');
+      const fresh = await getAllCourseU(dbRepositoryCourse);
+      await dbRepositoryCache.setCache({
+        key: 'all-courses',
+        expireTimeSec: 600,
+        data: JSON.stringify(fresh)
+      });
+    } catch {
+      /* ignore cache errors */
+    }
+  };
+
+  // Invalidate course-scoped keys if you use them (keep noop-safe)
+  const invalidateCourseCaches = async (courseId?: string) => {
+    await refreshAllCoursesCache();
+    if (courseId) {
+      await cacheDel(`course:${courseId}`);      // optional convention
+      await cacheDel(`lessons:${courseId}`);     // optional convention
+      await cacheDel(`search:${courseId}`);      // optional convention
+    }
+  };
+
   /** ---------------------- Course ---------------------- */
 
-  const addCourse = asyncHandler(async (req: CustomRequest, res: Response) => {
+  const addCourse = asyncHandler(async (req: CustomRequest, res: Response): Promise<void> => {
     const instructorId = req.user?.Id;
     const body: AddCourseInfoInterface = req.body;
     const files = (req.files as Record<string, Express.Multer.File[]>) || {};
 
     const createdId = await addCourses(instructorId, body, files, dbRepositoryCourse, cloud);
 
-    res.status(201).json({
-      status: 'success',
-      message: 'Successfully added new course, course will be published after verification',
-      data: createdId
-    });
+    // Invalidate immediately so lists reflect the new draft right away
+    await invalidateCourseCaches(String(createdId));
+
+    created(res, 'Successfully added new course, course will be published after verification', createdId);
   });
 
-  const editCourse = asyncHandler(async (req: CustomRequest, res: Response) => {
+  const editCourse = asyncHandler(async (req: CustomRequest, res: Response): Promise<void> => {
     const courseId = req.params.courseId;
     const instructorId = req.user?.Id;
-    const body: EditCourseInfo & { introductionKey?: string } = req.body;
+    const body: (EditCourseInfo & { introductionKey?: string }) = req.body;
     const files = (req.files as Record<string, Express.Multer.File[]>) || {};
 
     // Attach uploads (thumbnail/guidelines/introduction) if present
@@ -125,93 +168,112 @@ const courseController = (
     }
 
     const result = await editCourseU(courseId, instructorId, files, body, dbRepositoryCourse);
-    res.status(200).json({ status: 'success', message: 'Successfully updated the course', data: result });
+
+    // Keep cache hot & consistent
+    await invalidateCourseCaches(courseId);
+
+    ok(res, 'Successfully updated the course', result);
   });
 
-  const getAllCourses = asyncHandler(async (_req: Request, res: Response) => {
+  const getAllCourses = asyncHandler(async (_req: Request, res: Response): Promise<void> => {
+    // Always read DB then refresh cache—keeps data fresh when upstream mutated
     const courses = await getAllCourseU(dbRepositoryCourse);
     await dbRepositoryCache.setCache({ key: 'all-courses', expireTimeSec: 600, data: JSON.stringify(courses) });
-    res.status(200).json({ status: 'success', message: 'Successfully retrieved all courses', data: courses });
+    ok(res, 'Successfully retrieved all courses', courses);
   });
 
-  const getIndividualCourse = asyncHandler(async (req: Request, res: Response) => {
+  const getIndividualCourse = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const { courseId } = req.params;
     const course = await getCourseByIdU(courseId, dbRepositoryCourse);
-    res.status(200).json({ status: 'success', message: 'Successfully retrieved the course', data: course });
+    ok(res, 'Successfully retrieved the course', course);
   });
 
-  const getCoursesByInstructor = asyncHandler(async (req: CustomRequest, res: Response) => {
+  const getCoursesByInstructor = asyncHandler(async (req: CustomRequest, res: Response): Promise<void> => {
     const instructorId = req.user?.Id;
     const courses = await getCourseByInstructorU(instructorId, dbRepositoryCourse);
-    res.status(200).json({ status: 'success', message: 'Successfully retrieved your courses', data: courses });
+    ok(res, 'Successfully retrieved your courses', courses);
   });
 
-  const enrollStudent = asyncHandler(async (req: CustomRequest, res: Response) => {
+  const enrollStudent = asyncHandler(async (req: CustomRequest, res: Response): Promise<void> => {
     const { courseId } = req.params;
     const { Id: studentId } = req.user || {};
     const paymentInfo: PaymentInfo = req.body;
 
     await enrollStudentU(courseId ?? '', studentId ?? '', paymentInfo, dbRepositoryCourse, dbRepositoryPayment);
-    res.status(200).json({ status: 'success', message: 'Successfully enrolled into the course', data: null });
+
+    // Enrollment can affect "trending" or UI counts → refresh list cache
+    await invalidateCourseCaches(courseId);
+
+    ok(res, 'Successfully enrolled into the course', null);
   });
 
-  const getRecommendedCourseByStudentInterest = asyncHandler(async (req: CustomRequest, res: Response) => {
+  const getRecommendedCourseByStudentInterest = asyncHandler(async (req: CustomRequest, res: Response): Promise<void> => {
     const studentId = req.user?.Id ?? '';
     const courses = await getRecommendedCourseByStudentU(studentId, dbRepositoryCourse);
-    res.status(200).json({ status: 'success', message: 'Successfully retrieved recommended courses', data: courses });
+    ok(res, 'Successfully retrieved recommended courses', courses);
   });
 
-  const getTrendingCourses = asyncHandler(async (_req: Request, res: Response) => {
+  const getTrendingCourses = asyncHandler(async (_req: Request, res: Response): Promise<void> => {
     const courses = await getTrendingCourseU(dbRepositoryCourse);
-    res.status(200).json({ status: 'success', message: 'Successfully retrieved trending courses', data: courses });
+    ok(res, 'Successfully retrieved trending courses', courses);
   });
 
-  const getCourseByStudent = asyncHandler(async (req: CustomRequest, res: Response) => {
+  const getCourseByStudent = asyncHandler(async (req: CustomRequest, res: Response): Promise<void> => {
     const studentId = req.user?.Id;
     const courses = await getCourseByStudentU(studentId, dbRepositoryCourse);
-    res.status(200).json({ status: 'success', message: 'Successfully retrieved courses based on students', data: courses });
+    ok(res, 'Successfully retrieved courses based on students', courses);
   });
 
-  const searchCourse = asyncHandler(async (req: Request, res: Response) => {
+  const searchCourse = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const { search = '', filter = '' } = req.query as { search?: string; filter?: string };
     const key = (search?.trim?.() ?? '') === '' ? (search as string) : (filter as string);
     const searchResult = await searchCourseU(search as string, filter as string, dbRepositoryCourse);
     if (searchResult.length) {
       await dbRepositoryCache.setCache({ key: `${key}`, expireTimeSec: 600, data: JSON.stringify(searchResult) });
     }
-    res.status(200).json({ status: 'success', message: 'Successfully retrieved courses based on the search query', data: searchResult });
+    ok(res, 'Successfully retrieved courses based on the search query', searchResult);
   });
 
   /** Moderation: draft → pending → approved|rejected */
 
-  const submitCourse = asyncHandler(async (req: CustomRequest, res: Response) => {
+  const submitCourse = asyncHandler(async (req: CustomRequest, res: Response): Promise<void> => {
     const courseId = req.params.courseId;
     await dbRepositoryCourse.editCourse(courseId, { status: 'pending', rejectionReason: null } as any);
-    res.status(200).json({ status: 'success', message: 'Course submitted for review', data: null });
+
+    await invalidateCourseCaches(courseId);
+
+    ok(res, 'Course submitted for review', null);
   });
 
-  const moderateCourse = asyncHandler(async (req: CustomRequest, res: Response) => {
+  const moderateCourse = asyncHandler(async (req: CustomRequest, res: Response): Promise<void> => {
     const courseId = req.params.courseId;
     const { action, reason } = req.body as { action: 'approve' | 'reject'; reason?: string };
 
     if (action !== 'approve' && action !== 'reject') {
       throw new AppError('Invalid action. Use approve|reject', HttpStatusCodes.BAD_REQUEST);
     }
+
     const patch: any = { status: action === 'approve' ? 'approved' : 'rejected' };
     if (action === 'reject') patch.rejectionReason = reason || 'Not specified';
+    else patch.rejectionReason = null;
 
-    await dbRepositoryCourse.editCourse(courseId, patch);
-    res.status(200).json({ status: 'success', message: `Course ${action}d`, data: null });
+    const updated = await dbRepositoryCourse.editCourse(courseId, patch);
+    if (!updated) throw new AppError('Course not found', HttpStatusCodes.NOT_FOUND);
+
+    // 🔥 Make changes visible immediately by refreshing caches
+    await invalidateCourseCaches(courseId);
+
+    ok(res, `Course ${action}d`, null);
   });
 
   /** ---------------------- Lessons ---------------------- */
 
-  const addLesson = asyncHandler(async (req: CustomRequest, res: Response) => {
+  const addLesson = asyncHandler(async (req: CustomRequest, res: Response): Promise<void> => {
     const courseId = req.params.courseId;
     const instructorId = req.user?.Id;
 
-    if (!instructorId) { res.status(401).json({ status: 'fail', message: 'Unauthorized' }); return; }
-    if (!courseId) { res.status(400).json({ status: 'fail', message: 'Missing courseId' }); return; }
+    if (!instructorId) { fail(res, 'Unauthorized', 401); return; }
+    if (!courseId) { fail(res, 'Missing courseId', 400); return; }
 
     const body = req.body as any;
 
@@ -255,11 +317,16 @@ const courseController = (
     };
 
     await addLessonsU([], courseId, instructorId, lesson, dbRepositoryLesson, dbRepositoryQuiz);
-    res.status(201).json({ status: 'success', message: 'Successfully added new lesson', data: null });
+
+    // Lessons listing might be cached by course
+    await invalidateCourseCaches(courseId);
+
+    created(res, 'Successfully added new lesson', null);
   });
 
-  const editLesson = asyncHandler(async (req: CustomRequest, res: Response) => {
+  const editLesson = asyncHandler(async (req: CustomRequest, res: Response): Promise<void> => {
     const lessonId = req.params.lessonId;
+    const courseId = req.params.courseId; // if present in route params
     const body = req.body as any;
 
     if (typeof body.questions === 'string') {
@@ -288,16 +355,20 @@ const courseController = (
     }
 
     await editLessonsU([], lessonId, patch, dbRepositoryLesson, dbRepositoryQuiz);
-    res.status(200).json({ status: 'success', message: 'Successfully updated the lesson', data: null });
+
+    // Reflect lesson changes immediately
+    await invalidateCourseCaches(courseId);
+
+    ok(res, 'Successfully updated the lesson', null);
   });
 
-  const getLessonsByCourse = asyncHandler(async (req: Request, res: Response) => {
+  const getLessonsByCourse = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const courseId = req.params.courseId;
     const lessons = await getLessonsByCourseIdU(courseId, dbRepositoryLesson);
-    res.status(200).json({ status: 'success', message: 'Successfully retrieved lessons based on the course', data: lessons });
+    ok(res, 'Successfully retrieved lessons based on the course', lessons);
   });
 
-  const getLessonsByCoursePublic = asyncHandler(async (req: CustomRequest, res: Response) => {
+  const getLessonsByCoursePublic = asyncHandler(async (req: CustomRequest, res: Response): Promise<void> => {
     const courseId = req.params.courseId;
     const userId = req.user?.Id;
 
@@ -312,66 +383,62 @@ const courseController = (
 
     const data = (isInstructor || isEnrolled) ? lessons : (lessons || []).filter((l: any) => !!l.isPreview);
 
-    res.status(200).json({
-      status: 'success',
-      message: isInstructor || isEnrolled ? 'All lessons' : 'Preview lessons only',
-      data
-    });
+    ok(res, isInstructor || isEnrolled ? 'All lessons' : 'Preview lessons only', data);
   });
 
-  const getLessonById = asyncHandler(async (req: Request, res: Response) => {
+  const getLessonById = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const lessonId = req.params.lessonId;
     const lesson = await getLessonByIdU(lessonId, dbRepositoryLesson);
-    res.status(200).json({ status: 'success', message: 'Successfully retrieved lessons based on the course', data: lesson });
+    ok(res, 'Successfully retrieved lessons based on the course', lesson);
   });
 
-  const getQuizzesByLesson = asyncHandler(async (req: Request, res: Response) => {
+  const getQuizzesByLesson = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const lessonId = req.params.lessonId;
     const quizzes = await getQuizzesLessonU(lessonId, dbRepositoryQuiz);
-    res.status(200).json({ status: 'success', message: 'Successfully retrieved quizzes based on the lesson', data: quizzes });
+    ok(res, 'Successfully retrieved quizzes based on the lesson', quizzes);
   });
 
   /** ---------------------- Discussions ---------------------- */
 
-  const addDiscussion = asyncHandler(async (req: CustomRequest, res: Response) => {
+  const addDiscussion = asyncHandler(async (req: CustomRequest, res: Response): Promise<void> => {
     const lessonId = req.params.lessonId;
     const userId = req.user?.Id;
     const discussion: AddDiscussionInterface = req.body;
 
     await addDiscussionU(userId, lessonId, discussion, dbRepositoryDiscussion);
-    res.status(200).json({ status: 'success', message: 'Successfully posted your comment', data: null });
+    ok(res, 'Successfully posted your comment', null);
   });
 
-  const getDiscussionsByLesson = asyncHandler(async (req: Request, res: Response) => {
+  const getDiscussionsByLesson = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const lessonId = req.params.lessonId;
     const discussion = await getDiscussionsByLessonU(lessonId, dbRepositoryDiscussion);
-    res.status(200).json({ status: 'success', message: 'Successfully retrieved discussions based on a lesson', data: discussion });
+    ok(res, 'Successfully retrieved discussions based on a lesson', discussion);
   });
 
-  const editDiscussions = asyncHandler(async (req: Request, res: Response) => {
+  const editDiscussions = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const discussionId = req.params.discussionId;
     const message: string = req.body.message;
     await editDiscussionU(discussionId, message, dbRepositoryDiscussion);
-    res.status(200).json({ status: 'success', message: 'Successfully edited your comment', data: null });
+    ok(res, 'Successfully edited your comment', null);
   });
 
-  const deleteDiscussion = asyncHandler(async (req: Request, res: Response) => {
+  const deleteDiscussion = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const discussionId = req.params.discussionId;
     await deleteDiscussionByIdU(discussionId, dbRepositoryDiscussion);
-    res.status(200).json({ status: 'success', message: 'Successfully deleted your comment', data: null });
+    ok(res, 'Successfully deleted your comment', null);
   });
 
-  const replyDiscussion = asyncHandler(async (req: Request, res: Response) => {
+  const replyDiscussion = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const discussionId = req.params.discussionId;
     const reply = req.body.reply;
     await replyDiscussionU(discussionId, reply, dbRepositoryDiscussion);
-    res.status(200).json({ status: 'success', message: 'Successfully replied to a comment', data: null });
+    ok(res, 'Successfully replied to a comment', null);
   });
 
-  const getRepliesByDiscussion = asyncHandler(async (req: Request, res: Response) => {
+  const getRepliesByDiscussion = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const discussionId = req.params.discussionId;
     const replies = await getRepliesByDiscussionIdU(discussionId, dbRepositoryDiscussion);
-    res.status(200).json({ status: 'success', message: 'Successfully retrieved replies based on discussion', data: replies });
+    ok(res, 'Successfully retrieved replies based on discussion', replies);
   });
 
   return {

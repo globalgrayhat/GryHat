@@ -1,3 +1,4 @@
+import { ok, created, fail, err } from '../../shared/http/respond';
 // src/adapters/controllers/paymentController.ts
 import { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
@@ -54,22 +55,14 @@ const paymentController = (
   // ---------- Stripe endpoints (unchanged) ----------
   const getConfig = asyncHandler(async (_req: Request, res: Response): Promise<void> => {
     const config = getConfigU(paymentService);
-    return void res.status(200).json({
-      status: 'success',
-      message: 'Successfully completed payment',
-      data: config
-    });
+    return void ok(res, 'Successfully completed payment', config);
   });
 
   const createPaymentIntent = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const { courseId } = req.body as { courseId: string };
     const response = await createPaymentIntentU(courseId, dbRepositoryCourse, paymentService);
     const { client_secret } = response;
-    return void res.status(200).json({
-      status: 'success',
-      message: 'Successfully completed payment',
-      data: { clientSecret: client_secret }
-    });
+    return void ok(res, 'Successfully completed payment', { clientSecret: client_secret });
   });
 
   // ---------- MyFatoorah endpoints (new) ----------
@@ -99,31 +92,19 @@ const paymentController = (
       { methodLabel, customerName, customerEmail, customerMobile, studentId }
     );
 
-    return void res.status(200).json({
-      status: 'success',
-      message: 'MyFatoorah invoice created',
-      data: { invoiceId: invoice.id, url: invoice.url, status: invoice.status }
-    });
+    return void ok(res, 'MyFatoorah invoice created', { invoiceId: invoice.id, url: invoice.url, status: invoice.status });
   });
 
   const getMFStatus = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const { key, keyType } = (req.body || {}) as { key: string; keyType?: 'InvoiceId' | 'PaymentId' };
     const status = await getMFStatusU(key, mfService, keyType);
-    return void res.status(200).json({
-      status: 'success',
-      message: 'MyFatoorah status fetched',
-      data: status
-    });
+    return void ok(res, 'MyFatoorah status fetched', status);
   });
 
   const listMFMethods = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const { courseId } = req.query as { courseId: string };
     const methods = await listMFMethodsU(courseId, dbRepositoryCourse, mfService);
-    return void res.status(200).json({
-      status: 'success',
-      message: 'MyFatoorah methods',
-      data: methods
-    });
+    return void ok(res, 'MyFatoorah methods', methods);
   });
 
   // ---------- Optional: Unified entry point ----------
@@ -133,11 +114,7 @@ const paymentController = (
     if (provider === 'stripe') {
       const { courseId } = req.body as { courseId: string };
       const response = await createPaymentIntentU(courseId, dbRepositoryCourse, paymentService);
-      return void res.status(200).json({
-        status: 'success',
-        message: 'Stripe client secret created',
-        data: { clientSecret: response.client_secret }
-      });
+      return void ok(res, 'Stripe client secret created', { clientSecret: response.client_secret });
     }
 
     if (provider === 'myfatoorah') {
@@ -165,14 +142,10 @@ const paymentController = (
         mfService,
         { methodLabel, customerName, customerEmail, customerMobile, studentId }
       );
-      return void res.status(200).json({
-        status: 'success',
-        message: 'MyFatoorah invoice created',
-        data: { invoiceId: invoice.id, url: invoice.url, status: invoice.status }
-      });
+      return void ok(res, 'MyFatoorah invoice created', { invoiceId: invoice.id, url: invoice.url, status: invoice.status });
     }
 
-    return void res.status(400).json({ status: 'fail', message: 'Unknown provider' });
+    return void fail(res, 'Unknown provider', 400);
   });
 
   return {

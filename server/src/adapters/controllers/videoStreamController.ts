@@ -1,3 +1,4 @@
+import { ok, created, fail, err } from '../../shared/http/respond';
 import { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
 import { CloudServiceInterface } from '../../app/services/cloudServiceInterface';
@@ -20,10 +21,10 @@ const videoStreamController = (
   const cloudService = cloudServiceInterface(cloudServiceImpl());
   const repository = storageConfigDbRepository(storageConfigRepoMongoDb());
 
-  const streamVideo = asyncHandler(async (req: Request, res: Response) => {
+  const streamVideo = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const videoFileId = req.params.videoFileId;
     if (!videoFileId) {
-      res.status(400).json({ status: 'fail', message: 'Missing video file identifier' });
+      fail(res, 'Missing video file identifier', 400);
       return;
     }
 
@@ -67,12 +68,12 @@ const videoStreamController = (
     // S3: deliver a fetchable URL
     if (provider === StorageProvider.S3) {
       const url = await cloudService.getCloudFrontUrl(videoFileId);
-      res.status(200).json({ status: 'success', message: 'URL ready', data: url });
+      ok(res, 'URL ready', url);
       return;
     }
 
     // External (YouTube/Vimeo): key IS the URL
-    res.status(200).json({ status: 'success', message: 'External URL', data: videoFileId });
+    ok(res, 'External URL', videoFileId);
   });
 
   return { streamVideo };

@@ -1,3 +1,4 @@
+import { ok, created, fail, err } from '../../shared/http/respond';
 import { StudentsDbInterface } from '../../app/repositories/studentDbRepository';
 import { StudentRepositoryMongoDB } from '../../frameworks/database/mongodb/repositories/studentsRepoMongoDb';
 import { AuthService } from '../../frameworks/services/authService';
@@ -44,8 +45,7 @@ const studentController = (
   const dbRepositoryContact = contactDbRepository(contactDbRepositoryImpl());
 
   const authService = authServiceInterface(authServiceImpl());
-  const changePassword = asyncHandler(
-    async (req: CustomRequest, res: Response) => {
+  const changePassword = asyncHandler(async (req: CustomRequest, res: Response): Promise<void> => {
       const passwordInfo: { currentPassword: string; newPassword: string } =
         req.body;
       const studentId: string | undefined = req.user?.Id;
@@ -55,16 +55,11 @@ const studentController = (
         authService,
         dbRepositoryStudent
       );
-      res.status(200).json({
-        status: 'success',
-        message: 'Successfully reset password',
-        data: null
-      });
+      ok(res, 'Successfully reset password', null);
     }
   );
 
-  const updateProfile = asyncHandler(
-    async (req: CustomRequest, res: Response) => {
+  const updateProfile = asyncHandler(async (req: CustomRequest, res: Response): Promise<void> => {
       const studentInfo: StudentUpdateInfo = req.body;
       const studentId: string | undefined = req.user?.Id;
       const profilePic: {
@@ -81,16 +76,11 @@ const studentController = (
         dbRepositoryStudent
       );
       await dbRepositoryCache.clearCache(studentId ?? '');
-      res.status(200).json({
-        status: 'success',
-        message: 'Successfully updated your profile',
-        data: null
-      });
+      ok(res, 'Successfully updated your profile', null);
     }
   );
 
-  const getStudentDetails = asyncHandler(
-    async (req: CustomRequest, res: Response) => {
+  const getStudentDetails = asyncHandler(async (req: CustomRequest, res: Response): Promise<void> => {
       const studentId: string | undefined = req.user?.Id;
       const studentDetails = await getStudentDetailsU(
         studentId,
@@ -102,63 +92,38 @@ const studentController = (
         data: JSON.stringify(studentDetails)
       };
       await dbRepositoryCache.setCache(cacheOptions);
-      res.status(200).json({
-        status: 'success',
-        message: 'Successfully retrieved student details',
-        data: studentDetails
-      });
+      ok(res, 'Successfully retrieved student details', studentDetails);
     }
   );
 
-  const getAllStudents = asyncHandler(async (req: Request, res: Response) => {
+  const getAllStudents = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const students = await getAllStudentsU(dbRepositoryStudent);
-    res.status(200).json({
-      status: 'success',
-      message: 'Successfully retrieved all student details',
-      data: students
-    });
+    ok(res, 'Successfully retrieved all student details', students);
   });
 
-  const blockStudent = asyncHandler(async (req: Request, res: Response) => {
+  const blockStudent = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const studentId: string = req.params.studentId;
     const reason: string = req.body.reason;
     await blockStudentU(studentId, reason, dbRepositoryStudent);
-    res.status(200).json({
-      status: 'success',
-      message: 'Successfully blocked student ',
-      data: null
-    });
+    ok(res, 'Successfully blocked student ', null);
   });
 
-  const unblockStudent = asyncHandler(async (req: Request, res: Response) => {
+  const unblockStudent = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const studentId: string = req.params.studentId;
     await unblockStudentU(studentId, dbRepositoryStudent);
-    res.status(200).json({
-      status: 'success',
-      message: 'Successfully unblocked student ',
-      data: null
-    });
+    ok(res, 'Successfully unblocked student ', null);
   });
 
-  const getAllBlockedStudents = asyncHandler(
-    async (req: Request, res: Response) => {
+  const getAllBlockedStudents = asyncHandler(async (req: Request, res: Response): Promise<void> => {
       const students = await getAllBlockedStudentsU(dbRepositoryStudent);
-      res.status(200).json({
-        status: 'success',
-        message: 'Successfully unblocked student ',
-        data: students
-      });
+      ok(res, 'Successfully unblocked student ', students);
     }
   );
 
-  const addContact = asyncHandler(async (req: Request, res: Response) => {
+  const addContact = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const contactInfo: ContactInterface = req.body;
     await addContactU(contactInfo, dbRepositoryContact);
-    res.status(200).json({
-      status: 'success',
-      message: 'Successfully Submitted your response ',
-      data: null
-    });
+    ok(res, 'Successfully Submitted your response ', null);
   });
 
   return {

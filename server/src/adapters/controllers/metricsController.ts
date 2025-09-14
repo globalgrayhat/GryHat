@@ -1,3 +1,4 @@
+import { ok, created, fail, err } from '../../shared/http/respond';
 import { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
 import { getMetrics } from '../../app/helper/requestMetrics';
@@ -10,13 +11,9 @@ import { getMetrics } from '../../app/helper/requestMetrics';
  * broken down by HTTP method and route.
  */
 const metricsController = () => {
-  const fetchMetrics = asyncHandler(async (_req: Request, res: Response) => {
+  const fetchMetrics = asyncHandler(async (_req: Request, res: Response): Promise<void> => {
     const metrics = getMetrics();
-    res.status(200).json({
-      status: 'success',
-      message: 'Performance metrics retrieved successfully',
-      data: metrics
-    });
+    ok(res, 'Performance metrics retrieved successfully', metrics);
   });
   return { fetchMetrics };
 };

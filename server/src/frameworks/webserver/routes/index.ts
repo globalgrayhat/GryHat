@@ -20,6 +20,74 @@ import { UserRole } from '../../../constants/enums';
 import type { RedisClient } from '../../../app';
 
 const routes = (app: Application, redisClient: RedisClient) => {
+  
+  // ---------- Root ----------
+  /**
+   * @swagger
+   * /:
+   *   get:
+   *     tags: [GrayHat]
+   *     summary: GrayHat root
+   *     description: Returns GrayHat platform banner and basic info.
+   *     responses:
+   *       200:
+   *         description: Root info
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 platform:
+   *                   type: string
+   *                   example: GrayHat
+   *                 status:
+   *                   type: string
+   *                   example: ok
+   *                 version:
+   *                   type: string
+   *                   example: "1.0"
+   */
+  app.get('/', (_req, res) => {
+    res.status(200).json({
+      platform: 'GrayHat',
+      status: 'ok',
+      version: '1.0',
+    });
+  });
+
+  /**
+   * @swagger
+   * /api/health:
+   *   get:
+   *     tags: [GrayHat]
+   *     summary: GrayHat health check
+   *     description: Simple liveness probe for GrayHat platform.
+   *     responses:
+   *       200:
+   *         description: Service is healthy
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 platform:
+   *                   type: string
+   *                   example: GrayHat
+   *                 status:
+   *                   type: string
+   *                   example: healthy
+   *                 timestamp:
+   *                   type: string
+   *                   format: date-time
+   */
+  app.get('/api/health', (_req, res) => {
+    res.status(200).json({
+      platform: 'GrayHat',
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+    });
+  });
+
   // Auth
   app.use('/api/auth', authRouter());
 

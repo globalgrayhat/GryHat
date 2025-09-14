@@ -1,10 +1,11 @@
+// server/src/app/usecases/lessons/addLesson.ts
 import HttpStatusCodes from '../../../constants/HttpStatusCodes';
 import AppError from '../../../utils/appError';
 import { CreateLessonInterface } from '../../../types/lesson';
 import { QuizDbInterface } from '../../repositories/quizDbRepository';
 import { LessonDbRepositoryInterface } from '../../repositories/lessonDbRepository';
 
-import * as ffprobePath from 'ffprobe-static';
+import ffprobeStatic from 'ffprobe-static';
 import ffmpeg from 'fluent-ffmpeg';
 import * as fs from 'fs';
 import path from 'path';
@@ -14,6 +15,12 @@ import { cloudServiceInterface } from '../../services/cloudServiceInterface';
 import { CloudServiceImpl } from '../../../frameworks/services';
 import { tusUploadService } from '../../../frameworks/services/tusUploadService';
 
+// DTO validation
+import { parseAddLessonDTO, type AddLessonDTO } from '../../dtos/lesson.dto';
+
+const FFPROBE_PATH = (ffprobeStatic as unknown as { path?: string }).path || '';
+
+/** -------- Utils -------- */
 const toArray = (v: unknown): string[] => {
   if (!v) return [];
   if (Array.isArray(v)) return v.map(String).map(s => s.trim()).filter(Boolean);
@@ -43,10 +50,11 @@ const tusDiskPath = (id: string): string | null => {
 const probeDurationSec = (absPath: string): Promise<number> =>
   new Promise((resolve) => {
     try {
-      ffmpeg(absPath).setFfprobePath(ffprobePath.path).ffprobe((err: Error | null, data: any) => {
+      if (FFPROBE_PATH) ffmpeg.setFfprobePath(FFPROBE_PATH);
+      ffmpeg(absPath).ffprobe((err: Error | null, data: any) => {
         if (err) return resolve(0);
         const d = Number(data?.format?.duration ?? 0);
-        resolve(isFinite(d) ? d : 0);
+        resolve(Number.isFinite(d) ? d : 0);
       });
     } catch { resolve(0); }
   });
@@ -56,7 +64,36 @@ const vimeoEmbed = (idOrUrl: string) => {
   return `https://player.vimeo.com/video/${id}`;
 };
 
+/** Normalize loose lesson input so DTO can validate safely */
+const normalizeAddLessonInput = (raw: CreateLessonInterface | any): AddLessonDTO => {
+  const asBool = (v: unknown) => v === true || String(v ?? '').toLowerCase().trim() === 'true';
 
+  return {
+    title: String(raw?.title ?? ''),
+    description: meaningful(raw?.description) ? String(raw?.description) : undefined,
+    contents: Array.isArray(raw?.contents) ? raw.contents : toArray(raw?.contents),
+    duration: Number(raw?.duration ?? 0),
+    about: meaningful(raw?.about) ? String(raw?.about) : undefined,
+    isPreview: asBool(raw?.isPreview ?? false),
+
+    videoSource: raw?.videoSource,
+    videoUrl: raw?.videoUrl,
+    videoFile: raw?.videoFile,
+    videoTusKeys: raw?.videoTusKeys !== undefined ? toArray(raw.videoTusKeys) : undefined,
+    primaryVideoKey: raw?.primaryVideoKey,
+
+    questions: Array.isArray(raw?.questions) ? raw.questions : tryParseJson(raw?.questions, []),
+
+    resources: Array.isArray(raw?.resources) ? raw.resources : []
+  };
+};
+
+/**
+ * Add lesson use-case.
+ * - Validates with AddLessonDTO.
+ * - Supports TUS upload OR external URL (mutually exclusive).
+ * - Uploads any raw resource files (when controller passes _resourcesUploads).
+ */
 export const addLessonsU = async (
   _media: Express.Multer.File[] | undefined,
   courseId: string | undefined,
@@ -64,7 +101,7 @@ export const addLessonsU = async (
   lesson: CreateLessonInterface,
   lessonDbRepository: ReturnType<LessonDbRepositoryInterface>,
   quizDbRepository: ReturnType<QuizDbInterface>
-) => {
+): Promise<void> => {
   if (!courseId) throw new AppError('Please provide a course id', HttpStatusCodes.BAD_REQUEST);
   if (!instructorId) throw new AppError('Please provide an instructor id', HttpStatusCodes.BAD_REQUEST);
   if (!lesson) throw new AppError('Data is not provided', HttpStatusCodes.BAD_REQUEST);
@@ -72,70 +109,84 @@ export const addLessonsU = async (
   const cloud = cloudServiceInterface(CloudServiceImpl());
   const tus = tusUploadService();
 
-  // ---- Normalize fields ----
-  (lesson as any).contents = Array.isArray(lesson.contents) ? lesson.contents : toArray((lesson as any).contents);
-  (lesson as any).about = meaningful((lesson as any).about) ? String((lesson as any).about) : undefined;
-  (lesson as any).isPreview =
-    typeof (lesson as any).isPreview === 'boolean'
-      ? (lesson as any).isPreview
-      : String((lesson as any).isPreview || '').toLowerCase() === 'true';
-
-  (lesson as any).questions = tryParseJson((lesson as any).questions, lesson.questions || []);
-  (lesson as any).resources = Array.isArray((lesson as any).resources) ? (lesson as any).resources : [];
-  (lesson as any).media = Array.isArray((lesson as any).media) ? (lesson as any).media : [];
-
-  // ---- Gather video inputs ----
-  const rawUrl = (lesson as any).videoUrl;
-  const rawSource = String((lesson as any).videoSource || '').toLowerCase(); // 'youtube'|'vimeo'|'local'|'s3'|'tus'
-  const hasUrl = meaningful(rawUrl);
-  const url = hasUrl ? String(rawUrl).trim() : '';
-
-  const singleTusId = meaningful((lesson as any).videoFile) ? String((lesson as any).videoFile).trim() : '';
-  const tusArray = toArray((lesson as any).videoTusKeys).filter(meaningful);
-  const tusIds = singleTusId ? [singleTusId] : tusArray;
-
-  if (hasUrl && tusIds.length) {
-    throw new AppError('Choose either a video URL OR a TUS upload (videoFile/videoTusKeys), not both.', HttpStatusCodes.BAD_REQUEST);
+  // ---- Normalize + validate with DTO ----
+  const normalized = normalizeAddLessonInput(lesson);
+  const parsed = parseAddLessonDTO(normalized);
+  if (!parsed.ok || !parsed.data) {
+    throw new AppError(`Invalid lesson payload: ${JSON.stringify(parsed.errors)}`, HttpStatusCodes.BAD_REQUEST);
   }
+  const dto = parsed.data;
 
-  // ---- Upload resources (raw files) ----
+  // Prepare payload
+  const payload: any = {
+    title: dto.title,
+    description: dto.description ?? '',
+    contents: dto.contents,
+    duration: Number(dto.duration || 0),
+    about: dto.about,
+    isPreview: !!dto.isPreview,
+
+    videoTusKeys: Array.isArray(dto.videoTusKeys) ? dto.videoTusKeys : [],
+    primaryVideoKey: dto.primaryVideoKey,
+
+    media: Array.isArray((lesson as any).media) ? (lesson as any).media : [],
+    resources: Array.isArray(dto.resources) ? dto.resources : [],
+
+    courseId,
+    instructorId,
+
+    videoSource: dto.videoSource,
+    videoUrl: dto.videoUrl
+  };
+
+  // ---- Upload resources if controller passed raw uploads in _resourcesUploads ----
   const rawResUploads: Express.Multer.File[] =
     Array.isArray((lesson as any)._resourcesUploads) ? (lesson as any)._resourcesUploads : [];
   if (rawResUploads.length) {
     const up = await Promise.all(
-      rawResUploads.map(async f => {
+      rawResUploads.map(async (f) => {
         const r = await cloud.uploadAndGetUrl(f);
         return { name: r.name, url: r.url, key: (r as any).key };
       })
     );
-    (lesson as any).resources = [ ...(lesson as any).resources, ...up ];
+    payload.resources = [...(payload.resources || []), ...up];
   }
 
-  // ---- Decide video mode ----
+  // ---- Decide video mode (mutually exclusive) ----
+  const hasUrl = meaningful(dto.videoUrl);
+  const url = hasUrl ? String(dto.videoUrl).trim() : '';
+  const tusIds = Array.isArray(dto.videoTusKeys) ? dto.videoTusKeys.filter(meaningful) : [];
+  const rawSource = String(dto.videoSource || '').toLowerCase();
+
+  if (hasUrl && tusIds.length) {
+    throw new AppError('Choose either a video URL OR a TUS upload (videoTusKeys), not both.', HttpStatusCodes.BAD_REQUEST);
+  }
+
   let usedVideo = false;
 
-  if (!hasUrl && tusIds.length && (rawSource === 'tus' || rawSource === '' || rawSource === undefined)) {
-    const existingIds: string[] = tusIds.filter(id => !!tusDiskPath(id));
+  // A) TUS mode
+  if (!hasUrl && tusIds.length && (rawSource === 'tus' || rawSource === 'local' || rawSource === '' || rawSource === undefined)) {
+    const existingIds: string[] = tusIds.filter((id) => !!tusDiskPath(id));
     if (!existingIds.length) throw new AppError('Provided TUS id(s) not found on server', HttpStatusCodes.BAD_REQUEST);
 
     const finalized: string[] = [];
     for (const id of existingIds) {
       try {
         const { url: fileUrl, name } = await tus.finalizeToCloud(id, cloud);
-        (lesson as any).media.push({ name: name || 'video', url: fileUrl, key: id });
+        payload.media.push({ name: name || 'video', url: fileUrl, key: id });
         finalized.push(id);
       } catch { /* ignore */ }
     }
     if (!finalized.length) throw new AppError('Failed to finalize any TUS uploads', HttpStatusCodes.BAD_REQUEST);
 
-    (lesson as any).videoTusKeys = finalized;
-    (lesson as any).primaryVideoKey = finalized[0];
+    payload.videoTusKeys = finalized;
+    payload.primaryVideoKey = dto.primaryVideoKey ?? finalized[0];
 
-    if (!lesson.duration) {
+    if (!payload.duration) {
       const firstPath = tusDiskPath(finalized[0]);
       if (firstPath) {
         const dur = await probeDurationSec(firstPath);
-        if (dur > 0) (lesson as any).duration = dur;
+        if (dur > 0) payload.duration = dur;
       }
     }
     usedVideo = true;
@@ -143,39 +194,43 @@ export const addLessonsU = async (
 
   // B) URL mode
   if (!usedVideo && hasUrl) {
-    const src = rawSource || ( /youtu\.be|youtube\.com/i.test(url) ? 'youtube'
-                       : /vimeo\.com/i.test(url) ? 'vimeo'
-                       : 'direct');
+    const src =
+      rawSource ||
+      ( /youtu\.be|youtube\.com/i.test(url) ? 'youtube'
+      : /vimeo\.com/i.test(url) ? 'vimeo'
+      : 'direct');
 
     if (src === 'youtube') {
-      // embed format
-      const u = new URL(url);
-      let vid = u.searchParams.get('v');
-      if (!vid && u.hostname === 'youtu.be') vid = u.pathname.slice(1);
+      // Convert to embed format
+      let vid = '';
+      try {
+        const u = new URL(url);
+        vid = u.searchParams.get('v') || '';
+        if (!vid && /youtu\.be/i.test(u.hostname)) vid = u.pathname.slice(1);
+      } catch { /* fallthrough */ }
       if (!vid) throw new AppError('Invalid YouTube URL', HttpStatusCodes.BAD_REQUEST);
-      const embed = `https://www.youtube.com/embed/${vid}`;
-      (lesson as any).media.push({ name: 'youtube', url: embed });
+      payload.media.push({ name: 'youtube', url: `https://www.youtube.com/embed/${vid}` });
     } else if (src === 'vimeo') {
-      (lesson as any).media.push({ name: 'vimeo', url: vimeoEmbed(url) });
+      payload.media.push({ name: 'vimeo', url: vimeoEmbed(url) });
     } else {
-      (lesson as any).media.push({ name: 'video', url });
+      payload.media.push({ name: 'video', url });
     }
 
-    (lesson as any).videoTusKeys = [];
-    (lesson as any).primaryVideoKey = undefined;
+    payload.videoTusKeys = [];
+    payload.primaryVideoKey = undefined;
     usedVideo = true;
   }
 
   if (!usedVideo) {
-    throw new AppError('No valid video provided. Provide either a video URL or a TUS id (videoFile / videoTusKeys).', HttpStatusCodes.BAD_REQUEST);
+    throw new AppError('No valid video provided. Provide either a video URL or TUS id(s) in videoTusKeys.', HttpStatusCodes.BAD_REQUEST);
   }
 
   // ===== Persist =====
-  const lessonId = await lessonDbRepository.addLesson(courseId, instructorId, lesson);
+  const lessonId = await lessonDbRepository.addLesson(courseId, instructorId, payload as CreateLessonInterface);
   if (!lessonId) throw new AppError('Failed to add lesson', HttpStatusCodes.BAD_REQUEST);
 
   // Optional quiz
-  const qs = (lesson as any).questions;
+  const qs = dto.questions ?? tryParseJson((lesson as any).questions, []);
   if (Array.isArray(qs) && qs.length) {
     await quizDbRepository.addQuiz({ courseId, lessonId: lessonId.toString(), questions: qs });
   }
