@@ -84,6 +84,29 @@ const courseRouter = (redisClient: RedisClient) => {
     controller.addCourse
   );
 
+/**
+ * @swagger
+ * /api/courses/delete-course/{courseId}:
+ *   delete:
+ *     summary: Delete course (Instructor only)
+ *     tags: [Course]
+ *     security: [ { bearerAuth: [] } ]
+ *     parameters:
+ *       - in: path
+ *         name: courseId
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200: { description: Course deleted successfully }
+ *       404: { description: Course not found }
+ */
+router.delete(
+  '/delete-course/:courseId',
+  jwtAuthMiddleware,
+  roleCheckMiddleware(UserRole.Instructor),
+  controller.deleteCourse
+);
+
   /**
    * @swagger
    * /api/courses/instructors/edit-course/{courseId}:
@@ -190,7 +213,7 @@ const courseRouter = (redisClient: RedisClient) => {
    * /api/courses/get-course/{courseId}:
    *   get:
    *     summary: Get course by ID
-   *     tags: [Course]
+   *     tags: [C/ourse]
    *     parameters:
    *       - in: path
    *         name: courseId
@@ -200,7 +223,7 @@ const courseRouter = (redisClient: RedisClient) => {
    *       200: { description: Course details }
    *       404: { description: Course not found }
    */
-  router.get('/get-course/:courseId', controller.getIndividualCourse);
+  router.get('/get-course:courseId', controller.getIndividualCourse);
 
   // -------------------- LESSONS --------------------
 

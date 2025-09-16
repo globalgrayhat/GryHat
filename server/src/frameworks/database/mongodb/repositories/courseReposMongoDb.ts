@@ -22,19 +22,26 @@ const newCourse = new Course(normalized);
     const response = await Course.findOneAndUpdate(
       { _id: new mongoose.Types.ObjectId(courseId) },
       { ...editInfo }
-    );
+    )
+    .populate('instructorId', 'firstName lastName email profilePic')
+    ;
     return response;
   };
 
   const getAllCourse = async () => {
-    const courses: CourseInterface[] | null = await Course.find({});
+    const courses: CourseInterface[] | null = await Course.find({})
+    .populate('instructorId', 'firstName lastName email profilePic');
     return courses;
   };
 
   const getCourseById = async (courseId: string) => {
     const course: CourseInterface | null = await Course.findOne({
       _id: new mongoose.Types.ObjectId(courseId)
-    }).lean();
+    })
+    .populate('instructorId', 'firstName lastName email profilePic')
+    .populate('category', 'name') 
+    .populate('subcategory', 'name')
+    .lean();
     return course;
   };
 
@@ -248,6 +255,14 @@ const newCourse = new Course(normalized);
     return courses;
   };
 
+  const deleteCourse = async (courseId: string) => {
+    const response = await Course.findOneAndDelete({
+      _id: new mongoose.Types.ObjectId(courseId)
+    });
+    return response;
+  };
+  
+
   return {
     addCourse,
     editCourse,
@@ -262,7 +277,8 @@ const newCourse = new Course(normalized);
     getTotalNumberOfCourses,
     getNumberOfCoursesAddedInEachMonth,
     getStudentsByCourseForInstructor,
-    searchCourse
+    searchCourse,
+    deleteCourse
   };
 };
 

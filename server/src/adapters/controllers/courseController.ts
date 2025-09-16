@@ -441,6 +441,19 @@ const courseController = (
     ok(res, 'Successfully retrieved replies based on discussion', replies);
   });
 
+  const deleteCourse = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const { courseId } = req.params;
+
+    const deleted = await dbRepositoryCourse.deleteCourse(courseId);
+    if (!deleted) {
+      return fail(res, 'Course not found', 404);
+    }
+
+    await invalidateCourseCaches(courseId);
+
+    ok(res, 'Course deleted successfully', null);
+  });
+
   return {
     // Courses
     addCourse,
@@ -455,6 +468,7 @@ const courseController = (
     searchCourse,
     submitCourse,
     moderateCourse,
+    deleteCourse,
 
     // Lessons
     addLesson,
@@ -470,7 +484,7 @@ const courseController = (
     editDiscussions,
     deleteDiscussion,
     replyDiscussion,
-    getRepliesByDiscussion
+    getRepliesByDiscussion,
   };
 };
 
