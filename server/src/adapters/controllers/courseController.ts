@@ -246,25 +246,26 @@ const courseController = (
   });
 
   const moderateCourse = asyncHandler(async (req: CustomRequest, res: Response): Promise<void> => {
-    const courseId = req.params.courseId;
+    const { courseId } = req.params;
     const { action, reason } = req.body as { action: 'approve' | 'reject'; reason?: string };
-
-    if (action !== 'approve' && action !== 'reject') {
+  
+    if (!['approve', 'reject'].includes(action)) {
       throw new AppError('Invalid action. Use approve|reject', HttpStatusCodes.BAD_REQUEST);
     }
-
-    const patch: any = { status: action === 'approve' ? 'approved' : 'rejected' };
-    if (action === 'reject') patch.rejectionReason = reason || 'Not specified';
-    else patch.rejectionReason = null;
-
+  
+    const patch: any = {
+      status: action === 'approve' ? 'approved' : 'rejected',
+      isVerified: action === 'approve',
+      rejectionReason: action === 'reject' ? reason || 'Not specified' : null,
+    };
+  
     const updated = await dbRepositoryCourse.editCourse(courseId, patch);
     if (!updated) throw new AppError('Course not found', HttpStatusCodes.NOT_FOUND);
-
-    // 🔥 Make changes visible immediately by refreshing caches
+  
     await invalidateCourseCaches(courseId);
-
     ok(res, `Course ${action}d`, null);
   });
+  
 
   /** ---------------------- Lessons ---------------------- */
 

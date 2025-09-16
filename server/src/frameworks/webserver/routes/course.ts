@@ -223,7 +223,7 @@ router.delete(
    *       200: { description: Course details }
    *       404: { description: Course not found }
    */
-  router.get('/get-course:courseId', controller.getIndividualCourse);
+  router.get('/get-course/:courseId', controller.getIndividualCourse);
 
   // -------------------- LESSONS --------------------
 
