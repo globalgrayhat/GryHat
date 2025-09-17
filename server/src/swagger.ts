@@ -1,5 +1,6 @@
 import swaggerJSDoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
+<<<<<<< HEAD
 import configKeys from './config';
 
 // Build base URL from env (protocol/host/port)
@@ -11,11 +12,14 @@ const PORT = Number(configKeys.PORT) || 5000;
 
 // NOTE: servers[].url SHOULD be the API base, not the /api-docs path
 const BASE_URL = `${PROTOCOL}://${HOST}:${PORT}`;
+=======
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
 
 const options = {
   definition: {
     openapi: '3.0.0',
     info: {
+<<<<<<< HEAD
       title: 'GrayHat API',
       version: '1.0.0',
       description: 'API documentation for GrayHat - E-Learning Platform'
@@ -41,6 +45,19 @@ const options = {
     './src/frameworks/webserver/routes/*.ts',
     './src/adapters/controllers/*.ts'
   ]
+=======
+      title: 'GryHat API',
+      version: '1.0.0',
+      description: 'API documentation for GryHat'
+    },
+    servers: [
+      {
+        url: 'http://localhost:3000'
+      }
+    ]
+  },
+  apis: ['./routes/*.ts']
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
 };
 
 const swaggerSpec = swaggerJSDoc(options);

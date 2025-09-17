@@ -6,16 +6,25 @@ import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
 import useTimeAgo from "../../../hooks/useTimeAgo";
 import { InstructorApiResponse } from "../../../api/types/apiResponses/api-response-instructors";
+<<<<<<< HEAD
 import { Avatar } from "@material-tailwind/react";
 
 const ViewInstructorRequests: React.FC = () => {
   const [requests, setRequests] = useState<InstructorApiResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+=======
+
+
+
+const ViewInstructorRequests: React.FC = () => {
+  const [requests, setRequests] = useState([]);
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
   const calculateTimeAgo = useTimeAgo();
 
   const handleApiCall = async () => {
     try {
+<<<<<<< HEAD
       setLoading(true);
       setError(null);
       const response = await getAllInstructorRequests();
@@ -27,12 +36,19 @@ const ViewInstructorRequests: React.FC = () => {
       toast.error(errorMessage, { position: toast.POSITION.BOTTOM_RIGHT });
     } finally {
       setLoading(false);
+=======
+      const response = await getAllInstructorRequests();
+      setRequests(response.data.data);
+    } catch (error:any) {
+      toast.error(error.data.message,{position:toast.POSITION.BOTTOM_RIGHT})
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
     }
   };
 
   useEffect(() => {
     handleApiCall();
   }, []);
+<<<<<<< HEAD
 
   // Loading state
   if (loading) {
@@ -117,11 +133,36 @@ const ViewInstructorRequests: React.FC = () => {
                 </p>
                 <p className='mt-1 truncate text-xs leading-5 text-gray-500'>
                   {email}
+=======
+  const totalPages = 10,currentPage =1
+
+  return (
+    <ul role='list' className=' divide-gray-100  '>
+      {requests?.map((person: InstructorApiResponse) => (
+        <Link
+          to={`/admin/instructors/requests/${person._id}`}
+          key={person?._id}
+        >
+          <li className='flex justify-between gap-x-6 gap-y-3 mt-3 p-3 py-5 rounded-md border bg-white border-gray-300'>
+            <div className='flex gap-x-4'>
+              <img
+                className='h-12 w-12 flex-none rounded-full bg-gray-50'
+                src={person.profilePic}
+                alt=''
+              />
+              <div className='min-w-0 flex-auto'>
+                <p className='text-sm font-semibold leading-6 text-gray-900'>
+                  {`${person?.firstName} ${person?.lastName}`}
+                </p>
+                <p className='mt-1 truncate text-xs leading-5 text-gray-500'>
+                  {person?.email}
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
                 </p>
               </div>
             </div>
             <div className='hidden sm:flex sm:flex-col sm:items-end'>
                 <p className='mt-1 text-xs leading-5 text-gray-500'>
+<<<<<<< HEAD
                 Application sent {calculateTimeAgo(dateJoined)}
               </p>
             </div>
@@ -130,15 +171,63 @@ const ViewInstructorRequests: React.FC = () => {
           to={`/admin/instructors/requests/${_id}`}
           key={_id}
         >
+=======
+                Application sent {calculateTimeAgo(person?.dateJoined)}
+              </p>
+            </div>
+            <div className='flex gap-x-4'>
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
               <button
                 className='p-1 m-3 rounded-md bg-blue-600 text-white w-20 text-center focus:outline-none focus:ring-2 focus:ring-blue-600 hover:bg-blue-700 hover:shadow-md'
               >
                 View
               </button>
+<<<<<<< HEAD
             </Link>
             </div>
           </li>
       ))} 
+=======
+            </div>
+          </li>
+        </Link>
+      ))} 
+      {/* <CardFooter className='flex items-center justify-between border-t border-blue-gray-50 p-4'>
+        <Button
+          variant='outlined'
+          color='blue-gray'
+          size='sm'
+          // onClick={goToPreviousPage}
+          // disabled={currentPage === 1}
+        >
+          Previous
+        </Button>
+        <div className='flex items-center gap-2'>
+          {Array.from({ length: totalPages }, (_, index) => index + 1).map(
+            (pageNumber) => (
+              <IconButton
+                key={pageNumber}
+                variant={pageNumber === currentPage ? "outlined" : "text"}
+                color='blue-gray'
+                size='sm'
+                // onClick={() => goToPage(pageNumber)}
+              >
+                {pageNumber}
+              </IconButton>
+            )
+          )}
+        </div>
+        <Button
+          variant='outlined'
+          color='blue-gray'
+          size='sm'
+          // onClick={goToNextPage}
+          // disabled={currentPage === totalPages}
+        >
+          Next
+        </Button>
+      </CardFooter> */}
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
     </ul>
   );
 };

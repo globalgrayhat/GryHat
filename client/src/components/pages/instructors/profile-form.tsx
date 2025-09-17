@@ -60,7 +60,11 @@ const ProfileForm: React.FC<Props> = ({ editMode, setEditMode }) => {
         about: instructor?.about || "",
       });
     }
+<<<<<<< HEAD
     setProfileUrl(instructor?.profilePic?.url ?? "");
+=======
+    setProfileUrl(instructor?.profileUrl ?? "");
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
   }, [instructor]);
 
   useEffect(() => {

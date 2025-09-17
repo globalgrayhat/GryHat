@@ -39,7 +39,11 @@ export function AdminSideNav() {
       <div className="mb-2 flex items-center gap-4 p-4">
         <img src={APP_LOGO} alt="brand" className="h-8 w-8" />
         <Typography variant="h5" color="blue-gray">
+<<<<<<< HEAD
           GrayHAT
+=======
+          TutorTrek
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
         </Typography>
       </div>
       <List>

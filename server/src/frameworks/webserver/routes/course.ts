@@ -4,6 +4,11 @@ import { courseRepositoryMongodb } from '../../../frameworks/database/mongodb/re
 import { courseDbRepository } from '../../../app/repositories/courseDbRepository';
 import roleCheckMiddleware from '../middlewares/roleCheckMiddleware';
 import { UserRole } from '../../../constants/enums';
+<<<<<<< HEAD
+=======
+import { cloudServiceInterface } from '../../../app/services/cloudServiceInterface';
+import { CloudServiceImpl } from '../../../frameworks/services';
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
 import upload from '../middlewares/multer';
 import { quizDbRepository } from '../../../app/repositories/quizDbRepository';
 import { quizRepositoryMongodb } from '../../../frameworks/database/mongodb/repositories/quizzDbRepository';
@@ -14,7 +19,10 @@ import { discussionRepositoryMongoDb } from '../../../frameworks/database/mongod
 import { paymentRepositoryMongodb } from '../../../frameworks/database/mongodb/repositories/paymentRepoMongodb';
 import { paymentInterface } from '../../../app/repositories/paymentDbRepository';
 import jwtAuthMiddleware from '../middlewares/userAuth';
+<<<<<<< HEAD
 import optionalAuth from '../middlewares/optionalAuth';
+=======
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
 import { redisCacheRepository } from '../../../frameworks/database/redis/redisCacheRepository';
 import { cacheRepositoryInterface } from '../../../app/repositories/cachedRepoInterface';
 import { RedisClient } from '../../../app';
@@ -22,8 +30,14 @@ import { cachingMiddleware } from '../middlewares/redisCaching';
 
 const courseRouter = (redisClient: RedisClient) => {
   const router = express.Router();
+<<<<<<< HEAD
 
   const controller = courseController(
+=======
+  const controller = courseController(
+    cloudServiceInterface,
+    CloudServiceImpl,
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
     courseDbRepository,
     courseRepositoryMongodb,
     quizDbRepository,
@@ -38,6 +52,7 @@ const courseRouter = (redisClient: RedisClient) => {
     redisCacheRepository,
     redisClient
   );
+<<<<<<< HEAD
 
   /**
    * @swagger
@@ -72,10 +87,14 @@ const courseRouter = (redisClient: RedisClient) => {
    *       201: { description: Course created (returns courseId) }
    *       400: { description: Bad request }
    */
+=======
+  //* Add course
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
   router.post(
     '/instructors/add-course',
     jwtAuthMiddleware,
     roleCheckMiddleware(UserRole.Instructor),
+<<<<<<< HEAD
     upload.fields([
       { name: 'guidelines', maxCount: 1 },
       { name: 'introduction', maxCount: 1 },
@@ -130,10 +149,17 @@ router.delete(
    *     responses:
    *       200: { description: Course updated successfully }
    */
+=======
+    upload.array('files'),
+    controller.addCourse
+  );
+
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
   router.put(
     '/instructors/edit-course/:courseId',
     jwtAuthMiddleware,
     roleCheckMiddleware(UserRole.Instructor),
+<<<<<<< HEAD
     upload.fields([
       { name: 'guidelines', maxCount: 1 },
       { name: 'introduction', maxCount: 1 },
@@ -260,10 +286,32 @@ router.delete(
    *       201: { description: Lesson added }
    *       400: { description: Invalid payload (URL + TUS together, or missing video) }
    */
+=======
+    upload.array('files'),
+    controller.editCourse
+  );
+
+  router.get(
+    '/get-all-courses',
+    cachingMiddleware(redisClient, 'all-courses'),
+    controller.getAllCourses
+  );
+
+  router.get('/get-course/:courseId', controller.getIndividualCourse);
+
+  router.get(
+    '/get-course-by-instructor',
+    jwtAuthMiddleware,
+    roleCheckMiddleware(UserRole.Instructor),
+    controller.getCoursesByInstructor
+  );
+
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
   router.post(
     '/instructors/add-lesson/:courseId',
     jwtAuthMiddleware,
     roleCheckMiddleware(UserRole.Instructor),
+<<<<<<< HEAD
     // نسمح فقط برفع المرفقات resources؛ الفيديو يأتي كرابط أو TUS id
     upload.fields([{ name: 'resources', maxCount: 20 }]),
     controller.addLesson
@@ -296,10 +344,17 @@ router.delete(
    *     responses:
    *       200: { description: Lesson updated }
    */
+=======
+    upload.array('media'),
+    controller.addLesson
+  );
+
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
   router.put(
     '/instructors/edit-lesson/:lessonId',
     jwtAuthMiddleware,
     roleCheckMiddleware(UserRole.Instructor),
+<<<<<<< HEAD
     upload.fields([{ name: 'resources', maxCount: 20 }]),
     controller.editLesson
   );
@@ -741,3 +796,82 @@ export default courseRouter;
  *         isPreview: { type: boolean }
  *         questions: { type: string, description: "JSON string" }
  */
+=======
+    upload.array('media'),
+    controller.editLesson
+  );
+
+  router.get(
+    '/instructors/get-lessons-by-course/:courseId',
+    controller.getLessonsByCourse
+  );
+
+  router.get('/get-lessons-by-id/:lessonId', controller.getLessonById);
+
+  router.get('/get-quizzes-by-lesson/:lessonId', controller.getQuizzesByLesson);
+
+  router.post(
+    '/lessons/add-discussion/:lessonId',
+    jwtAuthMiddleware,
+    controller.addDiscussion
+  );
+
+  router.get(
+    '/lessons/get-discussions-by-lesson/:lessonId',
+    controller.getDiscussionsByLesson
+  );
+
+  router.patch(
+    '/lessons/edit-discussion/:discussionId',
+    jwtAuthMiddleware,
+    controller.editDiscussions
+  );
+
+  router.delete(
+    '/lessons/delete-discussion/:discussionId',
+    jwtAuthMiddleware,
+    controller.deleteDiscussion
+  );
+
+  router.put(
+    '/lessons/reply-discussion/:discussionId',
+    jwtAuthMiddleware,
+    controller.replyDiscussion
+  );
+
+  router.get(
+    '/lesson/replies-based-on-discussion/:discussionId',
+    controller.getRepliesByDiscussion
+  );
+
+  router.post(
+    '/enroll-student/:courseId',
+    jwtAuthMiddleware,
+    controller.enrollStudent
+  );
+
+  router.get(
+    '/get-recommended-courses',
+    jwtAuthMiddleware,
+    roleCheckMiddleware(UserRole.Student),
+    controller.getRecommendedCourseByStudentInterest
+  );
+
+  router.get('/get-trending-courses', controller.getTrendingCourses);
+
+  router.get(
+    '/get-course-by-student',
+    jwtAuthMiddleware,
+    controller.getCourseByStudent
+  );
+
+  router.get(
+    '/search-course',
+    cachingMiddleware(redisClient),
+    controller.searchCourse
+  );
+
+  return router;
+};
+export default courseRouter;
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)

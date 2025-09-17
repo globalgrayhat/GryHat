@@ -11,6 +11,7 @@ const categoryRouter = () => {
     categoryRepositoryMongodb
   );
 
+<<<<<<< HEAD
   /**
    * @swagger
    * /api/category/add-category:
@@ -119,6 +120,15 @@ const categoryRouter = () => {
  */
 router.delete('/delete-category/:categoryId', controller.deleteCategory);
 
+=======
+  router.post('/add-category', controller.addCategory);
+
+  router.get('/get-category/:categoryId', controller.getCategoryById);
+
+  router.get('/get-all-categories', controller.getAllCategory);
+
+  router.put('/edit-category/:categoryId',controller.editCategory)
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
 
   return router;
 };

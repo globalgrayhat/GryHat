@@ -3,7 +3,12 @@ export interface InstructorInterface {
   lastName: string;
   profilePic: {
     name: string;
+<<<<<<< HEAD
     url: string;
+=======
+    key?: string;
+    url?: string;
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
   };
   email: string;
   mobile: number;

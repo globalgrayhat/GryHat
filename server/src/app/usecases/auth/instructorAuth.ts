@@ -2,15 +2,25 @@ import HttpStatusCodes from '../../../constants/HttpStatusCodes';
 import {
   SavedInstructorInterface,
   InstructorInterface
+<<<<<<< HEAD
 } from '../../../types/instructorInterface';
+=======
+} from '@src/types/instructorInterface';
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
 import AppError from '../../../utils/appError';
 import { InstructorDbInterface } from '../../../app/repositories/instructorDbRepository';
 import { AuthServiceInterface } from '../../../app/services/authServicesInterface';
 import { RefreshTokenDbInterface } from '../../../app/repositories/refreshTokenDBRepository';
+<<<<<<< HEAD
+=======
+import { UploadedFileInterface } from '@src/types/common';
+import { CloudServiceInterface } from '@src/app/services/cloudServiceInterface';
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
 import { UserRole } from '../../../constants/enums';
 
 export const instructorRegister = async (
   instructor: InstructorInterface,
+<<<<<<< HEAD
   files: { [fieldname: string]: Express.Multer.File[] },
   instructorRepository: ReturnType<InstructorDbInterface>,
   authService: ReturnType<AuthServiceInterface>
@@ -20,6 +30,23 @@ export const instructorRegister = async (
   instructor.email = email.toLowerCase();
   const isEmailAlreadyRegistered =
     await instructorRepository.getInstructorByEmail(instructor.email);
+=======
+  files: Express.Multer.File[],
+  instructorRepository: ReturnType<InstructorDbInterface>,
+  authService: ReturnType<AuthServiceInterface>,
+  cloudService: ReturnType<CloudServiceInterface>
+) => {
+  console.log(files);
+  instructor.certificates=[]
+  // Use object destructuring and default value
+  const { password = '', email = '' }: InstructorInterface = instructor;
+  instructor.email = email.toLowerCase();
+
+  // Check if the email is already registered
+  const isEmailAlreadyRegistered = await instructorRepository.getInstructorByEmail(
+    instructor.email
+  );
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
 
   if (isEmailAlreadyRegistered) {
     throw new AppError(
@@ -28,6 +55,7 @@ export const instructorRegister = async (
     );
   }
 
+<<<<<<< HEAD
   if (files.profilePic && files.profilePic.length > 0) {
     const profilePicFile = files.profilePic[0];
     instructor.profilePic = {
@@ -49,6 +77,28 @@ export const instructorRegister = async (
     instructor.password = await authService.hashPassword(password);
   }
 
+=======
+
+  for (const file of files) {
+    let uploadedFile;
+
+    if (file.originalname === 'profilePic') {
+      uploadedFile = await cloudService.upload(file);
+      instructor.profilePic = uploadedFile;
+    } else {
+      uploadedFile = await cloudService.upload(file);
+      instructor.certificates.push(uploadedFile);
+    }
+  }
+
+  // Hash the password if provided
+  if (password) {
+    instructor.password = await authService.hashPassword(password);
+  }
+  console.log(instructor)
+
+  // Add instructor to the repository
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
   const response = await instructorRepository.addInstructor(instructor);
 
   return response

@@ -47,9 +47,12 @@ export const courseDbRepository = (
   const searchCourse = async (isFree: boolean, searchQuery: string,filterQuery:string) =>
     await repository.searchCourse(isFree, searchQuery,filterQuery);
 
+<<<<<<< HEAD
   const deleteCourse = async (courseId: string) =>
     await repository.deleteCourse(courseId);
 
+=======
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
   return {
     addCourse,
     editCourse,
@@ -64,8 +67,12 @@ export const courseDbRepository = (
     getTotalNumberOfCourses,
     getNumberOfCoursesAddedInEachMonth,
     getStudentsByCourseForInstructor,
+<<<<<<< HEAD
     searchCourse,
     deleteCourse
+=======
+    searchCourse
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
   };
 };
 export type CourseDbRepositoryInterface = typeof courseDbRepository;

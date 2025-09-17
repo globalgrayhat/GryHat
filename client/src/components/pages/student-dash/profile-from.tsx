@@ -121,7 +121,11 @@ const ProfileForm:React.FC<Props> = ({editMode,setEditMode}) => {
       </div>
       <div className='p-5 flex '>
         <Avatar
+<<<<<<< HEAD
           src={studentInfo?.profilePic?.url || USER_AVATAR}
+=======
+          src={previewImage || studentInfo?.profilePic?.url  ||USER_AVATAR}
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
           alt='avatar'
           size='xl'
         />

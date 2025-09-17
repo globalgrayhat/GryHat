@@ -58,6 +58,7 @@ export const editCategoryU = async (
   }
   await categoryDbRepository.editCategory(categoryId, categoryInfo);
 };
+<<<<<<< HEAD
 
 export const deleteCategoryU = async (
   categoryId: string,
@@ -81,3 +82,5 @@ export const deleteCategoryU = async (
 
   return deletedCategory;
 };
+=======
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)

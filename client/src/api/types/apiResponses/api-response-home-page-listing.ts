@@ -1,4 +1,5 @@
 export interface ApiResponseRecommended {
+<<<<<<< HEAD
   _id: string;
   title: string;
   duration: number;
@@ -9,6 +10,15 @@ export interface ApiResponseRecommended {
   instructorProfileUrl: string;
   categoryName: string;
   createdAt: string; 
+=======
+  _id: string
+  instructor: Instructor
+  course: Course,
+  media:{
+    profileUrl:string,
+    thumbnailUrl:string,
+  }
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
 }
 
 export interface Instructor {
@@ -51,6 +61,7 @@ export interface Course {
   }
   
   export interface ApiResponseTrending {
+<<<<<<< HEAD
     _id: string;
     title: string;
     thumbnailUrl: string;
@@ -59,4 +70,12 @@ export interface Course {
     instructorProfileUrl: string;
     enrolledCount: number;
     createdAt: string; 
+=======
+    _id: string
+    title: string
+    thumbnailUrl: string;
+    profileUrl:string;
+    instructorFirstName: string
+    instructorLastName: string
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
   }

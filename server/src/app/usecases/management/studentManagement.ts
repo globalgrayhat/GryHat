@@ -11,7 +11,11 @@ export const getAllStudentsU = async (
   await Promise.all(
     students.map(async (student) => {
       if (student?.profilePic?.url) {
+<<<<<<< HEAD
         student.profilePic.url = student.profilePic.url;
+=======
+        student.profileUrl = student.profilePic.url;
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
       }
     })
   );
@@ -60,7 +64,11 @@ export const getAllBlockedStudentsU = async (
   await Promise.all(
     blockedStudents.map(async (student) => {
       if (student?.profilePic?.url) {
+<<<<<<< HEAD
         student.profilePic.url = student.profilePic.url;
+=======
+        student.profileUrl = student.profilePic.url;
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
       }
     })
   );

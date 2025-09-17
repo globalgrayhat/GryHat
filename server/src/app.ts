@@ -1,4 +1,5 @@
 import express, { Application, NextFunction } from 'express';
+<<<<<<< HEAD
 import http from 'http';
 import { Server } from 'socket.io';
 import path from 'path';
@@ -33,10 +34,29 @@ const colorHEX = (hex: string, text: string): string => {
   const b = parseInt(m.slice(4, 6), 16) || 255;
   return `\x1b[38;2;${r};${g};${b}m${text}\x1b[0m`;
 };
+=======
+import connectToMongoDb from './frameworks/database/mongodb/connection';
+import http from 'http';
+import serverConfig from './frameworks/webserver/server';
+import expressConfig from './frameworks/webserver/express';
+import routes from './frameworks/webserver/routes';
+import connection from './frameworks/database/redis/connection';
+import colors from 'colors.ts';
+import errorHandlingMiddleware from './frameworks/webserver/middlewares/errorHandling';
+import configKeys from './config'; 
+import AppError from './utils/appError';
+import { ClientToServerEvents, InterServerEvents, ServerToClientEvents, SocketData } from './types/socketInterfaces';
+import { Server } from 'socket.io';
+import socketConfig from './frameworks/websocket/socket';
+import { authService } from './frameworks/services/authService';
+
+colors?.enable();
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
 
 const app: Application = express();
 const server = http.createServer(app);
 
+<<<<<<< HEAD
 // Helper: build full docs URL from env (protocol/host/port + path)
 const buildDocsUrl = (req?: express.Request): string => {
   const protocol =
@@ -85,6 +105,20 @@ const io = new Server(server, {
 socketConfig(io, authService());
 
 //* connecting mongoDb
+=======
+//* web socket connection
+const io = new Server<ClientToServerEvents,ServerToClientEvents,InterServerEvents,SocketData>(server,{
+  cors:{
+      origin:configKeys.ORIGIN_PORT,
+      methods:["GET","POST"]
+  } 
+});
+
+
+socketConfig(io,authService())  
+
+//* connecting mongoDb 
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
 connectToMongoDb();
 
 //* connection to redis
@@ -93,6 +127,7 @@ const redisClient = connection().createRedisClient();
 //* express config connection
 expressConfig(app);
 
+<<<<<<< HEAD
 //* docs (conditionally)
 mountSwagger(app);
 
@@ -110,13 +145,23 @@ app.get('/api/docs', (req, res) => {
   });
 });
 
+=======
+//* routes for each endpoint
+routes(app, redisClient);
+
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
 //* handles server side errors
 app.use(errorHandlingMiddleware);
 
 //* catch 404 and forward to error handler
+<<<<<<< HEAD
 import AppError from './utils/appError';
 app.all('*', (req, _res, next: NextFunction) => {
   next(new AppError(`Not found: ${req.method} ${req.originalUrl}`, 404));
+=======
+app.all('*', (req, res, next: NextFunction) => {
+  next(new AppError('Not found', 404));
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
 });
 
 //* starting the server with server config

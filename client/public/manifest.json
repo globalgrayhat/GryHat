@@ -3,17 +3,29 @@
   "name": "Create React App Sample",
   "icons": [
     {
+<<<<<<< HEAD
       "src": "https://res.cloudinary.com/dwucedjmy/image/upload/v1689622796/grayhat-logo_bmdovg.png",
+=======
+      "src": "https://res.cloudinary.com/dwucedjmy/image/upload/v1689622796/tutortrek-logo_bmdovg.png",
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
       "sizes": "64x64 32x32 24x24 16x16",
       "type": "image/x-icon"
     },
     {
+<<<<<<< HEAD
       "src": "https://res.cloudinary.com/dwucedjmy/image/upload/v1689622796/grayhat-logo_bmdovg.png",
+=======
+      "src": "https://res.cloudinary.com/dwucedjmy/image/upload/v1689622796/tutortrek-logo_bmdovg.png",
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
       "type": "image/png",
       "sizes": "192x192"
     },
     {
+<<<<<<< HEAD
       "src": "https://res.cloudinary.com/dwucedjmy/image/upload/v1689622796/grayhat-logo_bmdovg.png",
+=======
+      "src": "https://res.cloudinary.com/dwucedjmy/image/upload/v1689622796/tutortrek-logo_bmdovg.png",
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
       "type": "image/png",
       "sizes": "512x512"
     }

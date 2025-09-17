@@ -10,7 +10,11 @@ import { studentDbRepository } from '../../../app/repositories/studentDbReposito
 import { studentRepositoryMongoDB } from '../../../frameworks/database/mongodb/repositories/studentsRepoMongoDb';
 import { paymentInterface } from '../../../app/repositories/paymentDbRepository';
 import { paymentRepositoryMongodb } from '../../../frameworks/database/mongodb/repositories/paymentRepoMongodb';
+<<<<<<< HEAD
 import { categoryDbInterface } from '../../../app/repositories/categoryDbRepository';
+=======
+import {  categoryDbInterface } from '../../../app/repositories/categoryDbRepository';
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
 import { categoryRepositoryMongodb } from '../../../frameworks/database/mongodb/repositories/categoryRepoMongoDb';
 
 const adminRouter = () => {
@@ -23,13 +27,18 @@ const adminRouter = () => {
     instructorDbRepository,
     instructorRepoMongoDb,
     studentDbRepository,
+<<<<<<< HEAD
     studentRepositoryMongoDB,
+=======
+    studentRepositoryMongoDB ,
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
     paymentInterface,
     paymentRepositoryMongodb,
     categoryDbInterface,
     categoryRepositoryMongodb
   );
 
+<<<<<<< HEAD
   /**
    * @swagger
    * /api/admin/dashboard-details:
@@ -75,6 +84,11 @@ const adminRouter = () => {
    *                   description: The data of the response
    */
   router.get('/graph-data', controller.getGraphDetails);
+=======
+  router.get("/dashboard-details",controller.getDashBoardDetails)
+ 
+  router.get('/graph-data',controller.getGraphDetails)
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
 
   return router;
 };

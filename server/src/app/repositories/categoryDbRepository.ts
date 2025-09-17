@@ -18,17 +18,25 @@ export const categoryDbInterface = (
   ) => await repository.editCategory(categoryId, categoryInfo);
 
   const getCourseCountByCategory = async ()=> await repository.getCourseCountByCategory()
+<<<<<<< HEAD
   
   const deleteCategory = async (categoryId: string) =>
     await repository.deleteCategory(categoryId);
   
+=======
+
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
   return {
     addCategory,
     getCategoryById,  
     getAllCategory,
     editCategory,
+<<<<<<< HEAD
     getCourseCountByCategory,
     deleteCategory
+=======
+    getCourseCountByCategory
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
   };
 };
 

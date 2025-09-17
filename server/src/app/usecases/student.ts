@@ -32,7 +32,11 @@ export const changePasswordU = async (
   }
   const isPasswordCorrect = await authService.comparePassword(
     password.currentPassword,
+<<<<<<< HEAD
     student?.password || ''
+=======
+    student?.password
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
   );
   if (!isPasswordCorrect) {
     throw new AppError(
@@ -55,6 +59,10 @@ export const updateProfileU = async (
   studentInfo: StudentUpdateInfo,
   profilePic: {
     name: string;
+<<<<<<< HEAD
+=======
+    key: string;
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
     path: string;
   },
   studentDbRepository: ReturnType<StudentsDbInterface>
@@ -74,6 +82,7 @@ export const updateProfileU = async (
       ...studentInfo,
       profilePic: {
         name: profilePic.name,
+<<<<<<< HEAD
         url: profilePic.path
       }
     };
@@ -83,6 +92,18 @@ export const updateProfileU = async (
       .then((res) => {
         console.log('res', res);
       });
+=======
+        key: profilePic.key,
+        url: `http://localhost:${process.env.PORT}/${profilePic.path}`
+      }
+    };
+    console.log('FinalStudentInfo', FinalStudentInfo);
+    const response = await studentDbRepository.updateProfile(
+      id,
+      FinalStudentInfo
+    );
+    console.log('response', response);
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
     return response;
   }
   return await studentDbRepository.updateProfile(id, studentInfo);

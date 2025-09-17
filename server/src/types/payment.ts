@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // Which provider processed the payment
 export type PaymentProvider = 'stripe' | 'myfatoorah';
 
@@ -29,3 +30,15 @@ export interface PaymentInfo {
   payment_method: PaymentMethod;
   status: string;              // e.g., 'succeeded' | 'paid' | 'pending' | 'failed'
 }
+=======
+export interface PaymentInfo {
+    courseId:string;
+    studentId:string;
+    paymentId?:string;
+    amount: number;
+    currency: string;
+    payment_method: string;
+    status: string;
+  }
+  
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)

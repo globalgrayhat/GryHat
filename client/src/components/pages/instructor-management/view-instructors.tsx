@@ -134,7 +134,10 @@ const ViewInstructors: React.FC = () => {
                 },
                 index
               ) => {
+<<<<<<< HEAD
                 console.log(profileUrl);
+=======
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
                 const isLast = index === instructors.length - 1;
                 const classes = isLast
                   ? "p-4"

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { FileRef } from './courseInterface';
 
 export interface CreateLessonInterface {
@@ -27,6 +28,20 @@ export interface CreateLessonInterface {
   videoUrl?: string;       // youtube/vimeo/local/s3 link
   videoFile?: string;      // single TUS id
   questions?: Question[];
+=======
+export interface CreateLessonInterface {
+  title: string;
+  description: string;
+  contents: string[];
+  duration: number;
+  instructorId: string;
+  courseId: string;
+  media: {
+    name: string;
+    url: string;
+  }[];
+  questions: Question[];
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
 }
 
 export interface EditLessonInterface {
@@ -34,6 +49,7 @@ export interface EditLessonInterface {
   description?: string;
   contents?: string[];
   duration?: number;
+<<<<<<< HEAD
   about?: string;
   courseId?: string;
   isPreview?: boolean;
@@ -48,6 +64,11 @@ export interface EditLessonInterface {
   videoUrl?: string;
   videoFile?: string;
 
+=======
+  instructorId?: string;
+  courseId?: string;
+  media?: { name: string; url: string }[];
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
   questions?: Question[];
 }
 

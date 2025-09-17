@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import CONFIG_KEYS from "../config";
 /**
  * Returns a full URL based on a given path.
@@ -19,6 +20,9 @@ export const getFullUrl = (path?: string | null): string => {
 
   return `${trimmedBase}/${trimmedPath}`;
 };
+=======
+
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
 
 export function formatDate(dateString: string): string {
   const date = new Date(dateString);

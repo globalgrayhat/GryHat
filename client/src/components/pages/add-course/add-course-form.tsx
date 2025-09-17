@@ -41,17 +41,28 @@ const CombinedForm: React.FC = () => {
   const [categories, setCategories] = useState<ApiResponseCategory[] | null>(
     null
   );
+<<<<<<< HEAD
   const [loading, setLoading] = useState(false);
+=======
+
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
   const handleFormSubmit = async (
     values: CourseFormValues,
     { resetForm }: FormikHelpers<CourseFormValues>
   ) => {
     try {
+<<<<<<< HEAD
       setLoading(true);
       const formData = new FormData();
       guidelines && formData.append("guidelines", guidelines);
       thumbnail && formData.append("thumbnail", thumbnail);
       introduction && formData.append("introduction",introduction)
+=======
+      const formData = new FormData();
+      guidelines && formData.append("files", guidelines);
+      thumbnail && formData.append("files", thumbnail);
+      introduction && formData.append("files",introduction)
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
       Object.keys(values).forEach((key) => formData.append(key, values[key]));
       const response = await addCourse(formData);
       toast.success(response.data.message, {
@@ -65,8 +76,11 @@ const CombinedForm: React.FC = () => {
       toast.error(error.data.message, {
         position: toast.POSITION.BOTTOM_RIGHT,
       });
+<<<<<<< HEAD
     } finally {
       setLoading(false);
+=======
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
     }
   };
 
@@ -86,6 +100,7 @@ const CombinedForm: React.FC = () => {
   const handlePaid = () => {
     setPaid(!paid);
   };
+<<<<<<< HEAD
  
   if (loading) {
     return (
@@ -94,6 +109,8 @@ const CombinedForm: React.FC = () => {
     </div>
     )
   }
+=======
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
 
   return (
     <div className='mb-20'>
@@ -162,9 +179,14 @@ const CombinedForm: React.FC = () => {
                     name='category'
                     className='pl-2 block w-80 rounded-md border-0 py-2.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-700 focus-visible:outline-none focus-visible:ring-blue-600 sm:text-sm sm:leading-6'
                   >
+<<<<<<< HEAD
                     <option value=''>Select Category</option>
                     {categories?.map(({ _id, name }, index) => (
                       <option selected={index === 0} key={_id} value={_id}>
+=======
+                    {categories?.map(({ _id, name }, index) => (
+                      <option selected={index === 0} key={_id}>
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
                         {name}
                       </option>
                     ))}

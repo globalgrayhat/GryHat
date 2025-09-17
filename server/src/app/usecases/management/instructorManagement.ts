@@ -24,6 +24,7 @@ export const acceptInstructorRequest = async (
   const response = await instructorRepository.acceptInstructorRequest(
     instructorId
   );
+<<<<<<< HEAD
   // Mongoose models return Document instances which do not expose custom
   // properties like `email` on the type. Cast to any to access these fields
   // safely. Optionally call toObject() when available to get a plain object.
@@ -34,11 +35,20 @@ export const acceptInstructorRequest = async (
     // Use the casted object to access the email property
     await emailService.sendEmail(
       responseObj.email,
+=======
+  if (response) {
+    emailService.sendEmail(
+      response.email,
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
       'Successfully verified your profile',
       'You are verified'
     );
   }
+<<<<<<< HEAD
   return responseObj;
+=======
+  return response;
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
 };
 
 export const rejectInstructorRequest = async (
@@ -64,23 +74,34 @@ export const rejectInstructorRequest = async (
     instructorId,
     reason
   );
+<<<<<<< HEAD
   const responseObj: any = response && typeof (response as any).toObject === 'function'
     ? (response as any).toObject()
     : (response as any);
   if (responseObj) {
     await emailService.sendEmail(
       responseObj.email,
+=======
+  if (response) {
+    emailService.sendEmail(
+      response.email,
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
       'Sorry your request is rejected',
       reason
     );
   }
+<<<<<<< HEAD
   return responseObj;
+=======
+  return response;
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
 };
 
 export const getAllInstructors = async (
   instructorRepository: ReturnType<InstructorDbInterface>
 ) => {
   const instructors = await instructorRepository.getAllInstructors();
+<<<<<<< HEAD
   // Convert each instructor document into a plain object to access dynamic
   // properties like profilePic and assign computed profileUrl. Without this
   // cast TypeScript complains that these properties do not exist on the
@@ -95,6 +116,16 @@ export const getAllInstructors = async (
     return instructor;
   });
   return instructorsObj;
+=======
+  await Promise.all(
+    instructors.map(async (instructor) => {
+      if (instructor.profilePic) {
+        instructor.profileUrl = instructor.profilePic.url ?? '';
+      }
+    })
+  );
+  return instructors;
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
 };
 
 export const blockInstructors = async (
@@ -130,6 +161,7 @@ export const getBlockedInstructors = async (
   instructorRepository: ReturnType<InstructorDbInterface>
 ) => {
   const blockedInstructors = await instructorRepository.getBlockedInstructors();
+<<<<<<< HEAD
   const blockedObjs = blockedInstructors.map((inst) => {
     const instructor: any = typeof (inst as any).toObject === 'function'
       ? (inst as any).toObject()
@@ -140,6 +172,16 @@ export const getBlockedInstructors = async (
     return instructor;
   });
   return blockedObjs;
+=======
+  await Promise.all(
+    blockedInstructors.map(async (instructor) => {
+      if (instructor.profilePic) {
+        instructor.profileUrl = instructor.profilePic.url ?? '';
+      }
+    })
+  );
+  return blockedInstructors;
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
 };
 
 export const getInstructorByIdUseCase = async (
@@ -149,12 +191,18 @@ export const getInstructorByIdUseCase = async (
   if (!instructorId) {
     throw new AppError('Invalid instructor id', HttpStatusCodes.BAD_REQUEST);
   }
+<<<<<<< HEAD
   const result = await instructorRepository.getInstructorById(instructorId);
   const instructor: any = result && typeof (result as any).toObject === 'function'
     ? (result as any).toObject()
     : (result as any);
   if (instructor?.profilePic) {
     instructor.profileUrl = instructor.profilePic.url;
+=======
+  const instructor = await instructorRepository.getInstructorById(instructorId);
+  if (instructor?.profilePic.key) {
+    instructor.profileUrl = instructor?.profilePic.url ?? '';
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
   }
   if (instructor) {
     instructor.password = 'no password';

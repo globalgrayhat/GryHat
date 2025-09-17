@@ -1,5 +1,8 @@
 import { NextFunction, Request, Response } from 'express';
+<<<<<<< HEAD
 import { recordRequest } from '../../../app/helper/requestMetrics';
+=======
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
 
 /**
  * Middleware that records the time taken for each HTTP request. When the
@@ -29,6 +32,7 @@ export const requestMonitorMiddleware = (
     } else {
       console.log(message);
     }
+<<<<<<< HEAD
     // Record aggregated metrics for this route. Use the method and the
     // original URL path as a unique key. Note that Express's `originalUrl`
     // includes the full path with prefix; this yields a per‑endpoint
@@ -36,6 +40,8 @@ export const requestMonitorMiddleware = (
     // later analysis.
     const key = `${req.method} ${req.originalUrl}`;
     recordRequest(key, durationMs, durationMs > LONG_REQUEST_THRESHOLD_MS);
+=======
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
   });
 
   next();

@@ -15,6 +15,7 @@ import { contactRepositoryMongodb } from '../../../frameworks/database/mongodb/r
 import roleCheckMiddleware from '../middlewares/roleCheckMiddleware';
 import { UserRole } from '../../../constants/enums';
 
+<<<<<<< HEAD
 /**
  * @swagger
  * tags:
@@ -22,6 +23,8 @@ import { UserRole } from '../../../constants/enums';
  *   description: Student management and profile APIs
  */
 
+=======
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
 const studentRouter = (redisClient: RedisClient) => {
   const router = express.Router();
   const controller = studentController(
@@ -35,6 +38,7 @@ const studentRouter = (redisClient: RedisClient) => {
     redisCacheRepository,
     redisClient
   );
+<<<<<<< HEAD
 
   /**
    * @swagger
@@ -62,12 +66,15 @@ const studentRouter = (redisClient: RedisClient) => {
    *       401:
    *         description: Unauthorized
    */
+=======
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
   router.patch(
     '/change-password',
     jwtAuthMiddleware,
     controller.changePassword
   );
 
+<<<<<<< HEAD
   /**
    * @swagger
    * /api/students/update-profile:
@@ -96,6 +103,8 @@ const studentRouter = (redisClient: RedisClient) => {
    *       401:
    *         description: Unauthorized
    */
+=======
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
   router.put(
     '/update-profile',
     jwtAuthMiddleware,
@@ -103,6 +112,7 @@ const studentRouter = (redisClient: RedisClient) => {
     controller.updateProfile
   );
 
+<<<<<<< HEAD
   /**
    * @swagger
    * /api/students/get-student-details:
@@ -117,6 +127,8 @@ const studentRouter = (redisClient: RedisClient) => {
    *       401:
    *         description: Unauthorized
    */
+=======
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
   router.get(
     '/get-student-details',
     jwtAuthMiddleware,
@@ -124,6 +136,7 @@ const studentRouter = (redisClient: RedisClient) => {
     controller.getStudentDetails
   );
 
+<<<<<<< HEAD
   /**
    * @swagger
    * /api/students/get-all-students:
@@ -163,6 +176,10 @@ const studentRouter = (redisClient: RedisClient) => {
    *       403:
    *         description: Forbidden - only admins allowed
    */
+=======
+  router.get('/get-all-students', jwtAuthMiddleware, controller.getAllStudents);
+
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
   router.patch(
     '/block-student/:studentId',
     jwtAuthMiddleware,
@@ -170,6 +187,7 @@ const studentRouter = (redisClient: RedisClient) => {
     controller.blockStudent
   );
 
+<<<<<<< HEAD
   /**
    * @swagger
    * /api/students/unblock-student/{studentId}:
@@ -193,6 +211,8 @@ const studentRouter = (redisClient: RedisClient) => {
    *       403:
    *         description: Forbidden - only admins allowed
    */
+=======
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
   router.patch(
     '/unblock-student/:studentId',
     jwtAuthMiddleware,
@@ -200,6 +220,7 @@ const studentRouter = (redisClient: RedisClient) => {
     controller.unblockStudent
   );
 
+<<<<<<< HEAD
   /**
    * @swagger
    * /api/students/get-all-blocked-students:
@@ -216,6 +237,8 @@ const studentRouter = (redisClient: RedisClient) => {
    *       403:
    *         description: Forbidden - only admins allowed
    */
+=======
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
   router.get(
     '/get-all-blocked-students',
     jwtAuthMiddleware,
@@ -223,6 +246,7 @@ const studentRouter = (redisClient: RedisClient) => {
     controller.getAllBlockedStudents
   );
 
+<<<<<<< HEAD
   /**
    * @swagger
    * /api/students/contact-us:
@@ -253,6 +277,8 @@ const studentRouter = (redisClient: RedisClient) => {
    *       400:
    *         description: Bad request
    */
+=======
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
   router.post('/contact-us', controller.addContact);
 
   return router;

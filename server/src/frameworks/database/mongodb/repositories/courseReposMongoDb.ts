@@ -1,5 +1,9 @@
 import Course from '../models/course';
+<<<<<<< HEAD
 import mongoose, { Types } from 'mongoose';
+=======
+import mongoose from 'mongoose';
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
 import Students from '../models/student';
 import {
   AddCourseInfoInterface,
@@ -9,10 +13,14 @@ import {
 
 export const courseRepositoryMongodb = () => {
   const addCourse = async (courseInfo: AddCourseInfoInterface) => {
+<<<<<<< HEAD
       const normalized: any = { ...courseInfo };
   if (!normalized.category && normalized.categoryId) normalized.category = normalized.categoryId;
   if (!normalized.about) normalized.about = normalized.description || normalized.title || 'About';
 const newCourse = new Course(normalized);
+=======
+    const newCourse = new Course(courseInfo);
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
     newCourse.price ? (newCourse.isPaid = true) : (newCourse.isPaid = false);
     const { _id: courseId } = await newCourse.save();
     return courseId;
@@ -22,27 +30,39 @@ const newCourse = new Course(normalized);
     const response = await Course.findOneAndUpdate(
       { _id: new mongoose.Types.ObjectId(courseId) },
       { ...editInfo }
+<<<<<<< HEAD
     )
     .populate('instructorId', 'firstName lastName email profilePic')
     ;
+=======
+    );
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
     return response;
   };
 
   const getAllCourse = async () => {
+<<<<<<< HEAD
     const courses: CourseInterface[] | null = await Course.find({})
     .populate('instructorId', 'firstName lastName email profilePic')
     .populate('category', 'name');
+=======
+    const courses: CourseInterface[] | null = await Course.find({});
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
     return courses;
   };
 
   const getCourseById = async (courseId: string) => {
     const course: CourseInterface | null = await Course.findOne({
       _id: new mongoose.Types.ObjectId(courseId)
+<<<<<<< HEAD
     })
     .populate('instructorId', 'firstName lastName email profilePic')
     .populate('category', 'name') 
     .populate('subcategory', 'name')
     .lean();
+=======
+    }).lean();
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
     return course;
   };
 
@@ -69,10 +89,16 @@ const newCourse = new Course(normalized);
     return response;
   };
 
+<<<<<<< HEAD
   // Get recommended courses based on student interests
   const getRecommendedCourseByStudentInterest = async (studentId: string) => {
     const pipeline = [
       { $match: { _id: new Types.ObjectId(studentId) } },
+=======
+  const getRecommendedCourseByStudentInterest = async (studentId: string) => {
+    const pipeline = [
+      { $match: { _id: new mongoose.Types.ObjectId(studentId) } },
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
       { $unwind: '$interests' },
       {
         $lookup: {
@@ -86,22 +112,33 @@ const newCourse = new Course(normalized);
       {
         $lookup: {
           from: 'course',
+<<<<<<< HEAD
           localField: 'category._id',
+=======
+          localField: 'category.name',
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
           foreignField: 'category',
           as: 'courses'
         }
       },
       { $unwind: '$courses' },
+<<<<<<< HEAD
   
       // Lookup instructor
       {
         $lookup: {
           from: 'users',
+=======
+      {
+        $lookup: {
+          from: 'instructor',
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
           localField: 'courses.instructorId',
           foreignField: '_id',
           as: 'instructor'
         }
       },
+<<<<<<< HEAD
       { $unwind: '$instructor' },
   
       // Lookup reviews
@@ -155,10 +192,31 @@ const newCourse = new Course(normalized);
               date: '$courses.createdAt',
               timezone: 'UTC'
             }
+=======
+      {
+        $addFields: {
+          instructor: { $arrayElemAt: ['$instructor', 0] }
+        }
+      },
+      {
+        $project: {
+          course: {
+            _id: '$courses._id',
+            name: '$courses.title',
+            thumbnailKey: '$courses.thumbnail.key'
+          },
+          instructor: {
+            _id: '$instructor._id',
+            firstName: '$instructor.firstName',
+            lastName: '$instructor.lastName',
+            email: '$instructor.email',
+            profileKey: '$instructor.profilePic.key'
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
           }
         }
       }
     ];
+<<<<<<< HEAD
   
     const courses = await Students.aggregate(pipeline);
     return courses;
@@ -222,12 +280,30 @@ const newCourse = new Course(normalized);
       {
         $lookup: {
           from: 'users',
+=======
+    const courses = await Students.aggregate(pipeline);
+    return courses;
+  };
+
+  const getTrendingCourses = async () => {
+    const courses = await Course.aggregate([
+      {
+        $sort: { enrolledCount: -1 }
+      },
+      {
+        $limit: 10
+      },
+      {
+        $lookup: {
+          from: 'instructor',
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
           localField: 'instructorId',
           foreignField: '_id',
           as: 'instructor'
         }
       },
       {
+<<<<<<< HEAD
         $lookup: {
           from: 'categories',
           localField: 'category',
@@ -269,6 +345,22 @@ const newCourse = new Course(normalized);
     return courses;
   };
   
+=======
+        $project: {
+          title: '$title',
+          coursesEnrolled: '$coursesEnrolled',
+          thumbnail: '$thumbnail',
+          instructorFirstName: { $arrayElemAt: ['$instructor.firstName', 0] },
+          instructorLastName: { $arrayElemAt: ['$instructor.lastName', 0] },
+          instructorProfile: { $arrayElemAt: ['$instructor.profilePic', 0] },
+          profileUrl: ''
+        }
+      }
+    ]);
+    return courses;
+  };
+
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
   const getCourseByStudent = async (id: string) => {
     const courses: CourseInterface[] | null = await Course.find({
       coursesEnrolled: {
@@ -369,6 +461,7 @@ const newCourse = new Course(normalized);
     return courses;
   };
 
+<<<<<<< HEAD
   const deleteCourse = async (courseId: string) => {
     const response = await Course.findOneAndDelete({
       _id: new mongoose.Types.ObjectId(courseId)
@@ -377,6 +470,8 @@ const newCourse = new Course(normalized);
   };
   
 
+=======
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
   return {
     addCourse,
     editCourse,
@@ -391,8 +486,12 @@ const newCourse = new Course(normalized);
     getTotalNumberOfCourses,
     getNumberOfCoursesAddedInEachMonth,
     getStudentsByCourseForInstructor,
+<<<<<<< HEAD
     searchCourse,
     deleteCourse
+=======
+    searchCourse
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
   };
 };
 

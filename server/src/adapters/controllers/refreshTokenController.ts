@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 import { ok, created, fail, err } from '../../shared/http/respond';
+=======
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
 import { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
 import { AuthService } from '../../frameworks/services/authService';
@@ -17,7 +20,11 @@ const refreshTokenController = (
     const authService = authServiceInterface(authServiceImpl())
 
 
+<<<<<<< HEAD
     const refreshToken = asyncHandler(async (req:Request,res:Response): Promise<void> => {
+=======
+    const refreshToken = asyncHandler(async(req:Request,res:Response)=>{
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
         let refreshToken = req.body.refreshToken
         
         const response = await refreshTokenU(refreshToken,dbRepositoryRefreshToken,authService)

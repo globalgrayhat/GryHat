@@ -5,6 +5,7 @@ import { cloudServiceInterface } from '../../../app/services/cloudServiceInterfa
 // Apply rate limiter to video streaming endpoint
 import { videoRateLimiter } from '../middlewares/rateLimit';
 
+<<<<<<< HEAD
 /**
  * @swagger
  * tags:
@@ -12,10 +13,13 @@ import { videoRateLimiter } from '../middlewares/rateLimit';
  *   description: Video streaming endpoints with rate limiting
  */
 
+=======
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
 const videoStreamRouter = () => {
   const router = express.Router();
   const controller = videoStreamController(cloudServiceInterface, CloudServiceImpl);
 
+<<<<<<< HEAD
   /**
    * @swagger
    * /api/video-streaming/stream-video/{videoFileId}:
@@ -45,5 +49,10 @@ const videoStreamRouter = () => {
   router.get('/stream-video/:videoFileId', videoRateLimiter, controller.streamVideo);
 
   return router;
+=======
+  router.get('/stream-video/:videoFileId', videoRateLimiter, controller.streamVideo);
+
+  return router
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
 };
 export default videoStreamRouter;

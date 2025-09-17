@@ -26,6 +26,10 @@ const categorySchema = new Schema({
   }
 });
 
+<<<<<<< HEAD
 const Category = model('categories', categorySchema);
+=======
+const Category = model('Category', categorySchema);
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
 
 export default Category;

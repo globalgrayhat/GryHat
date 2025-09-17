@@ -6,6 +6,7 @@ export const getRecommendedCourseByStudentU = async (
   studentId: string,
   courseDbRepository: ReturnType<CourseDbRepositoryInterface>
 ) => {
+<<<<<<< HEAD
   // Check if studentId is provided
   if (!studentId) {
     throw new AppError('Please provide a valid student id', HttpStatusCodes.BAD_REQUEST);
@@ -27,6 +28,32 @@ export const getRecommendedCourseByStudentU = async (
 };
 
 
+=======
+  if (!studentId) {
+    throw new AppError(
+      'Please provide a valid student id ',
+      HttpStatusCodes.BAD_REQUEST
+    );
+  }
+
+  const courses =
+    await courseDbRepository.getRecommendedCourseByStudentInterest(studentId);
+  await Promise.all(
+    courses.map(async (course) => {
+      course.media = { thumbnailUrl: '', profileUrl: '' };
+      if (course.course) {
+        course.media.thumbnailUrl = course.course.thumbnail.url;
+      }
+      if (course.instructor) {
+        course.media.profileUrl = course.instructor.profile.url;
+      }
+    })
+  );
+
+  return courses;
+};
+
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
 export const getTrendingCourseU = async (
   courseDbRepository: ReturnType<CourseDbRepositoryInterface>
 ) => {

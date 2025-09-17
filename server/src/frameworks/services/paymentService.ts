@@ -8,7 +8,11 @@ const stripe = new Stripe(configKeys.STRIPE_SECRET_KEY || '', {
 export const paymentService = () => {
   const createPaymentIntent = async (amount: number) => {
     const paymentIntent = await stripe.paymentIntents.create({
+<<<<<<< HEAD
       currency: 'KWD',
+=======
+      currency: 'INR',
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
       amount: amount * 100,
       automatic_payment_methods: { enabled: true }
     });

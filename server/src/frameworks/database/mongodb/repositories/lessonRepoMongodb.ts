@@ -11,6 +11,7 @@ export const lessonRepositoryMongodb = () => {
     instructorId: string,
     lesson: CreateLessonInterface
   ) => {
+<<<<<<< HEAD
     // ensure required linkage
     lesson.courseId = courseId;
     lesson.instructorId = instructorId;
@@ -21,11 +22,17 @@ export const lessonRepositoryMongodb = () => {
     if (typeof (lesson as any).isPreview !== 'boolean') (lesson as any).isPreview = false;
 
     const newLesson = new Lessons(lesson as any);
+=======
+    lesson.courseId = courseId;
+    lesson.instructorId = instructorId;
+    const newLesson = new Lessons(lesson);
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
     const { _id } = await newLesson.save();
     return _id;
   };
 
   const editLesson = async (lessonId: string, lesson: EditLessonInterface) => {
+<<<<<<< HEAD
     // always bump updatedAt
     const doc = await Lessons.findOneAndUpdate(
       { _id: new mongoose.Types.ObjectId(lessonId) },
@@ -33,19 +40,34 @@ export const lessonRepositoryMongodb = () => {
       { new: true, runValidators: true }
     );
     return doc;
+=======
+    const response = await Lessons.findOneAndUpdate(
+      { _id: new mongoose.Types.ObjectId(lessonId) },
+      { ...lesson }
+    );
+    return response;
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
   };
 
   const getLessonsByCourseId = async (courseId: string) => {
     const lessons = await Lessons.find({
       courseId: new mongoose.Types.ObjectId(courseId)
+<<<<<<< HEAD
     }).lean();
+=======
+    });
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
     return lessons;
   };
 
   const getLessonById = async (lessonId: string) => {
     const lesson = await Lessons.findOne({
       _id: new mongoose.Types.ObjectId(lessonId)
+<<<<<<< HEAD
     }).lean();
+=======
+    });
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
     return lesson;
   };
 

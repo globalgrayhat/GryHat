@@ -4,6 +4,7 @@ import AppError from '../../../utils/appError';
 import HttpStatusCodes from '../../../constants/HttpStatusCodes';
 import { UserRole } from '../../../constants/enums';
 
+<<<<<<< HEAD
 // Define a simple hierarchy for roles. Lower values correspond to higher
 // privileges. Owners outrank admins, who outrank instructors, who outrank
 // students. When adding new roles ensure they are represented in this map
@@ -16,12 +17,15 @@ const ROLE_HIERARCHY: Record<string, number> = {
   [UserRole.Student]: 3
 };
 
+=======
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
 /**
  * Middleware that restricts access to routes based on a required role. By
  * accepting a `UserRole` enum value instead of a raw string, the compiler can
  * warn about invalid roles at development time. If the authenticated user's
  * role matches the provided role, the request is allowed to proceed.
  */
+<<<<<<< HEAD
 /**
  * Middleware that restricts access to routes based on one or more roles.
  * When multiple roles are provided, the user must match any one of
@@ -59,6 +63,16 @@ const roleCheckMiddleware = (
       return next();
     }
     return next(new AppError('Unauthorized role', HttpStatusCodes.UNAUTHORIZED));
+=======
+const roleCheckMiddleware = (roleToCheck: UserRole) => {
+  return (req: CustomRequest, res: Response, next: NextFunction) => {
+    const role = req.user?.role;
+    if (role === roleToCheck) {
+      next();
+    } else {
+      throw new AppError('Unauthorized role', HttpStatusCodes.UNAUTHORIZED);
+    }
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
   };
 };
 

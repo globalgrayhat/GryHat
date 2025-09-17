@@ -2,6 +2,7 @@ import { CourseDbRepositoryInterface } from '../../repositories/courseDbReposito
 import HttpStatusCodes from '../../../constants/HttpStatusCodes';
 import AppError from '../../../utils/appError';
 import { PaymentInterface } from '@src/app/repositories/paymentDbRepository';
+<<<<<<< HEAD
 import { PaymentInfo, PaymentMethod, PaymentProvider } from '@src/types/payment';
 
 /** Decide provider from incoming blob without touching Stripe code */
@@ -71,6 +72,8 @@ const pickPaymentId = (info: any): string | undefined => {
     undefined
   );
 };
+=======
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
 
 export const enrollStudentU = async (
   courseId: string,
@@ -80,6 +83,7 @@ export const enrollStudentU = async (
   paymentDbRepository: ReturnType<PaymentInterface>
 ) => {
   if (!courseId) {
+<<<<<<< HEAD
     throw new AppError('Please provide course details', HttpStatusCodes.BAD_REQUEST);
   }
   if (!studentId) {
@@ -113,6 +117,30 @@ export const enrollStudentU = async (
       status
     };
 
+=======
+    throw new AppError(
+      'Please provide course details',
+      HttpStatusCodes.BAD_REQUEST
+    );
+  }
+  if (!studentId) {
+    throw new AppError(
+      'Please provide valid student details',
+      HttpStatusCodes.BAD_REQUEST
+    );
+  }
+  const course = await courseDbRepository.getCourseById(courseId);
+  if (course?.isPaid) {
+    const payment = {
+      paymentId: paymentInfo.id,
+      courseId: courseId,
+      studentId: studentId,
+      amount: paymentInfo.amount / 100,
+      currency: paymentInfo.currency,
+      payment_method: paymentInfo.payment_method,
+      status: paymentInfo.status
+    };
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
     await Promise.all([
       courseDbRepository.enrollStudent(courseId, studentId),
       paymentDbRepository.savePayment(payment)

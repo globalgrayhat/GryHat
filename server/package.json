@@ -14,6 +14,7 @@
     "@aws-sdk/client-cloudfront": "^3.363.0",
     "@aws-sdk/client-s3": "^3.363.0",
     "@aws-sdk/s3-request-presigner": "^3.363.0",
+<<<<<<< HEAD
     "@tus/file-store": "^1.5.1",
     "@tus/server": "^1.10.2",
     "axios": "^1.11.0",
@@ -25,14 +26,27 @@
     "dotenv": "^16.1.4",
     "dropbox": "^10.34.0",
     "express": "^4.21.2",
+=======
+    "bcryptjs": "^3.0.2",
+    "colors.ts": "^1.0.20",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "dotenv": "^16.1.4",
+    "express": "^4.18.2",
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
     "express-async-handler": "^1.2.0",
     "express-mongo-sanitize": "^2.2.0",
     "express-rate-limit": "^6.7.1",
     "ffprobe-static": "^3.1.0",
+<<<<<<< HEAD
     "file-type": "^21.0.0",
     "fluent-ffmpeg": "^2.1.2",
     "google-auth-library": "^8.8.0",
     "googleapis": "^159.0.0",
+=======
+    "fluent-ffmpeg": "^2.1.2",
+    "google-auth-library": "^8.8.0",
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
     "helmet": "^7.0.0",
     "jsonwebtoken": "^9.0.0",
     "mongoose": "^7.2.2",
@@ -42,6 +56,7 @@
     "nodemailer": "^6.9.3",
     "redis": "^4.6.7",
     "socket.io": "^4.7.1",
+<<<<<<< HEAD
     "stripe": "^12.12.0",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
@@ -54,18 +69,34 @@
     "@types/cookie-parser": "^1.4.3",
     "@types/cors": "^2.8.13",
     "@types/express": "^4.17.23",
+=======
+    "stripe": "^12.12.0"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^5.0.0",
+    "@types/cookie-parser": "^1.4.3",
+    "@types/cors": "^2.8.13",
+    "@types/express": "^4.17.17",
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
     "@types/ffprobe-static": "^2.0.1",
     "@types/fluent-ffmpeg": "^2.1.21",
     "@types/jsonwebtoken": "^9.0.2",
     "@types/morgan": "^1.9.4",
+<<<<<<< HEAD
     "@types/multer": "^1.4.13",
+=======
+    "@types/multer": "^1.4.7",
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
     "@types/multer-s3": "^3.0.0",
     "@types/nodemailer": "^6.4.9",
     "@types/socket.io": "^3.0.2",
     "@types/stripe": "^8.0.417",
+<<<<<<< HEAD
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/swagger-ui-express": "^4.1.8",
     "@types/vimeo": "^2.1.8",
+=======
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
     "@typescript-eslint/eslint-plugin": "^5.59.11",
     "@typescript-eslint/parser": "^5.59.11",
     "eslint": "^8.42.0",

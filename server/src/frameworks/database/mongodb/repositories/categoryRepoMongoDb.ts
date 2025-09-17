@@ -56,17 +56,25 @@ export const categoryRepositoryMongodb = () => {
     ]);
     return courses;
   };
+<<<<<<< HEAD
   const deleteCategory = async (categoryId: string) => {
     const deleted = await Category.deleteOne({ _id: new ObjectId(categoryId) });
     return deleted.deletedCount > 0;
   };
+=======
+
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
   return {
     addCategory,
     getCategoryById,
     getAllCategory,
     editCategory,
+<<<<<<< HEAD
     getCourseCountByCategory,
     deleteCategory
+=======
+    getCourseCountByCategory
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
   };
 };
 

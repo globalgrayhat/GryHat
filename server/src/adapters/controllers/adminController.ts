@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 import { ok, created, fail, err } from '../../shared/http/respond';
+=======
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
 import { AdminRepositoryMongoDb } from '../../frameworks/database/mongodb/repositories/adminRepoMongoDb';
 import { AdminDbInterface } from '../../app/repositories/adminDbRepository';
 import { Request, Response } from 'express';
@@ -41,7 +44,12 @@ const adminController = (
   const dbRepositoryPayment = paymentDbRepository(paymentDbRepositoryImpl());
   const dbRepositoryCategory = categoryDbRepository(categoryDbRepositoryImpl());
 
+<<<<<<< HEAD
   const getDashBoardDetails = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+=======
+  const getDashBoardDetails = asyncHandler(
+    async (req: Request, res: Response) => {
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
       const response = await getDashBoardDetailsU(
         dbRepositoryCourse,
         dbRepositoryInstructor,
@@ -49,17 +57,37 @@ const adminController = (
         dbRepositoryPayment
       );
 
+<<<<<<< HEAD
       ok(res, 'Successfully retrieved dashboard details', response);
     }
   );
 
   const getGraphDetails = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+=======
+      res.status(200).json({
+        status: 'success',
+        message: 'Successfully retrieved dashboard details',
+        data: response
+      });
+    }
+  );
+
+  const getGraphDetails = asyncHandler(async (req: Request, res: Response) => {
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
     const response = await getGraphDetailsU(
       dbRepositoryCourse,
       dbRepositoryCategory,
       dbRepositoryPayment
     );
+<<<<<<< HEAD
     ok(res, 'Successfully retrieved graph details', response);
+=======
+    res.status(200).json({
+      status: 'success',
+      message: 'Successfully retrieved graph details',
+      data: response
+    });
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
   });
 
   return {
@@ -68,4 +96,8 @@ const adminController = (
   };
 };
 
+<<<<<<< HEAD
 export default adminController;
+=======
+export default adminController;
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)

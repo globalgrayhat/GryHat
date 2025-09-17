@@ -60,7 +60,11 @@ const ViewInstructor: React.FC = (props: Props) => {
         </div>
         <div className='block text-center pb-5'>
           <p className='text-customFontColorBlack text-lg md:text-xl font-semibold'>
+<<<<<<< HEAD
             Meet Gray Hat Subject Experts
+=======
+            Meet Tutor Trek Subject Experts
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
           </p>
         </div>
       </div>
@@ -73,7 +77,11 @@ const ViewInstructor: React.FC = (props: Props) => {
                 <Avatar
                   className='h-32 w-32 mx-auto sm:mt-5'
                   src={
+<<<<<<< HEAD
                     instructor?.profilePic?.url ??
+=======
+                    instructor?.profileUrl ??
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
                     "https://img.freepik.com/free-icon/user_318-159711.jpg"
                   }
                   alt='avatar'

@@ -25,6 +25,7 @@ const instructorRouter = () => {
     sendEmailServiceInterface,
     sendEmailService
   );
+<<<<<<< HEAD
 
   /**
    * @swagger
@@ -75,10 +76,31 @@ const instructorRouter = () => {
    *         description: Instructor unblocked successfully
    */
   router.get(
+=======
+  //* Instructor management
+  router.get('/view-instructor-requests', controller.getInstructorRequests);
+
+  router.patch(
+    '/accept-instructor-request/:instructorId',
+    controller.verifyInstructor
+  );
+
+  router.put('/reject-instructor-request', controller.rejectRequest);
+
+  router.get('/get-all-instructors', controller.getAllInstructor);
+
+  router.patch(
+    '/get-all-instructors/block-instructors',
+    controller.blockInstructor
+  );
+
+  router.patch(
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
     '/get-all-instructors/unblock-instructors/:instructorId',
     controller.unblockInstructor
   );
 
+<<<<<<< HEAD
   /**
    * @swagger
    * /api/instructors/get-blocked-instructors:
@@ -122,6 +144,12 @@ const instructorRouter = () => {
    *       200:
    *         description: Instructor details for logged-in user
    */
+=======
+  router.get('/get-blocked-instructors', controller.getBlockedInstructor);
+
+  router.get('/view-instructor/:instructorId', controller.getInstructorById);
+
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
   router.get(
     '/get-instructor-details',
     jwtAuthMiddleware,
@@ -129,6 +157,7 @@ const instructorRouter = () => {
     controller.getInstructorDetails
   );
 
+<<<<<<< HEAD
   /**
    * @swagger
    * /api/instructors/get-all-instructors/block-instructors:
@@ -239,6 +268,8 @@ const instructorRouter = () => {
    *       200:
    *         description: Profile updated successfully
    */
+=======
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
   router.put(
     '/update-profile',
     jwtAuthMiddleware,
@@ -247,6 +278,7 @@ const instructorRouter = () => {
     controller.updateProfile
   );
 
+<<<<<<< HEAD
   /**
    * @swagger
    * /api/instructors/reject-instructor-request:
@@ -268,6 +300,20 @@ const instructorRouter = () => {
    *         description: Instructor request rejected
    */
   router.put('/reject-instructor-request', controller.rejectRequest);
+=======
+  router.patch(
+    '/change-password',
+    jwtAuthMiddleware,
+    roleCheckMiddleware(UserRole.Instructor),
+    controller.changePassword
+  );
+
+  router.get(
+    '/get-students-by-instructor',
+    jwtAuthMiddleware,
+    controller.getStudentsForInstructors
+  );
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
 
   return router;
 };

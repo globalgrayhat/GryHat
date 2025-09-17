@@ -13,6 +13,7 @@ const refreshRouter = () => {
     refreshTokenDbRepository,
     refreshTokenRepositoryMongoDB
   );
+<<<<<<< HEAD
 
   /**
    * @swagger
@@ -67,3 +68,9 @@ const refreshRouter = () => {
 };
 
 export default refreshRouter;
+=======
+  router.post('/refresh',controller.refreshToken)
+  return router
+};
+export default refreshRouter
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)

@@ -104,7 +104,11 @@ const en = {
 
   tutors: {
     title: "Our Instructors",
+<<<<<<< HEAD
     subtitle: "Meet Gray Hat Subject Experts",
+=======
+    subtitle: "Meet Tutor Trek Subject Experts",
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
     searchPlaceholder: "Search for instructors...",
     noResults: "No instructors found.",
   },

@@ -5,6 +5,7 @@ import paymentController from '../../../adapters/controllers/paymentController';
 import { courseDbRepository } from '../../../app/repositories/courseDbRepository';
 import { courseRepositoryMongodb } from '../../../frameworks/database/mongodb/repositories/courseReposMongoDb';
 
+<<<<<<< HEAD
 const router = express.Router();
 const controller = paymentController(
   paymentServiceInterface,
@@ -257,3 +258,22 @@ router.get('/myfatoorah/methods', controller.listMFMethods);
 router.post('/create', controller.createPayment);
 
 export default router;
+=======
+const paymentRouter = () => {
+  const router = express.Router();
+  const controller = paymentController(
+    paymentServiceInterface,
+    paymentService,
+    courseDbRepository,
+    courseRepositoryMongodb
+  );
+
+  router.get('/stripe/get-config', controller.getConfig);
+
+  router.post('/stripe/create-payment-intent', controller.createPaymentIntent);
+
+  return router;
+};
+
+export default paymentRouter;
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)

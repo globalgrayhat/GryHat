@@ -7,6 +7,7 @@ export interface StudentInterface {
     url?: string;
   };
   email: string;
+<<<<<<< HEAD
   mobile?: string;
   password?: string;
   interests: Array<string>;
@@ -15,6 +16,13 @@ export interface StudentInterface {
   isGoogleUser: boolean;
   isBlocked: boolean;
   blockedReason: string;
+=======
+  mobile: number;
+  password: string;
+  isGoogleUser: boolean;
+  isBlocked:boolean
+  profileUrl:string;
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
 }
 
 export interface StudentUpdateInfo {

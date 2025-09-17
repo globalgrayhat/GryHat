@@ -11,7 +11,11 @@ const ViewInstructorShimmer: React.FC = () => {
         </div>
         <div className='block text-center pb-5'>
           <p className='text-customFontColorBlack text-lg md:text-xl font-semibold'>
+<<<<<<< HEAD
             Meet Gray Hat Subject Experts
+=======
+            Meet Tutor Trek Subject Experts
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
           </p>
         </div>
       </div>

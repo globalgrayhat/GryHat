@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /**
  * This file re‑exports the Admin discriminator from the unified user model.
  * Previously the admin model contained its own schema; however, in
@@ -11,3 +12,30 @@
 import { Admin } from './user';
 
 export default Admin;
+=======
+import { Schema, model } from 'mongoose';
+
+const adminSchema = new Schema({
+  email: {
+    type: String,
+    required: true,
+    trim: true,
+    unique: true,
+    lowercase: true,
+    match: [
+      /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/,
+      'Please enter a valid email'
+    ]
+  },
+
+  password: {
+    type: String,
+    required: true,
+    minlength: 4
+  }
+});
+
+const Admin = model('Admin', adminSchema, 'admin');
+
+export default Admin;
+>>>>>>> 3e27a7a (نسخة نظيفة بكودي فقط)
