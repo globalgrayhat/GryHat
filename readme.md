@@ -7,13 +7,13 @@ The project is a comprehensive online learning platform that connects teachers a
 1. Clone the repository:
 
    ```shell
-   git clone https://github.com/abinth11/TutorTrek.git
+   git clone https://github.com/abinth11/GrayHAT.git
    ```
 
 2. Navigate to the project directory:
 
    ```shell
-   cd TutorTrek
+   cd GrayHAT
    ```
 3. Navigate to client directory and server directory
 
@@ -174,10 +174,10 @@ For any questions, feedback, or inquiries, please reach out to:
 
 ## Design Files and API Documentation
 
-* [Figma Design Files](https://www.figma.com/file/xSUUeK3lB9XHqBe3pg7pnM/TutorTrek?type=design&node-id=84%3A7156&t=uJ3S7XQV7OjJphmL-1)
+* [Figma Design Files](https://www.figma.com/file/xSUUeK3lB9XHqBe3pg7pnM/GrayHAT?type=design&node-id=84%3A7156&t=uJ3S7XQV7OjJphmL-1)
 * [Modules Specifications](https://drive.google.com/file/d/10aB7mVSsG_oG9V9wcK65orqcLoon2Dl4/view?usp=sharing)
 * [API Documentation](https://documenter.getpostman.com/view/23308654/2s93mAVL88)
 * [Database Design](https://drive.google.com/file/d/1N3YZ22s2cJnA1sSa5P5a-1ECzC70ztQu/view?usp=sharing)
-* [Live Link](https://tutortrek.online/)
+* [Live Link](https://grayhat.online/)
 
 

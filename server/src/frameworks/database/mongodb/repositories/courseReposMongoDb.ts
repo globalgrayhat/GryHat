@@ -1,5 +1,5 @@
 import Course from '../models/course';
-import mongoose from 'mongoose';
+import mongoose, { Types } from 'mongoose';
 import Students from '../models/student';
 import {
   AddCourseInfoInterface,
@@ -30,7 +30,8 @@ const newCourse = new Course(normalized);
 
   const getAllCourse = async () => {
     const courses: CourseInterface[] | null = await Course.find({})
-    .populate('instructorId', 'firstName lastName email profilePic');
+    .populate('instructorId', 'firstName lastName email profilePic')
+    .populate('category', 'name');
     return courses;
   };
 
@@ -68,9 +69,10 @@ const newCourse = new Course(normalized);
     return response;
   };
 
+  // Get recommended courses based on student interests
   const getRecommendedCourseByStudentInterest = async (studentId: string) => {
     const pipeline = [
-      { $match: { _id: new mongoose.Types.ObjectId(studentId) } },
+      { $match: { _id: new Types.ObjectId(studentId) } },
       { $unwind: '$interests' },
       {
         $lookup: {
@@ -84,77 +86,189 @@ const newCourse = new Course(normalized);
       {
         $lookup: {
           from: 'course',
-          localField: 'category.name',
+          localField: 'category._id',
           foreignField: 'category',
           as: 'courses'
         }
       },
       { $unwind: '$courses' },
+  
+      // Lookup instructor
       {
         $lookup: {
-          from: 'instructor',
+          from: 'users',
           localField: 'courses.instructorId',
           foreignField: '_id',
           as: 'instructor'
         }
       },
+      { $unwind: '$instructor' },
+  
+      // Lookup reviews
       {
-        $addFields: {
-          instructor: { $arrayElemAt: ['$instructor', 0] }
+        $lookup: {
+          from: 'reviews',
+          localField: 'courses._id',
+          foreignField: 'courseId',
+          as: 'reviews'
         }
       },
+  
+      // Add rating average
+      {
+        $addFields: {
+          'courses.rating': { $avg: '$reviews.rating' }
+        }
+      },
+  
+      // Merge instructor into course
+      {
+        $addFields: {
+          'courses.instructor': '$instructor'
+        }
+      },
+  
+      // Final projection
       {
         $project: {
-          course: {
-            _id: '$courses._id',
-            name: '$courses.title',
-            thumbnailKey: '$courses.thumbnail.key'
+          _id: '$courses._id',
+          title: '$courses.title',
+          duration: '$courses.duration',
+          level: '$courses.level',
+          thumbnailUrl: '$courses.thumbnail.url',
+          enrolledCount: { $size: { $ifNull: ['$courses.coursesEnrolled', []] } },
+          rating: { $ifNull: ['$courses.rating', 0] },
+          price: {
+            $cond: {
+              if: { $eq: ['$courses.isPaid', false] },
+              then: 0,
+              else: '$courses.price'
+            }
           },
-          instructor: {
-            _id: '$instructor._id',
-            firstName: '$instructor.firstName',
-            lastName: '$instructor.lastName',
-            email: '$instructor.email',
-            profileKey: '$instructor.profilePic.key'
+          instructorFirstName: '$courses.instructor.firstName',
+          instructorLastName: '$courses.instructor.lastName',
+          instructorProfileUrl: '$courses.instructor.profilePic.url',
+          categoryName: '$category.name',
+          createdAt: {
+            $dateToString: {
+              format: '%Y/%m/%d',
+              date: '$courses.createdAt',
+              timezone: 'UTC'
+            }
           }
         }
       }
     ];
+  
     const courses = await Students.aggregate(pipeline);
     return courses;
   };
-
+  
   const getTrendingCourses = async () => {
+    const now = new Date();
+  
     const courses = await Course.aggregate([
       {
-        $sort: { enrolledCount: -1 }
+        $lookup: {
+          from: 'reviews',
+          localField: '_id',
+          foreignField: 'courseId',
+          as: 'reviews'
+        }
       },
       {
-        $limit: 10
+        $addFields: {
+          enrolledCount: { $size: { $ifNull: ['$coursesEnrolled', []] } },
+          rating: { $avg: '$reviews.rating' },
+          daysSinceCreated: {
+            $divide: [
+              { $subtract: [now, '$createdAt'] },
+              1000 * 60 * 60 * 24 // milliseconds to days
+            ]
+          }
+        }
       },
+      {
+        $addFields: {
+          status: {
+            $switch: {
+              branches: [
+                {
+                  case: { $lt: ['$daysSinceCreated', 5] },
+                  then: 'new'
+                },
+                {
+                  case: {
+                    $and: [
+                      { $gte: ['$daysSinceCreated', 5] },
+                      { $lte: ['$daysSinceCreated', 15] },
+                      { $gte: ['$enrolledCount', 10] } // You can adjust this threshold
+                    ]
+                  },
+                  then: 'hot'
+                },
+                {
+                  case: { $gt: ['$daysSinceCreated', 15] },
+                  then: 'trending'
+                }
+              ],
+              default: 'none'
+            }
+          }
+        }
+      },
+      { $sort: { enrolledCount: -1 } },
+      { $limit: 10 },
       {
         $lookup: {
-          from: 'instructor',
+          from: 'users',
           localField: 'instructorId',
           foreignField: '_id',
           as: 'instructor'
         }
       },
       {
+        $lookup: {
+          from: 'categories',
+          localField: 'category',
+          foreignField: '_id',
+          as: 'category'
+        }
+      },
+      { $unwind: '$instructor' },
+      { $unwind: '$category' },
+      {
         $project: {
-          title: '$title',
-          coursesEnrolled: '$coursesEnrolled',
-          thumbnail: '$thumbnail',
-          instructorFirstName: { $arrayElemAt: ['$instructor.firstName', 0] },
-          instructorLastName: { $arrayElemAt: ['$instructor.lastName', 0] },
-          instructorProfile: { $arrayElemAt: ['$instructor.profilePic', 0] },
-          profileUrl: ''
+          _id: 1,
+          title: 1,
+          duration: 1,
+          level: 1,
+          rating: { $ifNull: ['$rating', 0] },
+          enrolledCount: 1,
+          price: {
+            $cond: {
+              if: { $eq: ['$isPaid', false] },
+              then: 0,
+              else: '$price'
+            }
+          },
+          thumbnail: 1,
+          thumbnailUrl: '$thumbnail.url',
+          instructorFirstName: '$instructor.firstName',
+          instructorLastName: '$instructor.lastName',
+          instructorProfileUrl: '$instructor.profilePic.url',
+          categoryName: '$category.name',
+          createdAt: {
+            $dateToString: { format: '%Y/%m/%d', date: '$createdAt' }
+          },
+          status: 1 // Return status: 'new', 'hot', 'trending'
         }
       }
     ]);
+  
     return courses;
   };
-
+  
   const getCourseByStudent = async (id: string) => {
     const courses: CourseInterface[] | null = await Course.find({
       coursesEnrolled: {

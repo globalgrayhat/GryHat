@@ -60,7 +60,7 @@ const ViewInstructor: React.FC = (props: Props) => {
         </div>
         <div className='block text-center pb-5'>
           <p className='text-customFontColorBlack text-lg md:text-xl font-semibold'>
-            Meet Tutor Trek Subject Experts
+            Meet Gray Hat Subject Experts
           </p>
         </div>
       </div>

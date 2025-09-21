@@ -56,13 +56,17 @@ export const categoryRepositoryMongodb = () => {
     ]);
     return courses;
   };
-
+  const deleteCategory = async (categoryId: string) => {
+    const deleted = await Category.deleteOne({ _id: new ObjectId(categoryId) });
+    return deleted.deletedCount > 0;
+  };
   return {
     addCategory,
     getCategoryById,
     getAllCategory,
     editCategory,
-    getCourseCountByCategory
+    getCourseCountByCategory,
+    deleteCategory
   };
 };
 

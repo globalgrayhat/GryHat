@@ -105,7 +105,7 @@ const ar = {
 
   tutors: {
     title: "قائمة المدربين",
-    subtitle: "تعرف على خبراء موضوعات Tutor Trek",
+    subtitle: "تعرف على خبراء موضوعات Gray Hat",
     searchPlaceholder: "ابحث عن المدربين...",
     noResults: "لم يتم العثور على مدربين.",
   },

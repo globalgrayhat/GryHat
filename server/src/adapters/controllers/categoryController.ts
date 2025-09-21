@@ -3,7 +3,8 @@ import {
   addCategoryU,
   getAllCategoryU,
   getCategoryByIdU,
-  editCategoryU
+  editCategoryU,
+  deleteCategoryU
 } from '../../app/usecases/category';
 import { CategoryDbInterface } from '../../app/repositories/categoryDbRepository';
 import { CategoryRepoMongodbInterface } from '../../frameworks/database/mongodb/repositories/categoryRepoMongoDb';
@@ -41,11 +42,21 @@ const categoryController = (
     ok(res, 'Successfully edited the category', null);
   });
 
+const deleteCategory = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const categoryId: string = req.params.categoryId;
+
+  await deleteCategoryU(categoryId, dbRepositoryCategory);
+
+  ok(res, 'Category deleted successfully', null);
+});
+
+
   return {
     addCategory,
     getCategoryById,
     getAllCategory,
-    editCategory
+    editCategory,
+    deleteCategory
   };
 };
 

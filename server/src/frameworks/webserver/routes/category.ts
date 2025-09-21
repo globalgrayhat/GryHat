@@ -99,6 +99,27 @@ const categoryRouter = () => {
    */
   router.put('/edit-category/:categoryId', controller.editCategory);
 
+/**
+ * @swagger
+ * /api/category/delete-category/{categoryId}:
+ *   delete:
+ *     summary: Delete category by ID
+ *     tags: [Category]
+ *     parameters:
+ *       - in: path
+ *         name: categoryId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Category deleted successfully
+ *       404:
+ *         description: Category not found
+ */
+router.delete('/delete-category/:categoryId', controller.deleteCategory);
+
+
   return router;
 };
 
