@@ -212,7 +212,7 @@ const newCourse = new Course(normalized);
                   then: 'trending'
                 }
               ],
-              default: 'none'
+              default: 'trind'
             }
           }
         }
