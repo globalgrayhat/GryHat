@@ -6,29 +6,26 @@ export const getRecommendedCourseByStudentU = async (
   studentId: string,
   courseDbRepository: ReturnType<CourseDbRepositoryInterface>
 ) => {
+  // Check if studentId is provided
   if (!studentId) {
-    throw new AppError(
-      'Please provide a valid student id ',
-      HttpStatusCodes.BAD_REQUEST
-    );
+    throw new AppError('Please provide a valid student id', HttpStatusCodes.BAD_REQUEST);
   }
 
-  const courses =
-    await courseDbRepository.getRecommendedCourseByStudentInterest(studentId);
+  // Fetch recommended courses for the student
+  const courses = await courseDbRepository.getRecommendedCourseByStudentInterest(studentId);
+
+  // Set media URLs if available
   await Promise.all(
     courses.map(async (course) => {
-      course.media = { thumbnailUrl: '', profileUrl: '' };
-      if (course.course) {
-        course.media.thumbnailUrl = course.course.thumbnail.url;
-      }
-      if (course.instructor) {
-        course.media.profileUrl = course.instructor.profile.url;
-      }
+      if (course.course) course.media.thumbnailUrl = course.course.thumbnail.url;
+      if (course.instructor) course.media.profileUrl = course.instructor.profile.url;
     })
   );
 
+  // Return processed courses
   return courses;
 };
+
 
 export const getTrendingCourseU = async (
   courseDbRepository: ReturnType<CourseDbRepositoryInterface>

@@ -2,32 +2,24 @@ import HttpStatusCodes from '../../../constants/HttpStatusCodes';
 import {
   SavedInstructorInterface,
   InstructorInterface
-} from '@src/types/instructorInterface';
+} from '../../../types/instructorInterface';
 import AppError from '../../../utils/appError';
 import { InstructorDbInterface } from '../../../app/repositories/instructorDbRepository';
 import { AuthServiceInterface } from '../../../app/services/authServicesInterface';
 import { RefreshTokenDbInterface } from '../../../app/repositories/refreshTokenDBRepository';
-import { UploadedFileInterface } from '@src/types/common';
-import { CloudServiceInterface } from '@src/app/services/cloudServiceInterface';
 import { UserRole } from '../../../constants/enums';
 
 export const instructorRegister = async (
   instructor: InstructorInterface,
-  files: Express.Multer.File[],
+  files: { [fieldname: string]: Express.Multer.File[] },
   instructorRepository: ReturnType<InstructorDbInterface>,
-  authService: ReturnType<AuthServiceInterface>,
-  cloudService: ReturnType<CloudServiceInterface>
+  authService: ReturnType<AuthServiceInterface>
 ) => {
-  console.log(files);
-  instructor.certificates=[]
-  // Use object destructuring and default value
+  instructor.certificates = [];
   const { password = '', email = '' }: InstructorInterface = instructor;
   instructor.email = email.toLowerCase();
-
-  // Check if the email is already registered
-  const isEmailAlreadyRegistered = await instructorRepository.getInstructorByEmail(
-    instructor.email
-  );
+  const isEmailAlreadyRegistered =
+    await instructorRepository.getInstructorByEmail(instructor.email);
 
   if (isEmailAlreadyRegistered) {
     throw new AppError(
@@ -36,26 +28,27 @@ export const instructorRegister = async (
     );
   }
 
+  if (files.profilePic && files.profilePic.length > 0) {
+    const profilePicFile = files.profilePic[0];
+    instructor.profilePic = {
+      name: profilePicFile.originalname,
+      url: `http://localhost:${process.env.PORT}/uploads/registration/anonymous/profile-pics/${profilePicFile.filename}`
+    };
+  }
 
-  for (const file of files) {
-    let uploadedFile;
-
-    if (file.originalname === 'profilePic') {
-      uploadedFile = await cloudService.upload(file);
-      instructor.profilePic = uploadedFile;
-    } else {
-      uploadedFile = await cloudService.upload(file);
-      instructor.certificates.push(uploadedFile);
+  if (files.certificates && files.certificates.length > 0) {
+    for (const certificateFile of files.certificates) {
+      instructor.certificates.push({
+        name: certificateFile.originalname,
+        url: `http://localhost:${process.env.PORT}/uploads/registration/anonymous/certificates/${certificateFile.filename}`
+      });
     }
   }
 
-  // Hash the password if provided
   if (password) {
     instructor.password = await authService.hashPassword(password);
   }
-  console.log(instructor)
 
-  // Add instructor to the repository
   const response = await instructorRepository.addInstructor(instructor);
 
   return response

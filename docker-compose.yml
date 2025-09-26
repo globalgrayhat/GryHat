@@ -76,7 +76,7 @@ services:
       - ./client/build:/usr/share/nginx/html
     depends_on:
       - nginx
-    command: certonly --webroot --webroot-path=/usr/share/nginx/html --email abinth250@gmail.com --agree-tos --no-eff-email -d tutortrek.online --force-renewal
+    command: certonly --webroot --webroot-path=/usr/share/nginx/html --email abinth250@gmail.com --agree-tos --no-eff-email -d grayhat.online --force-renewal
     networks:
       - tutortrek_connection_network
 

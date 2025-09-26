@@ -1,8 +1,10 @@
+import { ok, created, fail, err } from '../../shared/http/respond';
 import {
   addCategoryU,
   getAllCategoryU,
   getCategoryByIdU,
-  editCategoryU
+  editCategoryU,
+  deleteCategoryU
 } from '../../app/usecases/category';
 import { CategoryDbInterface } from '../../app/repositories/categoryDbRepository';
 import { CategoryRepoMongodbInterface } from '../../frameworks/database/mongodb/repositories/categoryRepoMongoDb';
@@ -16,51 +18,45 @@ const categoryController = (
 ) => {
   const dbRepositoryCategory = categoryDbRepository(categoryDbRepositoryImpl());
 
-  const addCategory = asyncHandler(async (req: Request, res: Response) => {
+  const addCategory = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const category: CategoryInterface = req.body;
     await addCategoryU(category, dbRepositoryCategory);
-    res.status(200).json({
-      status: 'success',
-      message: 'Successfully added a new category',
-      data: null
-    });
+    ok(res, 'Successfully added a new category', null);
   });
 
-  const getCategoryById = asyncHandler(async (req: Request, res: Response) => {
+  const getCategoryById = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const categoryId: string = req.params.categoryId;
     const category = await getCategoryByIdU(categoryId, dbRepositoryCategory);
-    res.status(200).json({
-      status: 'success',
-      message: 'Successfully retrieved a category by id',
-      data: category
-    });
+    ok(res, 'Successfully retrieved a category by id', category);
   });
 
-  const getAllCategory = asyncHandler(async (req: Request, res: Response) => {
+  const getAllCategory = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const categories = await getAllCategoryU(dbRepositoryCategory);
-    res.status(200).json({
-      status: 'success',
-      message: 'Successfully retrieved all categories',
-      data: categories
-    });
+    ok(res, 'Successfully retrieved all categories', categories);
   });
 
-  const editCategory = asyncHandler(async (req: Request, res: Response) => {
+  const editCategory = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const categoryId: string = req.params.categoryId;
     const categoryInfo = req.body;
     await editCategoryU(categoryId, categoryInfo, dbRepositoryCategory);
-    res.status(200).json({
-      status: 'success',
-      message: 'Successfully edited the category',
-      data: null
-    });
+    ok(res, 'Successfully edited the category', null);
   });
+
+const deleteCategory = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const categoryId: string = req.params.categoryId;
+
+  await deleteCategoryU(categoryId, dbRepositoryCategory);
+
+  ok(res, 'Category deleted successfully', null);
+});
+
 
   return {
     addCategory,
     getCategoryById,
     getAllCategory,
-    editCategory
+    editCategory,
+    deleteCategory
   };
 };
 

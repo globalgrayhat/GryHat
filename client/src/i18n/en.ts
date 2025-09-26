@@ -104,7 +104,7 @@ const en = {
 
   tutors: {
     title: "Our Instructors",
-    subtitle: "Meet Tutor Trek Subject Experts",
+    subtitle: "Meet Gray Hat Subject Experts",
     searchPlaceholder: "Search for instructors...",
     noResults: "No instructors found.",
   },

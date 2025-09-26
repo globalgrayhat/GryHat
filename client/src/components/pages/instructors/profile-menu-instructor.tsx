@@ -82,7 +82,7 @@ export function ProfileMenu() {
             size="sm"
             alt="candice wu"
             className="border border-blue-500 p-0.5"
-            src={instructor.instructorDetails?.profileUrl||USER_AVATAR}
+            src={instructor.instructorDetails?.profilePic?.url||USER_AVATAR}
           />
           <ChevronDownIcon
             strokeWidth={2.5}

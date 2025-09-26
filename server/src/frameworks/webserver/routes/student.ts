@@ -15,6 +15,13 @@ import { contactRepositoryMongodb } from '../../../frameworks/database/mongodb/r
 import roleCheckMiddleware from '../middlewares/roleCheckMiddleware';
 import { UserRole } from '../../../constants/enums';
 
+/**
+ * @swagger
+ * tags:
+ *   name: Students
+ *   description: Student management and profile APIs
+ */
+
 const studentRouter = (redisClient: RedisClient) => {
   const router = express.Router();
   const controller = studentController(
@@ -28,12 +35,67 @@ const studentRouter = (redisClient: RedisClient) => {
     redisCacheRepository,
     redisClient
   );
+
+  /**
+   * @swagger
+   * /api/students/change-password:
+   *   patch:
+   *     summary: Change password for logged-in student
+   *     tags: [Students]
+   *     security:
+   *       - bearerAuth: []
+   *     requestBody:
+   *       description: Current and new password data
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               currentPassword:
+   *                 type: string
+   *               newPassword:
+   *                 type: string
+   *     responses:
+   *       200:
+   *         description: Password changed successfully
+   *       401:
+   *         description: Unauthorized
+   */
   router.patch(
     '/change-password',
     jwtAuthMiddleware,
     controller.changePassword
   );
 
+  /**
+   * @swagger
+   * /api/students/update-profile:
+   *   put:
+   *     summary: Update student profile including image upload
+   *     tags: [Students]
+   *     security:
+   *       - bearerAuth: []
+   *     consumes:
+   *       - multipart/form-data
+   *     requestBody:
+   *       content:
+   *         multipart/form-data:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               image:
+   *                 type: string
+   *                 format: binary
+   *               otherFields:
+   *                 type: object
+   *                 description: Other profile fields
+   *     responses:
+   *       200:
+   *         description: Profile updated successfully
+   *       401:
+   *         description: Unauthorized
+   */
   router.put(
     '/update-profile',
     jwtAuthMiddleware,
@@ -41,6 +103,20 @@ const studentRouter = (redisClient: RedisClient) => {
     controller.updateProfile
   );
 
+  /**
+   * @swagger
+   * /api/students/get-student-details:
+   *   get:
+   *     summary: Get logged-in student's details (with caching)
+   *     tags: [Students]
+   *     security:
+   *       - bearerAuth: []
+   *     responses:
+   *       200:
+   *         description: Returns student details
+   *       401:
+   *         description: Unauthorized
+   */
   router.get(
     '/get-student-details',
     jwtAuthMiddleware,
@@ -48,8 +124,45 @@ const studentRouter = (redisClient: RedisClient) => {
     controller.getStudentDetails
   );
 
+  /**
+   * @swagger
+   * /api/students/get-all-students:
+   *   get:
+   *     summary: Get all students
+   *     tags: [Students]
+   *     security:
+   *       - bearerAuth: []
+   *     responses:
+   *       200:
+   *         description: List of all students
+   *       401:
+   *         description: Unauthorized
+   */
   router.get('/get-all-students', jwtAuthMiddleware, controller.getAllStudents);
 
+  /**
+   * @swagger
+   * /api/students/block-student/{studentId}:
+   *   patch:
+   *     summary: Block a student by admin
+   *     tags: [Students]
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - name: studentId
+   *         in: path
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The ID of the student to block
+   *     responses:
+   *       200:
+   *         description: Student blocked successfully
+   *       401:
+   *         description: Unauthorized
+   *       403:
+   *         description: Forbidden - only admins allowed
+   */
   router.patch(
     '/block-student/:studentId',
     jwtAuthMiddleware,
@@ -57,6 +170,29 @@ const studentRouter = (redisClient: RedisClient) => {
     controller.blockStudent
   );
 
+  /**
+   * @swagger
+   * /api/students/unblock-student/{studentId}:
+   *   patch:
+   *     summary: Unblock a student by admin
+   *     tags: [Students]
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - name: studentId
+   *         in: path
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The ID of the student to unblock
+   *     responses:
+   *       200:
+   *         description: Student unblocked successfully
+   *       401:
+   *         description: Unauthorized
+   *       403:
+   *         description: Forbidden - only admins allowed
+   */
   router.patch(
     '/unblock-student/:studentId',
     jwtAuthMiddleware,
@@ -64,6 +200,22 @@ const studentRouter = (redisClient: RedisClient) => {
     controller.unblockStudent
   );
 
+  /**
+   * @swagger
+   * /api/students/get-all-blocked-students:
+   *   get:
+   *     summary: Get all blocked students (admin only)
+   *     tags: [Students]
+   *     security:
+   *       - bearerAuth: []
+   *     responses:
+   *       200:
+   *         description: List of all blocked students
+   *       401:
+   *         description: Unauthorized
+   *       403:
+   *         description: Forbidden - only admins allowed
+   */
   router.get(
     '/get-all-blocked-students',
     jwtAuthMiddleware,
@@ -71,6 +223,36 @@ const studentRouter = (redisClient: RedisClient) => {
     controller.getAllBlockedStudents
   );
 
+  /**
+   * @swagger
+   * /api/students/contact-us:
+   *   post:
+   *     summary: Add contact message from student or user
+   *     tags: [Students]
+   *     requestBody:
+   *       description: Contact message data
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               name:
+   *                 type: string
+   *                 example: John Doe
+   *               email:
+   *                 type: string
+   *                 format: email
+   *                 example: john@example.com
+   *               message:
+   *                 type: string
+   *                 example: I have a question regarding my course.
+   *     responses:
+   *       201:
+   *         description: Contact message submitted successfully
+   *       400:
+   *         description: Bad request
+   */
   router.post('/contact-us', controller.addContact);
 
   return router;

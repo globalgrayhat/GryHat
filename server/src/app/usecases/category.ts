@@ -58,3 +58,26 @@ export const editCategoryU = async (
   }
   await categoryDbRepository.editCategory(categoryId, categoryInfo);
 };
+
+export const deleteCategoryU = async (
+  categoryId: string,
+  categoryDbRepository: ReturnType<CategoryDbInterface>
+) => {
+  if (!categoryId?.trim()) {
+    throw new AppError(
+      'Please provide a valid category id',
+      HttpStatusCodes.BAD_REQUEST
+    );
+  }
+
+  const deletedCategory = await categoryDbRepository.deleteCategory(categoryId);
+
+  if (!deletedCategory) {
+    throw new AppError(
+      'Category not found or could not be deleted',
+      HttpStatusCodes.NOT_FOUND
+    );
+  }
+
+  return deletedCategory;
+};

@@ -47,6 +47,9 @@ export const courseDbRepository = (
   const searchCourse = async (isFree: boolean, searchQuery: string,filterQuery:string) =>
     await repository.searchCourse(isFree, searchQuery,filterQuery);
 
+  const deleteCourse = async (courseId: string) =>
+    await repository.deleteCourse(courseId);
+
   return {
     addCourse,
     editCourse,
@@ -61,7 +64,8 @@ export const courseDbRepository = (
     getTotalNumberOfCourses,
     getNumberOfCoursesAddedInEachMonth,
     getStudentsByCourseForInstructor,
-    searchCourse
+    searchCourse,
+    deleteCourse
   };
 };
 export type CourseDbRepositoryInterface = typeof courseDbRepository;

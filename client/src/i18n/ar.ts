@@ -85,6 +85,8 @@ const ar = {
     subjects: "المواد",
     experience: "الخبرة",
     skills: "المهارات",
+    blockedTitle: "محظور",
+    blockedMessage: "لقد تم حظر حسابك. يرجى الاتصال بالدعم للحصول على المساعدة.",
     about: "نبذة عنك",
     photo: "صورة",
     certificate: "شهادة",
@@ -103,7 +105,7 @@ const ar = {
 
   tutors: {
     title: "قائمة المدربين",
-    subtitle: "تعرف على خبراء موضوعات Tutor Trek",
+    subtitle: "تعرف على خبراء موضوعات Gray Hat",
     searchPlaceholder: "ابحث عن المدربين...",
     noResults: "لم يتم العثور على مدربين.",
   },

@@ -1,11 +1,14 @@
 export interface ApiResponseRecommended {
-  _id: string
-  instructor: Instructor
-  course: Course,
-  media:{
-    profileUrl:string,
-    thumbnailUrl:string,
-  }
+  _id: string;
+  title: string;
+  duration: number;
+  level: string;
+  thumbnailUrl: string;
+  instructorFirstName: string;
+  instructorLastName: string;
+  instructorProfileUrl: string;
+  categoryName: string;
+  createdAt: string; 
 }
 
 export interface Instructor {
@@ -48,10 +51,12 @@ export interface Course {
   }
   
   export interface ApiResponseTrending {
-    _id: string
-    title: string
+    _id: string;
+    title: string;
     thumbnailUrl: string;
-    profileUrl:string;
-    instructorFirstName: string
-    instructorLastName: string
+    instructorFirstName: string;
+    instructorLastName: string;
+    instructorProfileUrl: string;
+    enrolledCount: number;
+    createdAt: string; 
   }

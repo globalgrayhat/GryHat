@@ -1,3 +1,4 @@
+import { ok, created, fail, err } from '../../shared/http/respond';
 import { AdminRepositoryMongoDb } from '../../frameworks/database/mongodb/repositories/adminRepoMongoDb';
 import { AdminDbInterface } from '../../app/repositories/adminDbRepository';
 import { Request, Response } from 'express';
@@ -40,8 +41,7 @@ const adminController = (
   const dbRepositoryPayment = paymentDbRepository(paymentDbRepositoryImpl());
   const dbRepositoryCategory = categoryDbRepository(categoryDbRepositoryImpl());
 
-  const getDashBoardDetails = asyncHandler(
-    async (req: Request, res: Response) => {
+  const getDashBoardDetails = asyncHandler(async (req: Request, res: Response): Promise<void> => {
       const response = await getDashBoardDetailsU(
         dbRepositoryCourse,
         dbRepositoryInstructor,
@@ -49,25 +49,17 @@ const adminController = (
         dbRepositoryPayment
       );
 
-      res.status(200).json({
-        status: 'success',
-        message: 'Successfully retrieved dashboard details',
-        data: response
-      });
+      ok(res, 'Successfully retrieved dashboard details', response);
     }
   );
 
-  const getGraphDetails = asyncHandler(async (req: Request, res: Response) => {
+  const getGraphDetails = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const response = await getGraphDetailsU(
       dbRepositoryCourse,
       dbRepositoryCategory,
       dbRepositoryPayment
     );
-    res.status(200).json({
-      status: 'success',
-      message: 'Successfully retrieved graph details',
-      data: response
-    });
+    ok(res, 'Successfully retrieved graph details', response);
   });
 
   return {

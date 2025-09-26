@@ -1,4 +1,24 @@
+import CONFIG_KEYS from "../config";
+/**
+ * Returns a full URL based on a given path.
+ * - If the path is already a full URL (starts with http/https), it returns it as-is.
+ * - Otherwise, it prepends the API base URL from the config.
+ *
+ * @param path - A relative or absolute path string
+ * @returns Full URL string
+ */
+export const getFullUrl = (path?: string | null): string => {
+  if (!path) return "";
 
+  // Return as-is if the path is already an absolute URL
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
+
+  // Clean up slashes to avoid double slashes in final URL
+  const trimmedBase = CONFIG_KEYS.API_BASE_URL.replace(/\/+$/, "");
+  const trimmedPath = path.replace(/^\/+/, "");
+
+  return `${trimmedBase}/${trimmedPath}`;
+};
 
 export function formatDate(dateString: string): string {
   const date = new Date(dateString);

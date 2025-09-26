@@ -1,15 +1,32 @@
+import { FileRef } from './courseInterface';
+
 export interface CreateLessonInterface {
   title: string;
   description: string;
-  contents: string[];
-  duration: number;
+  contents: string[];      
+  duration: number;      
+  about?: string;
+
   instructorId: string;
   courseId: string;
-  media: {
-    name: string;
-    url: string;
-  }[];
-  questions: Question[];
+
+  // Preview gating
+  isPreview?: boolean;
+
+  // Lesson resources/attachments
+  resources?: FileRef[];
+
+  // TUS info (persisted)
+  videoTusKeys?: string[];
+  primaryVideoKey?: string;
+
+  // Back-compat field
+  media?: FileRef[];
+
+  videoSource?: 'tus' | 'youtube' | 'vimeo' | 'local' | 's3' | '';
+  videoUrl?: string;       // youtube/vimeo/local/s3 link
+  videoFile?: string;      // single TUS id
+  questions?: Question[];
 }
 
 export interface EditLessonInterface {
@@ -17,9 +34,20 @@ export interface EditLessonInterface {
   description?: string;
   contents?: string[];
   duration?: number;
-  instructorId?: string;
+  about?: string;
   courseId?: string;
-  media?: { name: string; url: string }[];
+  isPreview?: boolean;
+  resources?: FileRef[];
+
+  videoTusKeys?: string[];
+  primaryVideoKey?: string;
+
+  media?: FileRef[];
+
+  videoSource?: 'tus' | 'youtube' | 'vimeo' | 'local' | 's3' | '';
+  videoUrl?: string;
+  videoFile?: string;
+
   questions?: Question[];
 }
 

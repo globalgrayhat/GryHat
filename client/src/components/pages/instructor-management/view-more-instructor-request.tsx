@@ -71,7 +71,7 @@ import { InstructorApiResponse } from "../../../api/types/apiResponses/api-respo
           <div className="flex items-center">
             <img
               className="h-12 w-12 rounded-full"
-              src={profilePic}
+              src={profilePic?.url}
               alt="Profile"
             />
             <h3 className="text-lg leading-6 font-medium text-gray-900 ml-4">
