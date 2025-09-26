@@ -192,16 +192,27 @@ const ViewCourseStudent: React.FC = () => {
   const instructorAvatar = instructor?.profilePic?.url
     ? getFullUrl(instructor.profilePic.url)
     : undefined;
+  // Intro Section
+    const introduction = course?.introduction?.url
+    ? getFullUrl(course.introduction.url)
+    : undefined;
+    const isSupportedVideo = (url: string): boolean => {
+      if (!url) return false;
+      return (
+        url.includes('youtube.com') ||
+        url.includes('youtu.be') ||
+        url.includes('vimeo.com') ||
+        /\.(mp4|webm|ogg)$/i.test(url)
+      );
+    };    
 
-  const coverUrl = getFullUrl(
-    course?.thumbnailUrl || (course as any)?.thumbnail?.url || ""
-  );
-
+    const coverUrl = getFullUrl(
+      course?.thumbnailUrl || (course as any)?.thumbnail?.url || ""
+    );
   // 👇 مهم: ناخذ من fieldين حسب الرِسبون
   const guidelinesUrl = getFullUrl(
     (course as any)?.guidelinesUrl || (course as any)?.guidelines?.url || ""
   );
-
   const paidFlag =
     typeof course?.isPaid === "boolean"
       ? course.isPaid
@@ -458,14 +469,64 @@ const ViewCourseStudent: React.FC = () => {
                     {expandedIndex === 0 && (
                       <ul className="divide-y divide-gray-200 dark:divide-gray-700">
                         <li>
+                        {introduction && isSupportedVideo(introduction) ? (
+                          <>
+                            {/* ✅ YouTube embed */}
+                            {introduction.includes('youtube.com') || introduction.includes('youtu.be') ? (
+                              <div className="aspect-video w-full">
+                                <iframe
+                                  className="w-full h-full rounded-md"
+                                  src={introduction.replace('watch?v=', 'embed/')}
+                                  title="YouTube video"
+                                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                  allowFullScreen
+                                ></iframe>
+                              </div>
+                            ) : introduction.includes('vimeo.com') ? (
+                              /* ✅ Vimeo embed */
+                              <div className="aspect-video w-full">
+                                <iframe
+                                  className="w-full h-full rounded-md"
+                                  src={introduction.replace('vimeo.com', 'player.vimeo.com/video')}
+                                  title="Vimeo video"
+                                  frameBorder="0"
+                                  allow="autoplay; fullscreen; picture-in-picture"
+                                  allowFullScreen
+                                ></iframe>
+                              </div>
+                            ) : (
+                              /* ✅ Direct video file (mp4/webm/ogg) */
+                              <div className="w-full p-2.5 sm:p-3">
+                                <video
+                                  controls
+                                  className="w-full rounded-md"
+                                  src={introduction}
+                                >
+                                  Your browser does not support the video tag.
+                                </video>
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <div className="flex items-center gap-2 p-2.5 sm:p-3 opacity-70">
+                            <IoBookSharp />
+                            <span className="flex-1">No introduction provided</span>
+                          </div>
+                        )}
+
+                          {/* Section tow */}
                           {guidelinesUrl ? (
                             <button
                               type="button"
                               onClick={openGuidelines}
-                              className="flex w-full items-center gap-2 p-2.5 sm:p-3 text-sm sm:text-base hover:bg-gray-50 dark:hover:bg-gray-700/60"
+                              className="flex items-center justify-between w-full gap-2 px-3 py-2 sm:px-4 sm:py-3 rounded-md bg-white dark:bg-gray-800 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700/60 transition"
                             >
-                              <IoBookSharp className="text-blue-500" />
-                              <span className="flex-1">Important guidelines</span>
+                              <div className="flex items-center gap-2">
+                                <IoBookSharp className="text-blue-500 text-lg sm:text-xl" />
+                                <span className="text-sm sm:text-base font-medium">
+                                  Important guidelines
+                                </span>
+                              </div>
                               <Chip
                                 variant="ghost"
                                 size="sm"
@@ -476,15 +537,18 @@ const ViewCourseStudent: React.FC = () => {
                                     ? "ZIP"
                                     : "FILE"
                                 }
-                                className="rounded-full"
+                                className="rounded-full text-xs sm:text-sm"
                               />
                             </button>
                           ) : (
-                            <div className="flex items-center gap-2 p-2.5 sm:p-3 opacity-70">
-                              <IoBookSharp />
-                              <span className="flex-1">No guidelines provided</span>
+                            <div className="flex items-center justify-between gap-2 px-3 py-2 sm:px-4 sm:py-3 opacity-70 bg-gray-100 dark:bg-gray-800 rounded-md">
+                              <div className="flex items-center gap-2">
+                                <IoBookSharp className="text-gray-500 text-lg sm:text-xl" />
+                                <span className="text-sm sm:text-base">No guidelines provided</span>
+                              </div>
                             </div>
                           )}
+
                         </li>
                       </ul>
                     )}

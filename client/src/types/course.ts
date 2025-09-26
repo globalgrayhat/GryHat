@@ -27,4 +27,5 @@ export interface CourseInterface {
     key: string
     name: string
     _id: string
+    url: string
   }
