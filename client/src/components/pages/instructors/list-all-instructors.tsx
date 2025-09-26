@@ -85,7 +85,7 @@ const ListAllInstructors: React.FC = () => {
     <div
       dir={dir}
       className="
-        min-h-screen pb-7
+         pb-7
         bg-[var(--bg-app)] text-[var(--text-primary)]
         dark:bg-gray-900 dark:text-gray-100
       "
@@ -106,42 +106,6 @@ const ListAllInstructors: React.FC = () => {
         </p>
       </div>
 
-      {/* Filters */}
-      <div className="bg-[var(--surface-1)] dark:bg-gray-900">
-        <div className="mx-auto max-w-7xl px-4 py-4 sm:py-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          {/* Category/Subject filter */}
-          <div className="w-full sm:w-[48%]">
-            <FilterInstructorSelectBox handleSelect={setFilterValue} />
-          </div>
-
-          {/* Search box */}
-          <div className="relative w-full sm:w-[48%]">
-            <label htmlFor="instructor-search" className="sr-only">
-              {t("tutors.searchLabel") || "Search instructors"}
-            </label>
-            <input
-              id="instructor-search"
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="
-                h-10 w-full rounded-md
-                border border-[var(--ring)] bg-[var(--surface-2)]
-                text-[var(--text-primary)]
-                placeholder:text-[var(--text-muted)]
-                focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent
-                dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100
-              "
-              placeholder={t("tutors.searchPlaceholder") || "Search instructors..."}
-            />
-            <RiSearchLine
-              size={18}
-              className="pointer-events-none absolute top-1/2 -translate-y-1/2 text-[var(--text-muted)]"
-              style={dir === "rtl" ? { left: "0.75rem" } : { right: "0.75rem" }}
-            />
-          </div>
-        </div>
-      </div>
 
       {/* List */}
       <div className="mx-auto max-w-7xl px-4 py-6 md:py-10">
