@@ -52,7 +52,7 @@ export default function StudentFooter() {
     <footer
       dir={dir}
       className="
-        mt-20 border-t border-gray-200 bg-white
+        mt-10 border-t border-gray-200 bg-white
         dark:border-gray-800 dark:bg-gray-900
         transition-colors
       "

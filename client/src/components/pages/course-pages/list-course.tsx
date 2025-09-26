@@ -129,8 +129,8 @@ const ListCourse: React.FC = () => {
 
   /* ---------- Ready ---------- */
   return (
-    <div className="min-h-screen bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100">
-      {/* Header */}
+    <div className="bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100">
+      {/* Header
       <div className="pt-5 pb-5 px-9 mt-5 mx-auto flex justify-center">
         <div className="w-10/12 ml-2 pl-1">
           <h1 className="text-2xl lg:text-3xl font-bold">{title}</h1>
@@ -138,7 +138,7 @@ const ListCourse: React.FC = () => {
             {subtitle}
           </p>
         </div>
-      </div>
+      </div> */}
 
       {/* Filters row */}
       <div className="flex justify-center bg-gray-50 dark:bg-gray-800">
@@ -172,7 +172,7 @@ const ListCourse: React.FC = () => {
       {/* Grid */}
       <div className="mx-auto flex justify-center">
         <div className="w-10/12">
-          <div className="mt-3 flex flex-wrap justify-center">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 md:grid-cols-4 gap-5 mt-3 justify-center">
             {courses.length ? (
               courses.map((course: CourseInterface) => (
                 <Link to={`/courses/${course._id}`} key={course._id} className="mt-5">

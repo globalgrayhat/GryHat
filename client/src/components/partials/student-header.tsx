@@ -6,7 +6,6 @@ import ProfileMenu from "../elements/profile-menu";
 import { selectIsLoggedIn, selectUserType } from "../../redux/reducers/authSlice";
 import { useSelector } from "react-redux";
 import { Button } from "@material-tailwind/react";
-import { APP_LOGO } from "../../constants/common";
 import LanguageToggle from "../common/LanguageToggle";
 import ThemeToggle from "../common/theme-toggle";
 import { useLanguage } from "../../contexts/LanguageContext";
@@ -73,7 +72,7 @@ const StudentHeader: React.FC = () => {
                 {/* Left: Logo + Desktop Nav */}
                 <div className="flex items-center gap-4 lg:gap-6">
                   <Link to="/" className="flex-shrink-0">
-                    <img className="h-8 md:h-9 lg:h-10 w-auto" src={APP_LOGO} alt="Logo" />
+                    <img className="h-8 md:h-9 lg:h-12 w-auto" src='/Profile.svg' alt="Logo" />
                   </Link>
 
                   {/* Desktop nav */}

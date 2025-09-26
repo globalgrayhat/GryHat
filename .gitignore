@@ -17,7 +17,7 @@ yarn-error.log
 # Environment variables
 .env
 .db
-
+.cursorignore
 # IDE
 .vscode/
 
