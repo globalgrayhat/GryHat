@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { getQuizzesByLesson } from "../../../api/endpoints/course/quiz";
 import { toast } from "react-toastify";
 import {
@@ -8,146 +8,185 @@ import {
 import { Link } from "react-router-dom";
 import { selectIsLoggedIn } from "../../../redux/reducers/authSlice";
 import { useSelector } from "react-redux";
+import { Card, CardBody, Button, Chip, Typography } from "@material-tailwind/react";
+
+/**
+ * Quizzes — brand-aligned, responsive UI
+ * - Clean card container + compact paddings for mobile
+ * - Progress, counter chip, and polished option buttons
+ */
 
 const Quizzes: React.FC<{ lessonId: string | undefined }> = ({ lessonId }) => {
-  const [quizzes, setQuizzes] = useState<Question[]>();
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);
-  const [selectedOptionId, setSelectedOptionId] = useState<string | undefined>(
-    undefined
-  );
   const isLoggedIn = useSelector(selectIsLoggedIn);
+
+  const [quizzes, setQuizzes] = useState<Question[] | null>(null);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);
+  const [selectedOptionId, setSelectedOptionId] = useState<string | undefined>(undefined);
   const [nextClicked, setNextClicked] = useState(false);
-  const [answeredCorrectly, setAnsweredCorrectly] = useState<
-    boolean | undefined
-  >(undefined);
+  const [answeredCorrectly, setAnsweredCorrectly] = useState<boolean | undefined>(undefined);
   const [score, setScore] = useState<number>(0);
 
-  const fetchQuizzes = async (lessonId: string) => {
-    try {
-      const response = await getQuizzesByLesson(lessonId);
-      setQuizzes(response?.data?.questions);
-    } catch (error: any) {
-      toast.error(error?.data?.message, {
-        position: toast.POSITION.BOTTOM_RIGHT,
-      });
-    }
-  };
-
+  // Load quizzes on lesson change
   useEffect(() => {
-    if (lessonId) {
-      fetchQuizzes(lessonId);
-    }
+    const fetchQuizzes = async (id: string) => {
+      try {
+        const response = await getQuizzesByLesson(id);
+        setQuizzes(response?.data?.questions ?? []);
+        setCurrentQuestionIndex(0);
+        setSelectedOptionId(undefined);
+        setNextClicked(false);
+        setAnsweredCorrectly(undefined);
+        setScore(0);
+      } catch (error: any) {
+        toast.error(error?.data?.message ?? "Failed to load quizzes", {
+          position: toast.POSITION.BOTTOM_RIGHT,
+        });
+      }
+    };
+    if (lessonId) fetchQuizzes(lessonId);
   }, [lessonId]);
 
-  const handleOptionSelect = (optionId: string) => {
-    setSelectedOptionId(optionId);
-  };
+  const total = quizzes?.length ?? 0;
+  const currentQuestion = useMemo(
+    () => (quizzes && total > 0 ? quizzes[Math.min(currentQuestionIndex, total - 1)] : null),
+    [quizzes, total, currentQuestionIndex]
+  );
+
+  const handleOptionSelect = (optionId: string) => setSelectedOptionId(optionId);
 
   const handleNextQuestion = () => {
+    if (!currentQuestion || !selectedOptionId) return;
     setNextClicked(true);
 
-    const currentQuestion = quizzes![currentQuestionIndex];
-    const selectedOption = currentQuestion.options.find(
-      (option) => option._id === selectedOptionId
-    );
-
-    if (selectedOption) {
-      setAnsweredCorrectly(selectedOption.isCorrect);
-      if (selectedOption.isCorrect) {
-        setScore((prevScore) => prevScore + 1);
-      }
+    const selected = currentQuestion.options.find((o) => o._id === selectedOptionId);
+    if (selected) {
+      setAnsweredCorrectly(selected.isCorrect);
+      if (selected.isCorrect) setScore((s) => s + 1);
     }
 
+    // Delay to show feedback color, then move next
     setTimeout(() => {
       setSelectedOptionId(undefined);
-      setCurrentQuestionIndex((prevIndex) => prevIndex + 1);
+      setCurrentQuestionIndex((idx) => idx + 1);
       setNextClicked(false);
       setAnsweredCorrectly(undefined);
-    }, 1000);
+    }, 800);
   };
 
+  // Gate when not logged in
   if (!isLoggedIn) {
     return (
-      <div className='flex flex-col items-center justify-center h-auto mb-5'>
-        <div className="pt-10 pb-10 flex justify-center items-center">
-          <h2 className='text-xl font-semibold mt-3'>
-            Please login to solve quizzes
-          </h2>
-          <Link to="/login" className="ml-2 mt-3.5 text-blue-600 underline">Login</Link>
-        </div>
-      </div>
-    );
-  }
-
-  if (currentQuestionIndex === quizzes?.length) {
-    return (
-      <div className='flex flex-col items-center justify-center h-auto mb-5'>
-        <div>
-          <h2 className='text-xl font-semibold mt-3'>
-            Congrats! your score is...{score}/{quizzes.length}
-          </h2>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className=''>
-      <h2 className='text-xl ml-3 p-1 font-bold mb-4 flex items-center'>
-        Questions
-        <div
-          className='ml-2 w-7 h-5 bg-blue-gray-100 rounded-full flex items-center justify-center text-customFontColorBlack font-light text-sm'
-          style={{ borderRadius: "43% 43%" }}
-        >
-          {quizzes?.length}
-        </div>
-      </h2>
-
-      <div className=' mx-auto px-4'>
-        {quizzes?.length ? (
-          <div className='w-full  shadow-sm border-gray-100 border-2 rounded-lg px-8 py-6'>
-            <p className='text-lg mb-6'>
-              <span className='font-bold mr-2'>
-                {currentQuestionIndex + 1}.
-              </span>
-              {quizzes[currentQuestionIndex]?.question}
-            </p>
-
-            <ul className='space-y-4'>
-              {quizzes[currentQuestionIndex]?.options.map((option: Option) => (
-                <li
-                  key={option._id}
-                  onClick={() => handleOptionSelect(option._id)}
-                  className={`${
-                    selectedOptionId === option._id
-                      ? nextClicked
-                        ? answeredCorrectly
-                          ? "bg-green-400 text-white"
-                          : "bg-red-400 text-white"
-                        : "bg-blue-400 text-white"
-                      : "bg-gray-200 hover:bg-gray-300 text-gray-700"
-                  } rounded-lg p-4 w-1/2 cursor-pointer transition-colors duration-200`}
-                >
-                  {option.option}
-                </li>
-              ))}
-            </ul>
-            {selectedOptionId && (
-              <button
-                onClick={handleNextQuestion}
-                className='bg-blue-500 text-white py-2 px-4 mt-6 rounded-lg hover:bg-blue-600 transition-colors duration-200'
-              >
-                Next
-              </button>
-            )}
+      <Card shadow={false} className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+        <CardBody className="p-4 sm:p-6">
+          <div className="flex flex-col items-center text-center">
+            <Typography variant="h6" className="!m-0 text-gray-900 dark:text-white">
+              Please login to solve quizzes
+            </Typography>
+            <Link to="/login" className="mt-2 text-sm text-blue-600 hover:underline">Login</Link>
           </div>
-        ) : (
-          <p className='text-lg text-center'>
+        </CardBody>
+      </Card>
+    );
+  }
+
+  // Finished
+  if (total > 0 && currentQuestionIndex >= total) {
+    return (
+      <Card shadow={false} className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+        <CardBody className="p-4 sm:p-6 text-center">
+          <Typography variant="h6" className="!m-0 text-gray-900 dark:text-white">
+            Congrats! Your score is {score}/{total}
+          </Typography>
+        </CardBody>
+      </Card>
+    );
+  }
+
+  // Empty
+  if (!total) {
+    return (
+      <Card shadow={false} className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+        <CardBody className="p-4 sm:p-6 text-center">
+          <Typography variant="h6" className="!m-0 text-gray-900 dark:text-white">
             No quizzes available for this lesson.
-          </p>
-        )}
-      </div>
-    </div>
+          </Typography>
+        </CardBody>
+      </Card>
+    );
+  }
+
+  // In-progress
+  return (
+    <Card shadow={false} className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+      <CardBody className="p-4 sm:p-6">
+        {/* Header */}
+        <div className="mb-3 sm:mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Typography variant="h6" className="!m-0 text-gray-900 dark:text-white text-base sm:text-lg">
+              Questions
+            </Typography>
+            <Chip size="sm" value={total} className="rounded-full text-xs" />
+          </div>
+          <div className="min-w-[120px] text-right text-[12px] text-gray-600 dark:text-gray-300">
+            {currentQuestionIndex + 1} / {total}
+          </div>
+        </div>
+
+        {/* Progress bar */}
+        <div className="mb-4 h-1.5 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+          <div
+            className="h-1.5 rounded-full bg-blue-600 dark:bg-blue-500 transition-all"
+            style={{ width: `${((currentQuestionIndex + 0) / Math.max(total, 1)) * 100}%` }}
+          />
+        </div>
+
+        {/* Question */}
+        <p className="text-sm sm:text-base text-gray-900 dark:text-white mb-4">
+          <span className="font-bold mr-2">{currentQuestionIndex + 1}.</span>
+          {currentQuestion?.question}
+        </p>
+
+        {/* Options — grid responsive */}
+        <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+          {currentQuestion?.options.map((option: Option) => {
+            const isSelected = selectedOptionId === option._id;
+            // Decide color state
+            let cls =
+              "w-full rounded-lg border text-left px-3 py-2 sm:px-4 sm:py-3 text-sm transition ring-1 ring-black/5 dark:ring-white/10";
+            if (isSelected && nextClicked) {
+              cls += option.isCorrect
+                ? " bg-green-500 text-white border-green-600"
+                : " bg-red-500 text-white border-red-600";
+            } else if (isSelected) {
+              cls += " bg-blue-600 text-white border-blue-700";
+            } else {
+              cls += " bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700/60 border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200";
+            }
+
+            return (
+              <li key={option._id}>
+                <button type="button" onClick={() => handleOptionSelect(option._id)} className={cls}>
+                  {option.option}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+
+        {/* Next */}
+        <div className="mt-4">
+          <Button
+            onClick={handleNextQuestion}
+            disabled={!selectedOptionId}
+            color="blue"
+            size="sm"
+            className="normal-case rounded-full"
+          >
+            Next
+          </Button>
+        </div>
+      </CardBody>
+    </Card>
   );
 };
 
