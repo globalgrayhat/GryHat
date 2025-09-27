@@ -2,14 +2,14 @@ import { StorageConfigDbRepository } from '../../repositories/storageConfigDbRep
 import { StorageConfig } from '../../../types/storageConfig';
 
 export const getStorageConfigU = async (
-  storageConfigDbRepository: ReturnType<StorageConfigDbRepository>
+  storageConfigDbRepository: StorageConfigDbRepository
 ) => {
   return await storageConfigDbRepository.getConfig();
 };
 
 export const updateStorageConfigU = async (
   configData: Partial<StorageConfig>,
-  storageConfigDbRepository: ReturnType<StorageConfigDbRepository>
+  storageConfigDbRepository: StorageConfigDbRepository
 ) => {
   const existingConfig = await storageConfigDbRepository.getConfig();
   

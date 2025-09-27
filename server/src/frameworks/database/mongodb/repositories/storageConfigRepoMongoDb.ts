@@ -1,17 +1,17 @@
-import StorageConfig from '../models/storageConfig';
+import { StorageConfigModel } from '../models/storageConfig';
 import { StorageConfig as StorageConfigType } from '@src/types/storageConfig';
 
 export const storageConfigRepoMongoDb = () => {
   const getConfig = async (): Promise<StorageConfigType | null> => {
-    return await StorageConfig.findOne({ isActive: true });
+    return await StorageConfigModel.findOne({ isActive: true });
   };
 
   const createConfig = async (config: Partial<StorageConfigType>) => {
-    return await StorageConfig.create(config);
+    return await StorageConfigModel.create(config);
   };
 
   const updateConfig = async (id: string, updates: Partial<StorageConfigType>) => {
-    return await StorageConfig.findByIdAndUpdate(
+    return await StorageConfigModel.findByIdAndUpdate(
       id,
       { ...updates, updatedAt: new Date() },
       { new: true }
@@ -25,4 +25,4 @@ export const storageConfigRepoMongoDb = () => {
   };
 };
 
-export type StorageConfigRepositoryMongoDb = typeof storageConfigRepoMongoDb;
+export type StorageConfigRepositoryMongoDb = ReturnType<typeof storageConfigRepoMongoDb>;

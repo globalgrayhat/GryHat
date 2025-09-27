@@ -1,5 +1,8 @@
 import { StorageProvider } from '../constants/enums';
 
+/**
+ * Represents the credentials used for external storage providers.
+ */
 export interface StorageCredentials {
   accessKeyId?: string;
   secretAccessKey?: string;
@@ -9,6 +12,9 @@ export interface StorageCredentials {
   cloudFrontDomainName?: string;
 }
 
+/**
+ * Base structure for the storage configuration.
+ */
 export interface StorageConfig {
   provider: StorageProvider;
   credentials?: StorageCredentials;

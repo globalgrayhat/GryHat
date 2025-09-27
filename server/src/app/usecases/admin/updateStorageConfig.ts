@@ -16,14 +16,12 @@ export const updateStorageConfigU = async (
   config: StorageConfig,
   repository: StorageConfigDbRepository
 ): Promise<StorageConfig> => {
-  // For local provider we ensure credentials is undefined to avoid storing
-  // unnecessary empty object. For cloud providers we rely on the provided
-  // credentials as-is.
-  const normalizedConfig: StorageConfig = {
+  const normalizedConfig: Partial<StorageConfig> = {
     provider: config.provider,
     credentials:
       config.provider === StorageProvider.Local ? undefined : config.credentials
   };
+
   return await repository.upsertConfig(normalizedConfig);
 };
 

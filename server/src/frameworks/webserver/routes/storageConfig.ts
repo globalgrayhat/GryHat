@@ -1,4 +1,3 @@
-// server/src/frameworks/webserver/routes/storageConfig.ts
 import express from 'express';
 import storageConfigController from '../../../adapters/controllers/storageConfigController';
 import { storageConfigDbRepository } from '../../../app/repositories/storageConfigDbRepository';
@@ -8,10 +7,10 @@ import { UserRole } from '../../../constants/enums';
 
 const storageConfigRouter = express.Router();
 
-const controller = storageConfigController(
-  storageConfigDbRepository,
-  storageConfigRepoMongoDb
-);
+const repositoryInstance = storageConfigRepoMongoDb();
+const dbRepository = storageConfigDbRepository(repositoryInstance);
+
+const controller = storageConfigController(dbRepository, repositoryInstance);
 
 /**
  * @swagger

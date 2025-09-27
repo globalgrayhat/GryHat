@@ -1,24 +1,27 @@
-// server/src/frameworks/database/mongodb/models/storageConfig.ts
-import { Schema, model } from 'mongoose';
-import { StorageConfig } from '@src/types/storageConfig';
+// models/storageConfigModel.ts
+import mongoose, { Schema } from 'mongoose';
 import { StorageProvider } from '../../../../constants/enums';
+import { StorageCredentials } from '../../../../types/storageConfig';
 
-const CredentialsSchema = new Schema({
+const StorageCredentialsSchema = new Schema<StorageCredentials>({
   accessKeyId: String,
   secretAccessKey: String,
   region: String,
   bucketName: String,
   cloudFrontDistributionId: String,
-  cloudFrontDomainName: String
-});
+  cloudFrontDomainName: String,
+}, { _id: false });
 
-const storageConfigSchema = new Schema({
+const StorageConfigSchema = new Schema({
   provider: {
     type: String,
     enum: Object.values(StorageProvider),
-    required: true
+    required: true,
   },
-  credentials: CredentialsSchema,
+  credentials: {
+    type: StorageCredentialsSchema,
+    required: false
+  },
   isActive: {
     type: Boolean,
     default: true
@@ -33,4 +36,4 @@ const storageConfigSchema = new Schema({
   }
 });
 
-export default model<StorageConfig>('StorageConfig', storageConfigSchema);
+export const StorageConfigModel = mongoose.model('StorageConfig', StorageConfigSchema);

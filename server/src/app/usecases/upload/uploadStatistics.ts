@@ -1,4 +1,3 @@
-// server/src/app/usecases/upload/uploadStatistics.ts
 import { UploadTrackingRepositoryMongoDb } from '../../../frameworks/database/mongodb/repositories/uploadTrackingRepoMongoDb';
 
 export const getUploadStatistics = async (
@@ -16,11 +15,11 @@ export const getUploadStatistics = async (
     totalUploads: userUploads.length,
     totalSize,
     averageSize,
-    uploadsByType: userUploads.reduce((acc, upload) => {
+    uploadsByType: userUploads.reduce((acc: Record<string, number>, upload) => {
       const type = upload.fileType.split('/')[0];
       acc[type] = (acc[type] || 0) + 1;
       return acc;
-    }, {}),
+    }, {} as Record<string, number>),
     dailyStats: await uploadTrackingRepo.getDailyUploadStats(new Date())
   };
 };
