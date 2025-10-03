@@ -32,16 +32,28 @@ export interface CourseDoc extends Document {
 }
 
 const FileSubSchema = new Schema<FileRef>(
-  { name: { type: String, required: true }, url: { type: String, required: true }, key: { type: String } },
+  {
+    name: { type: String, required: true },
+    url: { type: String, required: true },
+    key: { type: String }
+  },
   { _id: false }
 );
 
 const courseSchema = new Schema<CourseDoc>(
   {
     title: { type: String, required: true, minlength: 2, maxlength: 100 },
-    instructorId: { type: Schema.Types.ObjectId, ref: 'instructor', required: true },
+    instructorId: {
+      type: Schema.Types.ObjectId,
+      ref: 'instructor',
+      required: true
+    },
     duration: { type: Number, required: true, min: 0 },
-    category: { type: Schema.Types.ObjectId, ref: 'categories', required: true },
+    category: {
+      type: Schema.Types.ObjectId,
+      ref: 'categories',
+      required: true
+    },
     subcategory: { type: Schema.Types.ObjectId, ref: 'categories' },
     level: { type: String, required: true },
     tags: { type: [String], default: [] },
@@ -54,14 +66,22 @@ const courseSchema = new Schema<CourseDoc>(
     thumbnail: { type: FileSubSchema },
     guidelines: { type: FileSubSchema },
     introduction: { type: FileSubSchema },
-    videoSource: { type: String, enum: ['youtube', 'vimeo', 'local', 's3'], default: 'local' },
+    videoSource: {
+      type: String,
+      enum: ['youtube', 'vimeo', 'local', 's3'],
+      default: 'local'
+    },
     videoUrl: { type: String },
     resources: { type: [FileSubSchema], default: [] },
     coursesEnrolled: [{ type: Schema.Types.ObjectId, ref: 'students' }],
     rating: { type: Number, min: 0, max: 5, default: 0 },
     isVerified: { type: Boolean, default: false },
     completionStatus: { type: Number, min: 0, max: 100, default: 0 },
-    status: { type: String, enum: ['draft', 'pending', 'approved', 'rejected'], default: 'draft' },
+    status: {
+      type: String,
+      enum: ['draft', 'pending', 'approved', 'rejected'],
+      default: 'draft'
+    },
     rejectionReason: { type: String, default: null }
   },
   { collection: 'course', timestamps: true }

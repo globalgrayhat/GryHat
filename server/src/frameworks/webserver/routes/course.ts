@@ -52,6 +52,8 @@ const courseRouter = (redisClient: RedisClient) => {
    *     description: Course submission & moderation
    */
 
+  // ==================== POST ROUTES ====================
+
   /**
    * @swagger
    * /api/courses/instructors/add-course:
@@ -84,64 +86,6 @@ const courseRouter = (redisClient: RedisClient) => {
     controller.addCourse
   );
 
-/**
- * @swagger
- * /api/courses/delete-course/{courseId}:
- *   delete:
- *     summary: Delete course (Instructor only)
- *     tags: [Course]
- *     security: [ { bearerAuth: [] } ]
- *     parameters:
- *       - in: path
- *         name: courseId
- *         required: true
- *         schema: { type: string }
- *     responses:
- *       200: { description: Course deleted successfully }
- *       404: { description: Course not found }
- */
-router.delete(
-  '/delete-course/:courseId',
-  jwtAuthMiddleware,
-  roleCheckMiddleware(UserRole.Instructor),
-  controller.deleteCourse
-);
-
-  /**
-   * @swagger
-   * /api/courses/instructors/edit-course/{courseId}:
-   *   put:
-   *     summary: Edit course (Instructor only)
-   *     tags: [Course]
-   *     security: [ { bearerAuth: [] } ]
-   *     parameters:
-   *       - in: path
-   *         name: courseId
-   *         required: true
-   *         schema: { type: string }
-   *     requestBody:
-   *       content:
-   *         multipart/form-data:
-   *           schema:
-   *             $ref: '#/components/schemas/MultipartCourseEdit'
-   *         application/json:
-   *           schema:
-   *             $ref: '#/components/schemas/CoursePatchJson'
-   *     responses:
-   *       200: { description: Course updated successfully }
-   */
-  router.put(
-    '/instructors/edit-course/:courseId',
-    jwtAuthMiddleware,
-    roleCheckMiddleware(UserRole.Instructor),
-    upload.fields([
-      { name: 'guidelines', maxCount: 1 },
-      { name: 'introduction', maxCount: 1 },
-      { name: 'thumbnail', maxCount: 1 }
-    ]),
-    controller.editCourse
-  );
-
   /**
    * @swagger
    * /api/courses/instructors/submit/{courseId}:
@@ -163,69 +107,6 @@ router.delete(
     roleCheckMiddleware(UserRole.Instructor),
     controller.submitCourse
   );
-
-  /**
-   * @swagger
-   * /api/courses/admin/moderate/{courseId}:
-   *   patch:
-   *     summary: Approve/Reject a course
-   *     tags: [Moderation]
-   *     security: [ { bearerAuth: [] } ]
-   *     parameters:
-   *       - in: path
-   *         name: courseId
-   *         required: true
-   *         schema: { type: string }
-   *     requestBody:
-   *       required: true
-   *       content:
-   *         application/json:
-   *           schema:
-   *             type: object
-   *             required: [action]
-   *             properties:
-   *               action: { type: string, enum: [approve, reject] }
-   *               reason: { type: string, description: 'Required when action=reject' }
-   *     responses:
-   *       200: { description: Moderation applied }
-   *       400: { description: Invalid action }
-   */
-  router.patch(
-    '/admin/moderate/:courseId',
-    jwtAuthMiddleware,
-    roleCheckMiddleware(UserRole.Admin),
-    controller.moderateCourse
-  );
-
-  /**
-   * @swagger
-   * /api/courses/get-all-courses:
-   *   get:
-   *     summary: Get all courses
-   *     tags: [Course]
-   *     responses:
-   *       200: { description: List of all courses }
-   */
-  router.get('/get-all-courses', cachingMiddleware(redisClient, 'all-courses'), controller.getAllCourses);
-
-  /**
-   * @swagger
-   * /api/courses/get-course/{courseId}:
-   *   get:
-   *     summary: Get course by ID
-   *     tags: [C/ourse]
-   *     parameters:
-   *       - in: path
-   *         name: courseId
-   *         required: true
-   *         schema: { type: string }
-   *     responses:
-   *       200: { description: Course details }
-   *       404: { description: Course not found }
-   */
-  router.get('/get-course/:courseId', controller.getIndividualCourse);
-
-  // -------------------- LESSONS --------------------
 
   /**
    * @swagger
@@ -271,6 +152,312 @@ router.delete(
 
   /**
    * @swagger
+   * /api/courses/lessons/add-discussion/{lessonId}:
+   *   post:
+   *     summary: Add discussion to lesson
+   *     tags: [Discussion]
+   *     security: [ { bearerAuth: [] } ]
+   *     parameters:
+   *       - in: path
+   *         name: lessonId
+   *         required: true
+   *         schema: { type: string }
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties: { message: { type: string } }
+   *     responses:
+   *       200: { description: Discussion added }
+   */
+  router.post(
+    '/lessons/add-discussion/:lessonId',
+    jwtAuthMiddleware,
+    controller.addDiscussion
+  );
+
+  /**
+   * @swagger
+   * /api/courses/enroll-student/{courseId}:
+   *   post:
+   *     summary: Enroll student in a course
+   *     tags: [Course]
+   *     security: [ { bearerAuth: [] } ]
+   *     parameters:
+   *       - in: path
+   *         name: courseId
+   *         required: true
+   *         schema: { type: string }
+   *     requestBody:
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               amount: { type: number }
+   *               paymentMethodId: { type: string }
+   *     responses:
+   *       200: { description: Student enrolled }
+   */
+  router.post(
+    '/enroll-student/:courseId',
+    jwtAuthMiddleware,
+    controller.enrollStudent
+  );
+
+  // ==================== GET ROUTES ====================
+
+  /**
+   * @swagger
+   * /api/courses/get-all-courses:
+   *   get:
+   *     summary: Get all courses
+   *     tags: [Course]
+   *     responses:
+   *       200: { description: List of all courses }
+   */
+  router.get(
+    '/get-all-courses',
+    cachingMiddleware(redisClient, 'all-courses'),
+    controller.getAllCourses
+  );
+
+  /**
+   * @swagger
+   * /api/courses/get-course/{courseId}:
+   *   get:
+   *     summary: Get course by ID
+   *     tags: [Course]
+   *     parameters:
+   *       - in: path
+   *         name: courseId
+   *         required: true
+   *         schema: { type: string }
+   *     responses:
+   *       200: { description: Course details }
+   *       404: { description: Course not found }
+   */
+  router.get('/get-course/:courseId', controller.getIndividualCourse);
+
+  /**
+   * @swagger
+   * /api/courses/instructors/get-lessons-by-course/{courseId}:
+   *   get:
+   *     summary: Get lessons by course ID (instructor/admin)
+   *     tags: [Lesson]
+   *     parameters:
+   *       - in: path
+   *         name: courseId
+   *         required: true
+   *         schema: { type: string }
+   *     responses:
+   *       200: { description: Lessons list }
+   */
+  router.get(
+    '/instructors/get-lessons-by-course/:courseId',
+    controller.getLessonsByCourse
+  );
+
+  /**
+   * @swagger
+   * /api/courses/public/get-lessons/{courseId}:
+   *   get:
+   *     summary: Public lessons listing with previews
+   *     description: |
+   *       - Not enrolled/not instructor ⇒ returns only lessons where `isPreview=true`.
+   *       - Instructor or enrolled student ⇒ returns all lessons.
+   *     tags: [Lesson]
+   *     parameters:
+   *       - in: path
+   *         name: courseId
+   *         required: true
+   *         schema: { type: string }
+   *     responses:
+   *       200: { description: Preview or full lessons depending on access }
+   */
+  router.get(
+    '/public/get-lessons/:courseId',
+    optionalAuth,
+    controller.getLessonsByCoursePublic
+  );
+
+  /**
+   * @swagger
+   * /api/courses/get-lessons-by-id/{lessonId}:
+   *   get:
+   *     summary: Get a lesson by ID
+   *     tags: [Lesson]
+   *     parameters:
+   *       - in: path
+   *         name: lessonId
+   *         required: true
+   *         schema: { type: string }
+   *     responses:
+   *       200: { description: Lesson details }
+   */
+  router.get('/get-lessons-by-id/:lessonId', controller.getLessonById);
+
+  /**
+   * @swagger
+   * /api/courses/get-quizzes-by-lesson/{lessonId}:
+   *   get:
+   *     summary: Get quizzes of a lesson
+   *     tags: [Lesson]
+   *     parameters:
+   *       - in: path
+   *         name: lessonId
+   *         required: true
+   *         schema: { type: string }
+   *     responses:
+   *       200: { description: Quizzes list }
+   */
+  router.get('/get-quizzes-by-lesson/:lessonId', controller.getQuizzesByLesson);
+
+  /**
+   * @swagger
+   * /api/courses/lessons/get-discussions-by-lesson/{lessonId}:
+   *   get:
+   *     summary: Get discussions by lesson ID
+   *     tags: [Discussion]
+   *     parameters:
+   *       - in: path
+   *         name: lessonId
+   *         required: true
+   *         schema: { type: string }
+   *     responses:
+   *       200: { description: Discussions list }
+   */
+  router.get(
+    '/lessons/get-discussions-by-lesson/:lessonId',
+    controller.getDiscussionsByLesson
+  );
+
+  /**
+   * @swagger
+   * /api/courses/lesson/replies-based-on-discussion/{discussionId}:
+   *   get:
+   *     summary: Get replies based on discussion ID
+   *     tags: [Discussion]
+   *     parameters:
+   *       - in: path
+   *         name: discussionId
+   *         required: true
+   *         schema: { type: string }
+   *     responses:
+   *       200: { description: Replies list }
+   */
+  router.get(
+    '/lesson/replies-based-on-discussion/:discussionId',
+    controller.getRepliesByDiscussion
+  );
+
+  /**
+   * @swagger
+   * /api/courses/get-recommended-courses:
+   *   get:
+   *     summary: Get recommended courses for the authenticated student
+   *     tags: [Course]
+   *     security: [ { bearerAuth: [] } ]
+   *     responses:
+   *       200: { description: Recommended courses }
+   */
+  router.get(
+    '/get-recommended-courses',
+    jwtAuthMiddleware,
+    roleCheckMiddleware(UserRole.Student),
+    controller.getRecommendedCourseByStudentInterest
+  );
+
+  /**
+   * @swagger
+   * /api/courses/get-trending-courses:
+   *   get:
+   *     summary: Get trending courses
+   *     tags: [Course]
+   *     responses:
+   *       200: { description: Trending courses }
+   */
+  router.get('/get-trending-courses', controller.getTrendingCourses);
+
+  /**
+   * @swagger
+   * /api/courses/get-course-by-student:
+   *   get:
+   *     summary: Get courses the authenticated student is enrolled in
+   *     tags: [Course]
+   *     security: [ { bearerAuth: [] } ]
+   *     responses:
+   *       200: { description: Student's courses }
+   */
+  router.get(
+    '/get-course-by-student',
+    jwtAuthMiddleware,
+    controller.getCourseByStudent
+  );
+
+  /**
+   * @swagger
+   * /api/courses/search-course:
+   *   get:
+   *     summary: Search courses by keyword
+   *     tags: [Course]
+   *     parameters:
+   *       - in: query
+   *         name: search
+   *         schema: { type: string }
+   *       - in: query
+   *         name: filter
+   *         schema: { type: string }
+   *     responses:
+   *       200: { description: Search results }
+   */
+  router.get(
+    '/search-course',
+    cachingMiddleware(redisClient),
+    controller.searchCourse
+  );
+
+  // ==================== PUT ROUTES ====================
+
+  /**
+   * @swagger
+   * /api/courses/instructors/edit-course/{courseId}:
+   *   put:
+   *     summary: Edit course (Instructor only)
+   *     tags: [Course]
+   *     security: [ { bearerAuth: [] } ]
+   *     parameters:
+   *       - in: path
+   *         name: courseId
+   *         required: true
+   *         schema: { type: string }
+   *     requestBody:
+   *       content:
+   *         multipart/form-data:
+   *           schema:
+   *             $ref: '#/components/schemas/MultipartCourseEdit'
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/CoursePatchJson'
+   *     responses:
+   *       200: { description: Course updated successfully }
+   */
+  router.put(
+    '/instructors/edit-course/:courseId',
+    jwtAuthMiddleware,
+    roleCheckMiddleware(UserRole.Instructor),
+    upload.fields([
+      { name: 'guidelines', maxCount: 1 },
+      { name: 'introduction', maxCount: 1 },
+      { name: 'thumbnail', maxCount: 1 }
+    ]),
+    controller.editCourse
+  );
+
+  /**
+   * @swagger
    * /api/courses/instructors/edit-lesson/{lessonId}:
    *   put:
    *     summary: Edit lesson (Instructor only)
@@ -306,83 +493,14 @@ router.delete(
 
   /**
    * @swagger
-   * /api/courses/instructors/get-lessons-by-course/{courseId}:
-   *   get:
-   *     summary: Get lessons by course ID (instructor/admin)
-   *     tags: [Lesson]
-   *     parameters:
-   *       - in: path
-   *         name: courseId
-   *         required: true
-   *         schema: { type: string }
-   *     responses:
-   *       200: { description: Lessons list }
-   */
-  router.get('/instructors/get-lessons-by-course/:courseId', controller.getLessonsByCourse);
-
-  /**
-   * @swagger
-   * /api/courses/public/get-lessons/{courseId}:
-   *   get:
-   *     summary: Public lessons listing with previews
-   *     description: |
-   *       - Not enrolled/not instructor ⇒ returns only lessons where `isPreview=true`.
-   *       - Instructor or enrolled student ⇒ returns all lessons.
-   *     tags: [Lesson]
-   *     parameters:
-   *       - in: path
-   *         name: courseId
-   *         required: true
-   *         schema: { type: string }
-   *     responses:
-   *       200: { description: Preview or full lessons depending on access }
-   */
-  router.get('/public/get-lessons/:courseId', optionalAuth, controller.getLessonsByCoursePublic);
-
-  /**
-   * @swagger
-   * /api/courses/get-lessons-by-id/{lessonId}:
-   *   get:
-   *     summary: Get a lesson by ID
-   *     tags: [Lesson]
-   *     parameters:
-   *       - in: path
-   *         name: lessonId
-   *         required: true
-   *         schema: { type: string }
-   *     responses:
-   *       200: { description: Lesson details }
-   */
-  router.get('/get-lessons-by-id/:lessonId', controller.getLessonById);
-
-  /**
-   * @swagger
-   * /api/courses/get-quizzes-by-lesson/{lessonId}:
-   *   get:
-   *     summary: Get quizzes of a lesson
-   *     tags: [Lesson]
-   *     parameters:
-   *       - in: path
-   *         name: lessonId
-   *         required: true
-   *         schema: { type: string }
-   *     responses:
-   *       200: { description: Quizzes list }
-   */
-  router.get('/get-quizzes-by-lesson/:lessonId', controller.getQuizzesByLesson);
-
-  // -------------------- DISCUSSIONS --------------------
-
-  /**
-   * @swagger
-   * /api/courses/lessons/add-discussion/{lessonId}:
-   *   post:
-   *     summary: Add discussion to lesson
+   * /api/courses/lessons/reply-discussion/{discussionId}:
+   *   put:
+   *     summary: Reply to a discussion
    *     tags: [Discussion]
    *     security: [ { bearerAuth: [] } ]
    *     parameters:
    *       - in: path
-   *         name: lessonId
+   *         name: discussionId
    *         required: true
    *         schema: { type: string }
    *     requestBody:
@@ -391,27 +509,50 @@ router.delete(
    *         application/json:
    *           schema:
    *             type: object
-   *             properties: { message: { type: string } }
+   *             properties: { reply: { type: string } }
    *     responses:
-   *       200: { description: Discussion added }
+   *       200: { description: Reply added }
    */
-  router.post('/lessons/add-discussion/:lessonId', jwtAuthMiddleware, controller.addDiscussion);
+  router.put(
+    '/lessons/reply-discussion/:discussionId',
+    jwtAuthMiddleware,
+    controller.replyDiscussion
+  );
+
+  // ==================== PATCH ROUTES ====================
 
   /**
    * @swagger
-   * /api/courses/lessons/get-discussions-by-lesson/{lessonId}:
-   *   get:
-   *     summary: Get discussions by lesson ID
-   *     tags: [Discussion]
+   * /api/courses/admin/moderate/{courseId}:
+   *   patch:
+   *     summary: Approve/Reject a course
+   *     tags: [Moderation]
+   *     security: [ { bearerAuth: [] } ]
    *     parameters:
    *       - in: path
-   *         name: lessonId
+   *         name: courseId
    *         required: true
    *         schema: { type: string }
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required: [action]
+   *             properties:
+   *               action: { type: string, enum: [approve, reject] }
+   *               reason: { type: string, description: 'Required when action=reject' }
    *     responses:
-   *       200: { description: Discussions list }
+   *       200: { description: Moderation applied }
+   *       400: { description: Invalid action }
    */
-  router.get('/lessons/get-discussions-by-lesson/:lessonId', controller.getDiscussionsByLesson);
+  router.patch(
+    '/admin/moderate/:courseId',
+    jwtAuthMiddleware,
+    roleCheckMiddleware(UserRole.Admin),
+    controller.moderateCourse
+  );
 
   /**
    * @swagger
@@ -435,7 +576,36 @@ router.delete(
    *     responses:
    *       200: { description: Discussion updated }
    */
-  router.patch('/lessons/edit-discussion/:discussionId', jwtAuthMiddleware, controller.editDiscussions);
+  router.patch(
+    '/lessons/edit-discussion/:discussionId',
+    jwtAuthMiddleware,
+    controller.editDiscussions
+  );
+
+  // ==================== DELETE ROUTES ====================
+
+  /**
+   * @swagger
+   * /api/courses/delete-course/{courseId}:
+   *   delete:
+   *     summary: Delete course (Instructor only)
+   *     tags: [Course]
+   *     security: [ { bearerAuth: [] } ]
+   *     parameters:
+   *       - in: path
+   *         name: courseId
+   *         required: true
+   *         schema: { type: string }
+   *     responses:
+   *       200: { description: Course deleted successfully }
+   *       404: { description: Course not found }
+   */
+  router.delete(
+    '/delete-course/:courseId',
+    jwtAuthMiddleware,
+    roleCheckMiddleware(UserRole.Instructor),
+    controller.deleteCourse
+  );
 
   /**
    * @swagger
@@ -452,127 +622,35 @@ router.delete(
    *     responses:
    *       200: { description: Discussion deleted }
    */
-  router.delete('/lessons/delete-discussion/:discussionId', jwtAuthMiddleware, controller.deleteDiscussion);
+  router.delete(
+    '/lessons/delete-discussion/:discussionId',
+    jwtAuthMiddleware,
+    controller.deleteDiscussion
+  );
 
   /**
    * @swagger
-   * /api/courses/lessons/reply-discussion/{discussionId}:
-   *   put:
-   *     summary: Reply to a discussion
-   *     tags: [Discussion]
+   * /api/courses/instructors/delete-lesson/{lessonId}:
+   *   delete:
+   *     summary: Delete lesson (Instructor only)
+   *     tags: [Lesson]
    *     security: [ { bearerAuth: [] } ]
    *     parameters:
    *       - in: path
-   *         name: discussionId
-   *         required: true
-   *         schema: { type: string }
-   *     requestBody:
-   *       required: true
-   *       content:
-   *         application/json:
-   *           schema:
-   *             type: object
-   *             properties: { reply: { type: string } }
-   *     responses:
-   *       200: { description: Reply added }
-   */
-  router.put('/lessons/reply-discussion/:discussionId', jwtAuthMiddleware, controller.replyDiscussion);
-
-  /**
-   * @swagger
-   * /api/courses/lesson/replies-based-on-discussion/{discussionId}:
-   *   get:
-   *     summary: Get replies based on discussion ID
-   *     tags: [Discussion]
-   *     parameters:
-   *       - in: path
-   *         name: discussionId
+   *         name: lessonId
    *         required: true
    *         schema: { type: string }
    *     responses:
-   *       200: { description: Replies list }
+   *       200: { description: Lesson deleted successfully }
+   *       404: { description: Lesson not found }
+   *       403: { description: Not authorized to delete this lesson }
    */
-  router.get('/lesson/replies-based-on-discussion/:discussionId', controller.getRepliesByDiscussion);
-
-  // -------------------- ENROLL / DISCOVERY --------------------
-
-  /**
-   * @swagger
-   * /api/courses/enroll-student/{courseId}:
-   *   post:
-   *     summary: Enroll student in a course
-   *     tags: [Course]
-   *     security: [ { bearerAuth: [] } ]
-   *     parameters:
-   *       - in: path
-   *         name: courseId
-   *         required: true
-   *         schema: { type: string }
-   *     requestBody:
-   *       content:
-   *         application/json:
-   *           schema:
-   *             type: object
-   *             properties:
-   *               amount: { type: number }
-   *               paymentMethodId: { type: string }
-   *     responses:
-   *       200: { description: Student enrolled }
-   */
-  router.post('/enroll-student/:courseId', jwtAuthMiddleware, controller.enrollStudent);
-
-  /**
-   * @swagger
-   * /api/courses/get-recommended-courses:
-   *   get:
-   *     summary: Get recommended courses for the authenticated student
-   *     tags: [Course]
-   *     security: [ { bearerAuth: [] } ]
-   *     responses:
-   *       200: { description: Recommended courses }
-   */
-  router.get('/get-recommended-courses', jwtAuthMiddleware, roleCheckMiddleware(UserRole.Student), controller.getRecommendedCourseByStudentInterest);
-
-  /**
-   * @swagger
-   * /api/courses/get-trending-courses:
-   *   get:
-   *     summary: Get trending courses
-   *     tags: [Course]
-   *     responses:
-   *       200: { description: Trending courses }
-   */
-  router.get('/get-trending-courses', controller.getTrendingCourses);
-
-  /**
-   * @swagger
-   * /api/courses/get-course-by-student:
-   *   get:
-   *     summary: Get courses the authenticated student is enrolled in
-   *     tags: [Course]
-   *     security: [ { bearerAuth: [] } ]
-   *     responses:
-   *       200: { description: Student's courses }
-   */
-  router.get('/get-course-by-student', jwtAuthMiddleware, controller.getCourseByStudent);
-
-  /**
-   * @swagger
-   * /api/courses/search-course:
-   *   get:
-   *     summary: Search courses by keyword
-   *     tags: [Course]
-   *     parameters:
-   *       - in: query
-   *         name: search
-   *         schema: { type: string }
-   *       - in: query
-   *         name: filter
-   *         schema: { type: string }
-   *     responses:
-   *       200: { description: Search results }
-   */
-  router.get('/search-course', cachingMiddleware(redisClient), controller.searchCourse);
+  router.delete(
+    '/instructors/delete-lesson/:lessonId',
+    jwtAuthMiddleware,
+    roleCheckMiddleware(UserRole.Instructor),
+    controller.deleteLesson
+  );
 
   return router;
 };

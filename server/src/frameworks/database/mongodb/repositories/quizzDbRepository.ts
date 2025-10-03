@@ -2,7 +2,10 @@ import mongoose from 'mongoose';
 import Quiz from '../models/quiz';
 import { QuizInterface } from '@src/types/quiz';
 
-import { AddQuizInfoInterface, EditQuizInfoInterface } from '@src/types/courseInterface';
+import {
+  AddQuizInfoInterface,
+  EditQuizInfoInterface
+} from '@src/types/courseInterface';
 
 export const quizRepositoryMongodb = () => {
   const getQuizByLessonId = async (lessonId: string) => {
@@ -18,16 +21,27 @@ export const quizRepositoryMongodb = () => {
     return quizId;
   };
 
-  const editQuiz = async (lessonId: string, quizInfo: EditQuizInfoInterface) => {
+  const editQuiz = async (
+    lessonId: string,
+    quizInfo: EditQuizInfoInterface
+  ) => {
     await Quiz.updateOne(
       { lessonId: new mongoose.Types.ObjectId(lessonId) },
       { ...quizInfo }
     );
   };
 
+  const deleteQuizzesByLessonId = async (lessonId: string) => {
+    const result = await Quiz.deleteMany({
+      lessonId: new mongoose.Types.ObjectId(lessonId)
+    });
+    return result;
+  };
+
   return {
     addQuiz,
     editQuiz,
+    deleteQuizzesByLessonId,
     getQuizByLessonId
   };
 };

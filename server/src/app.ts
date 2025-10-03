@@ -9,7 +9,7 @@ import serverConfig from './frameworks/webserver/server';
 import expressConfig from './frameworks/webserver/express';
 import routes from './frameworks/webserver/routes';
 import errorHandlingMiddleware from './frameworks/webserver/middlewares/errorHandling';
-import jwtAuthMiddleware  from './frameworks/webserver/middlewares/userAuth';
+import jwtAuthMiddleware from './frameworks/webserver/middlewares/userAuth';
 
 import socketConfig from './frameworks/websocket/socket';
 import { authService } from './frameworks/services/authService';
@@ -40,28 +40,38 @@ const server = http.createServer(app);
 // Helper: build full docs URL from env (protocol/host/port + path)
 const buildDocsUrl = (req?: express.Request): string => {
   const protocol =
-    (process.env.SWAGGER_SERVER_PROTOCOL || process.env.PROTOCOL) ||
+    process.env.SWAGGER_SERVER_PROTOCOL ||
+    process.env.PROTOCOL ||
     (req?.protocol ?? 'http');
-  const host = (process.env.SWAGGER_SERVER_HOST || process.env.HOST) ||
+  const host =
+    process.env.SWAGGER_SERVER_HOST ||
+    process.env.HOST ||
     (req?.hostname ?? 'localhost');
   const port = Number(configKeys.PORT) || 5000;
   const path = (configKeys.SWAGGER_PATH || '/api-docs').startsWith('/')
-    ? (configKeys.SWAGGER_PATH || '/api-docs')
+    ? configKeys.SWAGGER_PATH || '/api-docs'
     : `/${configKeys.SWAGGER_PATH}`;
   return `${protocol}://${host}:${port}${path}`;
 };
 
 // --- DRY helper: mount swagger only if enabled ---
 const mountSwagger = (app: Application) => {
-  const enabled = String(configKeys.SWAGGER_ENABLED || '').toLowerCase() === 'true';
+  const enabled =
+    String(configKeys.SWAGGER_ENABLED || '').toLowerCase() === 'true';
   if (!enabled) {
     if (process.env.NODE_ENV !== 'production') {
-      console.log(colorHEX('#FFC107', '[Swagger] Disabled (SWAGGER_ENABLED != "true")'));
+      console.log(
+        colorHEX('#FFC107', '[Swagger] Disabled (SWAGGER_ENABLED != "true")')
+      );
     }
     return;
   }
   const path = configKeys.SWAGGER_PATH || '/api-docs';
-  app.use(path, swaggerUi.serve, swaggerUi.setup(swaggerSpec, { explorer: true }));
+  app.use(
+    path,
+    swaggerUi.serve,
+    swaggerUi.setup(swaggerSpec, { explorer: true })
+  );
   console.log(colorHEX('#00C853', `[Swagger] UI mounted at ${buildDocsUrl()}`));
 
   // Optional: raw JSON of the OpenAPI spec (useful for tooling)
@@ -79,8 +89,8 @@ app.use('/api/uploads', jwtAuthMiddleware, (req: any, res: any) => {
 const io = new Server(server, {
   cors: {
     origin: configKeys.ORIGIN_PORT,
-    methods: ['GET', 'POST'],
-  },
+    methods: ['GET', 'POST']
+  }
 });
 socketConfig(io, authService());
 
@@ -101,12 +111,13 @@ routes(app, redisClient);
 
 //* route that returns docs URL (always available)
 app.get('/api/docs', (req, res) => {
-  const enabled = String(configKeys.SWAGGER_ENABLED || '').toLowerCase() === 'true';
+  const enabled =
+    String(configKeys.SWAGGER_ENABLED || '').toLowerCase() === 'true';
   res.status(200).json({
     platform: 'GrayHat',
     swaggerEnabled: enabled,
     docsUrl: enabled ? buildDocsUrl(req) : null,
-    path: configKeys.SWAGGER_PATH || '/api-docs'
+    path: configKeys.SWAGGER_PATH || '/api-docs' 
   });
 });
 

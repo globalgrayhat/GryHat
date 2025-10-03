@@ -25,7 +25,7 @@ import { getIndividualCourse } from "../../../api/endpoints/course/course";
 import { getLessonsByCourse } from "../../../api/endpoints/course/lesson";
 
 import { CourseInterface } from "../../../types/course";
-import { formatToINR, getFullUrl } from "../../../utils/helpers";
+import { formatToINR, formatToUSD, getFullUrl } from "../../../utils/helpers";
 
 import useApiData from "../../../hooks/useApiCall";
 import { setCourse } from "../../../redux/reducers/courseSlice";
@@ -118,6 +118,7 @@ type CourseViewData = CourseInterface & {
   instructorId?: any;
   category?: any;
   thumbnail?: { url?: string };
+  videoUrl?: any;
 };
 
 const ViewCourseStudent: React.FC = () => {
@@ -188,7 +189,7 @@ const ViewCourseStudent: React.FC = () => {
   const coverUrl = getFullUrl(course?.thumbnailUrl || (course as any)?.thumbnail?.url || "");
 
   // Intro video (YouTube/Vimeo/direct)
-  const introduction = course?.introduction?.url ? getFullUrl(course.introduction.url) : undefined;
+  const IntroVideo = course?.videoUrl ? getFullUrl(course.videoUrl) : undefined;
   const isSupportedVideo = (url: string): boolean =>
     !!url &&
     (url.includes("youtube.com") ||
@@ -308,7 +309,42 @@ const ViewCourseStudent: React.FC = () => {
       active = false;
     };
   }, [downloadOpen, downloadTargetUrl]);
+  const getEmbedUrl = (url: string): string | null => {
+  try {
+    const parsed = new URL(url);
 
+    // ✅ YouTube
+    if (parsed.hostname.includes("youtube.com") || parsed.hostname.includes("youtu.be")) {
+      let videoId: string | null = null;
+
+      if (parsed.hostname.includes("youtu.be")) {
+        // https://youtu.be/VIDEO_ID
+        videoId = parsed.pathname.slice(1);
+      } else if (parsed.searchParams.has("v")) {
+        // https://www.youtube.com/watch?v=VIDEO_ID
+        videoId = parsed.searchParams.get("v");
+      }
+
+      if (videoId) {
+        return `https://www.youtube.com/embed/${videoId}`;
+      }
+    }
+
+    // ✅ Vimeo
+    if (parsed.hostname.includes("vimeo.com")) {
+      // https://vimeo.com/VIDEO_ID
+      const videoId = parsed.pathname.split("/")[1];
+      if (videoId) {
+        return `https://player.vimeo.com/video/${videoId}`;
+      }
+    }
+
+    // ❌ غير مدعوم
+    return null;
+  } catch {
+    return null;
+  }
+};
   if (isLoading || isLessonsLoading) return <ViewCourseShimmer />;
 
   return (
@@ -330,20 +366,32 @@ const ViewCourseStudent: React.FC = () => {
       <section className="mx-auto max-w-6xl p-2 sm:p-4 md:p-6">
         <Card shadow={false} className="overflow-hidden rounded-2xl border border-gray-200 bg-white transition hover:shadow-md dark:border-gray-700 dark:bg-gray-800">
           {/* Cover */}
-          <div className="relative aspect-[16/8] w-full sm:aspect-[16/8] md:aspect-[21/9]">
+          <div className="relative w-full aspect-[21/9] sm:aspect-[21/9] md:aspect-[21/8] lg:aspect-[21/10] rounded-2xl overflow-hidden  shadow-md transition-all duration-300">
             {coverUrl ? (
-              <img src={coverUrl} alt={course?.title || "Course cover"} className="h-full w-full object-cover" loading="lazy" />
+              <img 
+                src={coverUrl} 
+                alt={course?.title || "Course cover"} 
+                className="h-full cursor-pointer w-full object-contain transition-transform duration-300 hover:scale-105" 
+                loading="lazy" 
+              />
             ) : (
-              <div className="h-full w-full bg-gradient-to-br from-gray-200 to-gray-100 dark:from-gray-700 dark:to-gray-600" />
+              <div className="h-full w-full bg-gradient-to-br from-blue-200 via-purple-200 to-pink-200 dark:from-blue-800 dark:via-purple-800 dark:to-pink-800 flex items-center justify-center">
+                <div className="text-center">
+                  <div className="w-16 h-16 mx-auto mb-4 bg-white/20 rounded-full flex items-center justify-center">
+                    <AcademicCapIcon className="w-8 h-8 text-white" />
+                  </div>
+                  <p className="text-white/80 text-sm font-medium">Course Cover</p>
+                </div>
+              </div>
             )}
 
-            {/* Subtle overlay for legibility */}
-            <div className="absolute inset-0 bg-gradient-to-tr from-black/35 via-black/10 to-transparent dark:from-black/55 dark:via-black/20" />
+            {/* Enhanced overlay for better text readability */}
+            <div className="absolute inset-0 bg-gradient-to-tr from-black/40 via-black/15 to-transparent dark:from-black/60 dark:via-black/25" />
 
             {/* Badges (top-left) */}
-            <div className="absolute top-2 left-2 flex flex-wrap gap-2">
+            <div className="absolute top-3 left-3 flex flex-wrap gap-2">
               {categoryName && (
-                <span className="rounded-full px-2 py-0.5 text-[10px] sm:px-2.5 sm:py-1 sm:text-[11px] font-semibold bg-white/95 text-gray-900 ring-1 ring-black/5 dark:bg-blue-500 dark:text-white dark:ring-blue-400/40">
+                <span className="rounded-full px-3 py-1.5 text-xs sm:text-sm font-semibold bg-white/95 text-gray-900 ring-1 ring-black/5 shadow-lg backdrop-blur-sm dark:bg-blue-500 dark:text-white dark:ring-blue-400/40">
                   {categoryName}
                 </span>
               )}
@@ -351,11 +399,11 @@ const ViewCourseStudent: React.FC = () => {
                 <span
                   className={
                     isFree
-                      ? "rounded-full px-2 py-0.5 text-[10px] sm:px-2.5 sm:py-1 sm:text-[11px] font-semibold text-white bg-green-600 dark:bg-green-500"
-                      : "rounded-full px-2 py-0.5 text-[10px] sm:px-2.5 sm:py-1 sm:text-[11px] font-semibold text-gray-900 bg-white/95 ring-1 ring-black/5 dark:bg-indigo-500 dark:text-white dark:ring-indigo-400/40"
+                      ? "rounded-full px-3 py-1.5 text-xs sm:text-sm font-semibold text-white bg-green-600 shadow-lg dark:bg-green-500"
+                      : "rounded-full px-3 py-1.5 text-xs sm:text-sm font-semibold text-gray-900 bg-white/95 ring-1 ring-black/5 shadow-lg backdrop-blur-sm dark:bg-indigo-500 dark:text-white dark:ring-indigo-400/40"
                   }
                 >
-                  {isFree ? "FREE" : formatToINR?.(course?.price as number) ?? `₹${course?.price}`}
+                  {isFree ? "FREE" : formatToUSD?.(course?.price as number) ?? `$${course?.price}`}
                 </span>
               )}
             </div>
@@ -363,25 +411,40 @@ const ViewCourseStudent: React.FC = () => {
             {/* Instructor (top-right) */}
             <InstructorPin name={instructorName} avatar={instructorAvatar} />
 
-            {/* Title + meta (bottom) */}
-            <div className="absolute inset-x-0 bottom-0 p-2 sm:p-4">
-              <div className="rounded-xl bg-white/95 p-2.5 sm:p-3 ring-1 ring-black/5 backdrop-blur dark:bg-gray-900/85 dark:ring-white/10">
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                  <Typography variant="h5" className="!m-0 font-semibold text-gray-900 dark:text-white text-sm sm:text-base md:text-lg lg:text-xl">
+            {/* Enhanced Title + meta (bottom) */}
+            <div className="absolute inset-x-0 bottom-0 p-3 sm:p-6">
+              <div className="rounded-2xl bg-white/95 p-4 sm:p-6 ring-1 ring-black/5 backdrop-blur-md shadow-xl dark:bg-gray-900/90 dark:ring-white/10">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <Typography variant="h4" className="!m-0 font-bold text-gray-900 dark:text-white text-lg sm:text-xl md:text-2xl lg:text-3xl leading-tight">
                     {course?.title}
                   </Typography>
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2 text-[12px] text-gray-700 dark:text-gray-300">
-                      {typeof course?.duration === "number" && <span>⏱ {course?.duration}h</span>}
-                      {course?.level && <span>• 🎯 {course?.level}</span>}
-                      {Array.isArray(course?.coursesEnrolled) && <span>• 👥 {course?.coursesEnrolled.length}</span>}
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300">
+                      {typeof course?.duration === "number" && (
+                        <span className="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full">
+                          <span>⏱</span>
+                          <span className="font-medium">{course?.duration}h</span>
+                        </span>
+                      )}
+                      {course?.level && (
+                        <span className="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full">
+                          <span>🎯</span>
+                          <span className="font-medium">{course?.level}</span>
+                        </span>
+                      )}
+                      {Array.isArray(course?.coursesEnrolled) && (
+                        <span className="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full">
+                          <span>👥</span>
+                          <span className="font-medium">{course?.coursesEnrolled.length}</span>
+                        </span>
+                      )}
                     </div>
                     <Stars rating={safeRating} />
                   </div>
                 </div>
                 {course?.description && (
-                  <p className="mt-0.5 line-clamp-1 sm:line-clamp-2 text-[12px] sm:text-[13px] leading-5 text-gray-700 dark:text-gray-200">
-                    {course.description}
+                  <p className="mt-3 line-clamp-2 sm:line-clamp-3 text-sm sm:text-base leading-relaxed text-gray-700 dark:text-gray-200">
+                    {course?.description}
                   </p>
                 )}
               </div>
@@ -414,42 +477,37 @@ const ViewCourseStudent: React.FC = () => {
                       <ul className="divide-y divide-gray-200 dark:divide-gray-700">
                         <li>
                           {/* Introduction video (optional) */}
-                          {introduction && isSupportedVideo(introduction) ? (
-                            <>
-                              {introduction.includes("youtube.com") || introduction.includes("youtu.be") ? (
-                                <div className="aspect-video w-full">
-                                  <iframe
-                                    className="w-full h-full rounded-md"
-                                    src={introduction.replace("watch?v=", "embed/")}
-                                    title="Introduction video (YouTube)"
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                    allowFullScreen
-                                  />
-                                </div>
-                              ) : introduction.includes("vimeo.com") ? (
-                                <div className="aspect-video w-full">
-                                  <iframe
-                                    className="w-full h-full rounded-md"
-                                    src={introduction.replace("vimeo.com", "player.vimeo.com/video")}
-                                    title="Introduction video (Vimeo)"
-                                    allow="autoplay; fullscreen; picture-in-picture"
-                                    allowFullScreen
-                                  />
-                                </div>
-                              ) : (
+                          {IntroVideo && isSupportedVideo(IntroVideo) ? (
+                            (() => {
+                              const embedUrl = getEmbedUrl(IntroVideo);
+                              if (embedUrl) {
+                                return (
+                                  <div className="aspect-video w-full">
+                                    <iframe
+                                      className="w-full h-full rounded-md"
+                                      src={embedUrl}
+                                      title="Intro Video"
+                                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                      allowFullScreen
+                                    />
+                                  </div>
+                                );
+                              }
+                              return (
                                 <div className="w-full p-2.5 sm:p-3">
-                                  <video controls className="w-full rounded-md" src={introduction}>
+                                  <video controls className="w-full rounded-md" src={IntroVideo}>
                                     Your browser does not support the video tag.
                                   </video>
                                 </div>
-                              )}
-                            </>
+                              );
+                            })()
                           ) : (
                             <div className="flex items-center gap-2 p-2.5 sm:p-3 opacity-70">
                               <IoBookSharp />
                               <span className="flex-1">No introduction provided</span>
                             </div>
                           )}
+
 
                           {/* Guidelines entry (PDF in dialog, else confirm download) */}
                           {guidelinesUrl ? (
@@ -552,7 +610,7 @@ const ViewCourseStudent: React.FC = () => {
                         <Chip color="green" value="FREE" variant="filled" size="sm" className="rounded-full w-full md:w-auto" />
                       ) : (
                         <span className="text-2xl font-bold text-gray-900 dark:text-white">
-                          {formatToINR?.(course?.price as number) ?? `₹${course?.price}`}
+                          {formatToUSD?.(course?.price as number) ?? `$${course?.price}`}
                         </span>
                       ))}
                   </div>
@@ -659,7 +717,7 @@ const ViewCourseStudent: React.FC = () => {
                       <iframe
                         key={`${pdfPage}-${zoomLevels[zoomIndex]}`}
                         src={`${pdfSrc}#page=${pdfPage}&zoom=${zoomLevels[zoomIndex]}&pagemode=none`}
-                        title={`course-pdf-${course?._id ?? "doc"}`}
+                        title={`course-pdf-${course?._id || "doc"}`}
                         className="h-full w-full"
                         loading="lazy"
                         referrerPolicy="no-referrer"

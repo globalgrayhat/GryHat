@@ -36,9 +36,18 @@ export const capitalizeFirstLetter = (str: string): string => {
 };
 
 export function formatToINR(number: number): string {
-  const formatter = new Intl.NumberFormat("en-IN", {
+  const formatter = new Intl.NumberFormat("en-US", {
     style: "currency",
-    currency: "INR",
+    currency: "USD",
+  });
+
+  return formatter.format(number);
+}
+
+export function formatToUSD(number: number): string {
+  const formatter = new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
   });
 
   return formatter.format(number);

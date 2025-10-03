@@ -16,9 +16,14 @@ export const lessonRepositoryMongodb = () => {
     lesson.instructorId = instructorId;
 
     (lesson as any).media = Array.isArray(lesson.media) ? lesson.media : [];
-    (lesson as any).resources = Array.isArray((lesson as any).resources) ? (lesson as any).resources : [];
-    (lesson as any).videoTusKeys = Array.isArray((lesson as any).videoTusKeys) ? (lesson as any).videoTusKeys : [];
-    if (typeof (lesson as any).isPreview !== 'boolean') (lesson as any).isPreview = false;
+    (lesson as any).resources = Array.isArray((lesson as any).resources)
+      ? (lesson as any).resources
+      : [];
+    (lesson as any).videoTusKeys = Array.isArray((lesson as any).videoTusKeys)
+      ? (lesson as any).videoTusKeys
+      : [];
+    if (typeof (lesson as any).isPreview !== 'boolean')
+      (lesson as any).isPreview = false;
 
     const newLesson = new Lessons(lesson as any);
     const { _id } = await newLesson.save();
@@ -49,9 +54,17 @@ export const lessonRepositoryMongodb = () => {
     return lesson;
   };
 
+  const deleteLesson = async (lessonId: string) => {
+    const result = await Lessons.findOneAndDelete({
+      _id: new mongoose.Types.ObjectId(lessonId)
+    });
+    return result;
+  };
+
   return {
     addLesson,
     editLesson,
+    deleteLesson,
     getLessonsByCourseId,
     getLessonById
   };

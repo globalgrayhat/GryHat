@@ -36,7 +36,7 @@ const ListCourse: React.FC = () => {
       setCourses(res?.data?.data || []);
       setTimeout(() => setIsLoading(false), 400);
     } catch (error: any) {
-      toast.error(error?.data?.message || "Failed to load courses", { position: toast.POSITION.BOTTOM_RIGHT });
+      // toast.error(error?.data?.message || "Failed to load courses", { position: toast.POSITION.BOTTOM_RIGHT });
       setIsLoading(false);
     }
   };

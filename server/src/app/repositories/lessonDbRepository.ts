@@ -3,7 +3,6 @@ import { LessonRepositoryMongoDbInterface } from '../../frameworks/database/mong
 export const lessonDbRepository = (
   repository: ReturnType<LessonRepositoryMongoDbInterface>
 ) => {
-
   const addLesson = async (
     courseId: string,
     instructorId: string,
@@ -21,9 +20,13 @@ export const lessonDbRepository = (
   const getLessonById = async (lessonId: string) =>
     await repository.getLessonById(lessonId);
 
+  const deleteLesson = async (lessonId: string) =>
+    await repository.deleteLesson(lessonId);
+
   return {
     addLesson,
     editLesson,
+    deleteLesson,
     getLessonById,
     getLessonsByCourseId
   };
