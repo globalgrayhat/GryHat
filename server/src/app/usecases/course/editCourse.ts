@@ -1,10 +1,13 @@
-// server/src/app/usecases/course/editCourse.ts
-
 import HttpStatusCodes from '../../../constants/HttpStatusCodes';
 import AppError from '../../../utils/appError';
 import type { EditCourseInfo } from '../../../types/courseInterface';
 import type { CourseDbRepositoryInterface } from '../../repositories/courseDbRepository';
+
+// Unified, provider-agnostic services (no duplicated low-level logic)
 import { cloudServiceInterface } from '../../services/cloudServiceInterface';
+import { mediaService } from '../../services/mediaService';
+import { CloudServiceImpl, youtubeService, vimeoService } from '../../../frameworks/services';
+
 import { arraysPatch, pickFile, safeDeleteOld, toStringArray } from './_helpers';
 
 // DTO validator (keeps shape consistent with controllers)
@@ -39,11 +42,14 @@ const normalizeEditCourseInput = (raw: EditCourseInfo | any): Partial<EditCourse
   };
 };
 
+const looksLikeUrl = (s?: string) => !!s && /^https?:\/\//i.test(s || '');
+const nonEmpty = (v: unknown) => String(v ?? '').trim().length > 0;
+
 /**
  * Edit course use-case
  * - Validates input against EditCourseDTO
  * - Applies text & structural patches
- * - Uploads/rotates files (thumbnail/guidelines/introduction) if provided
+ * - Uploads/rotates files (thumbnail/guidelines/introduction) via mediaService
  * - Deletes old assets safely when replaced
  */
 export const editCourseU = async (
@@ -52,7 +58,7 @@ export const editCourseU = async (
   files: Record<string, Express.Multer.File[]> | undefined,
   courseInfo: EditCourseInfo,
   courseDbRepository: ReturnType<CourseDbRepositoryInterface>,
-  cloudService?: ReturnType<typeof cloudServiceInterface>
+  cloudServiceParam?: ReturnType<typeof cloudServiceInterface>
 ) => {
   if (!courseId) throw new AppError('Please provide course id', HttpStatusCodes.BAD_REQUEST);
   if (!instructorId) throw new AppError('Please provide instructor id', HttpStatusCodes.BAD_REQUEST);
@@ -64,6 +70,12 @@ export const editCourseU = async (
   if (String((oldCourse as any).instructorId) !== String(instructorId)) {
     throw new AppError('Forbidden', HttpStatusCodes.FORBIDDEN);
   }
+
+  // Services
+  const cloud = cloudServiceParam ?? cloudServiceInterface(CloudServiceImpl());
+  const media = mediaService();
+  const yt = youtubeService();
+  const vimeo = vimeoService();
 
   // Validate with DTO (keeps behavior consistent across layers)
   const normalized = normalizeEditCourseInput(courseInfo);
@@ -105,78 +117,81 @@ export const editCourseU = async (
   const guidelinesFile = pickFile(files, 'guidelines');
   const introductionFile = pickFile(files, 'introduction');
 
-  // --- Thumbnail
-  if (thumbnailFile && cloudService?.uploadAndGetUrl) {
-    const up = await cloudService.uploadAndGetUrl(thumbnailFile);
-    patch.thumbnail = { name: thumbnailFile.originalname, key: up.key, url: up.url };
+  // --- Thumbnail (upload via mediaService)
+  if (thumbnailFile) {
+    const up = await media.uploadOne(thumbnailFile);
+    patch.thumbnail = { name: up.name, key: up.key, url: up.url };
 
     await safeDeleteOld({
       oldKey: (oldCourse as any)?.thumbnail?.key,
       oldUrl: (oldCourse as any)?.thumbnail?.url,
-      cloudService:
-        cloudService && typeof (cloudService as any).removeFile === 'function'
-          ? { deleteByKey: (cloudService as any).removeFile }
-          : undefined
+      cloudService: { deleteByKey: (k: string) => cloud.removeFile(k) }
     });
   }
 
-  // --- Guidelines
-  if (guidelinesFile && cloudService?.uploadAndGetUrl) {
-    const up = await cloudService.uploadAndGetUrl(guidelinesFile);
-    patch.guidelines = { name: guidelinesFile.originalname, key: up.key, url: up.url };
+  // --- Guidelines (upload via mediaService)
+  if (guidelinesFile) {
+    const up = await media.uploadOne(guidelinesFile);
+    patch.guidelines = { name: up.name, key: up.key, url: up.url };
 
     await safeDeleteOld({
       oldKey: (oldCourse as any)?.guidelines?.key,
       oldUrl: (oldCourse as any)?.guidelines?.url,
-      cloudService:
-        cloudService && typeof (cloudService as any).removeFile === 'function'
-          ? { deleteByKey: (cloudService as any).removeFile }
-          : undefined
+      cloudService: { deleteByKey: (k: string) => cloud.removeFile(k) }
     });
   }
 
-  // --- Introduction: priority (key > file > external URL)
-  if (dto.introductionKey) {
-    patch.introduction = {
-      name: 'introduction',
-      key: dto.introductionKey,
-      url: dto.introductionKey
-    };
+  // --- Introduction: priority (key/url > file > normalized remote URL)
+  if (nonEmpty(dto.introductionKey)) {
+    const keyOrUrl = String(dto.introductionKey);
+    const url = looksLikeUrl(keyOrUrl) ? keyOrUrl : await cloud.getCloudFrontUrl(keyOrUrl);
+    patch.introduction = { name: 'introduction', key: looksLikeUrl(keyOrUrl) ? undefined : keyOrUrl, url };
 
     await safeDeleteOld({
       oldKey: (oldCourse as any)?.introduction?.key,
       oldUrl: (oldCourse as any)?.introduction?.url,
-      cloudService:
-        cloudService && typeof (cloudService as any).removeFile === 'function'
-          ? { deleteByKey: (cloudService as any).removeFile }
-          : undefined
+      cloudService: { deleteByKey: (k: string) => cloud.removeFile(k) }
     });
-  } else if (introductionFile && cloudService?.uploadAndGetUrl) {
-    const up = await cloudService.uploadAndGetUrl(introductionFile);
-    patch.introduction = { name: introductionFile.originalname, key: up.key, url: up.url };
+  } else if (introductionFile) {
+    // Keep LMS foldering: courses/<courseId>/introduction/<name>
+    const up = await media.uploadWithContext(introductionFile, {
+      courseId,
+      kind: 'introduction'
+    });
+    patch.introduction = { name: up.name, key: up.key, url: up.url };
 
     await safeDeleteOld({
       oldKey: (oldCourse as any)?.introduction?.key,
       oldUrl: (oldCourse as any)?.introduction?.url,
-      cloudService:
-        cloudService && typeof (cloudService as any).removeFile === 'function'
-          ? { deleteByKey: (cloudService as any).removeFile }
-          : undefined
+      cloudService: { deleteByKey: (k: string) => cloud.removeFile(k) }
     });
   } else if (
     (dto.videoSource === 'youtube' || dto.videoSource === 'vimeo') &&
-    dto.videoUrl
+    nonEmpty(dto.videoUrl)
   ) {
-    patch.introduction = { name: 'remote-video', url: dto.videoUrl };
+    // Normalize embed URL using dedicated services
+    const src = String(dto.videoSource).toLowerCase();
+    const rawUrl = String(dto.videoUrl);
 
-    if ((oldCourse as any)?.introduction?.url !== dto.videoUrl) {
+    if (src === 'youtube') {
+      const embed = yt.normalizeUrl(rawUrl); // throws if invalid
+      patch.introduction = { name: 'remote-video', url: embed };
+    } else {
+      // vimeo: extract id then build embed URL
+      let id = rawUrl;
+      try {
+        const u = new URL(rawUrl);
+        const parts = u.pathname.split('/').filter(Boolean);
+        if (parts.length) id = parts[parts.length - 1];
+      } catch { /* if not a URL, treat as id */ }
+      patch.introduction = { name: 'remote-video', url: vimeo.getEmbedUrl(id) };
+    }
+
+    if ((oldCourse as any)?.introduction?.url !== patch.introduction.url) {
       await safeDeleteOld({
         oldKey: (oldCourse as any)?.introduction?.key,
         oldUrl: (oldCourse as any)?.introduction?.url,
-        cloudService:
-          cloudService && typeof (cloudService as any).removeFile === 'function'
-            ? { deleteByKey: (cloudService as any).removeFile }
-            : undefined
+        cloudService: { deleteByKey: (k: string) => cloud.removeFile(k) }
       });
     }
   }

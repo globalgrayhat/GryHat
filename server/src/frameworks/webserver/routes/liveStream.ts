@@ -1,5 +1,3 @@
-// server/src/frameworks/webserver/routes/liveStream.ts
-
 import { Router } from 'express';
 import jwtAuthMiddleware from '../middlewares/userAuth';
 import roleCheckMiddleware from '../middlewares/roleCheckMiddleware';

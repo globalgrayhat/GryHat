@@ -34,24 +34,47 @@ export const CloudServiceImpl = () => {
   };
 
   return {
+    /** Upload a file using the active provider. */
     uploadFile: async (file: Express.Multer.File) => {
       const service = await selectService();
       return await service.uploadFile(file);
     },
+
+    /** Upload and return a public URL using the active provider. */
     uploadAndGetUrl: async (file: Express.Multer.File) => {
       const service = await selectService();
       return await service.uploadAndGetUrl(file);
     },
+
+    /**
+     * Upload using a specific key/path decided by caller.
+     * Keeps foldering consistent across providers.
+     */
+    uploadAtPath: async (file: Express.Multer.File, key: string) => {
+      const config = await repository.getConfig();
+      if (config?.provider === StorageProvider.S3) {
+        const service = s3Service(config.credentials);
+        // S3 variant accepts an explicit object key
+        return await service.uploadAtKey(file, key);
+      }
+      // Local default: write at a relative path and expose under /uploads
+      const service = localStorageService();
+      const { name, key: rel } = await service.uploadAtPath(file, key);
+      return { name, key: rel, url: `/uploads/${rel}` };
+    },
+
+    /** Retrieve a file (stream or buffer depending on provider). */
     getFile: async (fileKey: string) => {
       const config = await repository.getConfig();
       if (config?.provider === StorageProvider.S3) {
         const service = s3Service(config.credentials);
         return await service.getFile(fileKey);
       }
-      // Local or external: for external (YouTube/Vimeo) the "key" is a URL already.
       const service = localStorageService();
       return await service.getFile(fileKey);
     },
+
+    /** Video streaming helper. */
     getVideoStream: async (fileKey: string): Promise<NodeJS.ReadableStream> => {
       const config = await repository.getConfig();
       if (config?.provider === StorageProvider.S3) {
@@ -61,6 +84,8 @@ export const CloudServiceImpl = () => {
       const service = localStorageService();
       return await service.getVideoStream(fileKey);
     },
+
+    /** CloudFront signed URL passthrough for S3; local returns direct path. */
     getCloudFrontUrl: async (fileKey: string) => {
       const config = await repository.getConfig();
       if (config?.provider === StorageProvider.S3) {
@@ -70,6 +95,8 @@ export const CloudServiceImpl = () => {
       const service = localStorageService();
       return await service.getCloudFrontUrl(fileKey);
     },
+
+    /** Remove a stored file. */
     removeFile: async (fileKey: string) => {
       const config = await repository.getConfig();
       if (config?.provider === StorageProvider.S3) {

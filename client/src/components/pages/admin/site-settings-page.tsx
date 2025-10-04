@@ -43,14 +43,14 @@ const AdminSiteSettingsPage: React.FC = () => {
     }
     setLoading(true);
     try {
-      await updateSiteSettings({
-        platformName,
-        loginOptions: {
-          studentEnabled,
-          instructorEnabled,
-          googleEnabled,
-        },
-      });
+      // await updateSiteSettings({
+      //   platformName,
+      //   loginOptions: {
+      //     studentEnabled,
+      //     instructorEnabled,
+      //     googleEnabled,
+      //   },
+      // });
       toast.success(t('settings.successfullyUpdated') || 'Settings updated successfully');
       await refreshSettings();
     } catch (error: any) {

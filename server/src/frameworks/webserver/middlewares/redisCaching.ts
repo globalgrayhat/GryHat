@@ -1,26 +1,31 @@
 import { NextFunction, Response } from 'express';
 import { CustomRequest } from '@src/types/customRequest';
-import { RedisClient } from '../../../app';
 
-export function cachingMiddleware(redisClient: RedisClient, key?: string) {
-  return async function (
-    req: CustomRequest,
-    res: Response,
-    next: NextFunction
-  ) {
-    const { search, filter } = req.query as { search: string; filter: string };
-    const searchKey = search ?? filter ?? key ?? req.user?.Id;
+// Lightweight shape of what we need from Redis
+type RedisLike = {
+  get(key: string): Promise<string | null>;
+  set?(key: string, value: string, opts?: any): Promise<unknown>;
+  expire?(key: string, seconds: number): Promise<unknown>;
+};
 
-    if (!searchKey) {
-      // If both search, filter, and key are not present in query and params
-      return next();
-    }
+export function cachingMiddleware(redisClient?: RedisLike, keyPrefix = 'cache:') {
+  return async function (req: CustomRequest, res: Response, next: NextFunction) {
+    try {
+      if (!redisClient) return next();
 
-    const data = await redisClient.get(searchKey);
-    if (!data) {
-      return next();
-    } else {
+      const { search, filter } = req.query as { search?: string; filter?: string };
+      const keyPart =
+        search ?? filter ?? req.user?.Id ?? req.originalUrl; // robust fallback
+      if (!keyPart) return next();
+
+      const cacheKey = `${keyPrefix}${keyPart}`;
+      const data = await redisClient.get(cacheKey);
+      if (!data) return next();
+
       res.json({ data: JSON.parse(data) });
+    } catch {
+      // Fail-open on cache errors
+      next();
     }
   };
 }

@@ -1,5 +1,3 @@
-// server/src/types/liveStream.ts
-
 import { UserRole } from '../constants/enums';
 
 /**

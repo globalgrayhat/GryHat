@@ -2,7 +2,6 @@
 import multer from 'multer';
 import fs from 'fs';
 import path from 'path';
-import type { Request } from 'express';
 import { validateFileType } from '../../../utils/fileValidation';
 import configKeys from '../../../config';
 import AppError from '../../../utils/appError';
@@ -61,7 +60,9 @@ const ensureDir = (dir: string) => {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 };
 
-const storage = multer.diskStorage({
+const storage = multer.memoryStorage();
+/* diskStorage removed; foldering now handled by service */
+/*
   destination: (req: Request, file: any, cb) => {
     const baseDir =
       file.fieldname === 'profilePic' || file.fieldname === 'certificate' || file.fieldname === 'certificates'
@@ -106,6 +107,7 @@ const storage = multer.diskStorage({
     cb(null, `${safeBase}-${suffix}${ext}`);
   }
 });
+*/
 
 const fileFilter: multer.Options['fileFilter'] = async (req, file: any, cb) => {
   try {

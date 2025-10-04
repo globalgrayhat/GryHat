@@ -1,5 +1,3 @@
-// src/types/express.d.ts
-//
 // This module augmentation adds a `user` property to the Express
 // `Request` interface. Without this, TypeScript assumes that
 // `req.user` does not exist on `Request`, leading to errors wherever

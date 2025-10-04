@@ -1,27 +1,20 @@
 import express, { Application, NextFunction } from 'express';
 import http from 'http';
-import { Server } from 'socket.io';
 import path from 'path';
+
 import connectToMongoDb from './frameworks/database/mongodb/connection';
 import connection from './frameworks/database/redis/connection';
-import { createTusServer } from './frameworks/webserver/middlewares/tusServer';
+
 import serverConfig from './frameworks/webserver/server';
 import expressConfig from './frameworks/webserver/express';
 import routes from './frameworks/webserver/routes';
 import errorHandlingMiddleware from './frameworks/webserver/middlewares/errorHandling';
-import jwtAuthMiddleware from './frameworks/webserver/middlewares/userAuth';
-
-import socketConfig from './frameworks/websocket/socket';
-import { authService } from './frameworks/services/authService';
 
 import configKeys from './config';
-
-// Swagger (mounted conditionally)
 import { swaggerUi, swaggerSpec } from './swagger';
 
-// Use colors.ts with HEX
 import colors from 'colors.ts';
-const colorHEX = (hex: string, text: string): string => {
+const colorHEX = (hex: string, text: string) => {
   try {
     const c: any = colors as any;
     if (typeof c?.enable === 'function') c.enable();
@@ -35,102 +28,69 @@ const colorHEX = (hex: string, text: string): string => {
 };
 
 const app: Application = express();
+const { createRedisClient } = connection();
+const redisClient = createRedisClient();
 const server = http.createServer(app);
 
-// Helper: build full docs URL from env (protocol/host/port + path)
-const buildDocsUrl = (req?: express.Request): string => {
-  const protocol =
-    process.env.SWAGGER_SERVER_PROTOCOL ||
-    process.env.PROTOCOL ||
-    (req?.protocol ?? 'http');
-  const host =
-    process.env.SWAGGER_SERVER_HOST ||
-    process.env.HOST ||
-    (req?.hostname ?? 'localhost');
-  const port = Number(configKeys.PORT) || 5000;
-  const path = (configKeys.SWAGGER_PATH || '/api-docs').startsWith('/')
-    ? configKeys.SWAGGER_PATH || '/api-docs'
-    : `/${configKeys.SWAGGER_PATH}`;
-  return `${protocol}://${host}:${port}${path}`;
-};
-
-// --- DRY helper: mount swagger only if enabled ---
+/** Mount Swagger only when enabled to avoid noisy prod setups. */
 const mountSwagger = (app: Application) => {
-  const enabled =
-    String(configKeys.SWAGGER_ENABLED || '').toLowerCase() === 'true';
+  const enabled = String(configKeys.SWAGGER_ENABLED || '').toLowerCase() === 'true';
   if (!enabled) {
     if (process.env.NODE_ENV !== 'production') {
-      console.log(
-        colorHEX('#FFC107', '[Swagger] Disabled (SWAGGER_ENABLED != "true")')
-      );
+      console.log(colorHEX('#FFC107', '[Swagger] Disabled (SWAGGER_ENABLED != "true")'));
     }
     return;
   }
-  const path = configKeys.SWAGGER_PATH || '/api-docs';
-  app.use(
-    path,
-    swaggerUi.serve,
-    swaggerUi.setup(swaggerSpec, { explorer: true })
-  );
-  console.log(colorHEX('#00C853', `[Swagger] UI mounted at ${buildDocsUrl()}`));
-
-  // Optional: raw JSON of the OpenAPI spec (useful for tooling)
-  app.get(`${path}.json`, (_req, res) => res.status(200).json(swaggerSpec));
+  const docsPath = configKeys.SWAGGER_PATH || '/api-docs';
+  app.use(docsPath, swaggerUi.serve, swaggerUi.setup(swaggerSpec, { explorer: true }));
+  console.log(colorHEX('#00C853', `[Swagger] UI mounted at ${docsPath}`));
 };
+
+// Public assets (favicon, landing assets, etc.)
 app.use(express.static(path.join(__dirname, 'public')));
-// Create TUS server
-const tusServer = createTusServer();
 
-// Add TUS upload endpoint with authentication
-app.use('/api/uploads', jwtAuthMiddleware, (req: any, res: any) => {
-  tusServer.handle(req, res);
-});
-//* web socket connection
-const io = new Server(server, {
-  cors: {
-    origin: configKeys.ORIGIN_PORT,
-    methods: ['GET', 'POST']
-  }
-});
-socketConfig(io, authService());
+/**
+ * Boot sequence:
+ * 1) Connect DBs
+ * 2) Global middleware
+ * 3) Docs (optional)
+ * 4) Routes
+ * 5) Errors & 404
+ * 6) Start HTTP server
+ */
+(async () => {
+  await connectToMongoDb();
+  expressConfig(app);
+  mountSwagger(app);
 
-//* connecting mongoDb
-connectToMongoDb();
+  // Attach all API routes (pass redis client where needed)
+  routes(app, redisClient);
 
-//* connection to redis
-const redisClient = connection().createRedisClient();
-
-//* express config connection
-expressConfig(app);
-
-//* docs (conditionally)
-mountSwagger(app);
-
-//* routes for each endpoint
-routes(app, redisClient);
-
-//* route that returns docs URL (always available)
-app.get('/api/docs', (req, res) => {
-  const enabled =
-    String(configKeys.SWAGGER_ENABLED || '').toLowerCase() === 'true';
-  res.status(200).json({
-    platform: 'GrayHat',
-    swaggerEnabled: enabled,
-    docsUrl: enabled ? buildDocsUrl(req) : null,
-    path: configKeys.SWAGGER_PATH || '/api-docs' 
+  // Helper endpoint to advertise docs location
+  app.get('/api/docs', (req, res) => {
+    const enabled = String(configKeys.SWAGGER_ENABLED || '').toLowerCase() === 'true';
+    res.status(200).json({
+      platform: 'GrayHat',
+      swaggerEnabled: enabled,
+      docsUrl: enabled ? (configKeys.SWAGGER_PATH || '/api-docs') : null,
+      path: configKeys.SWAGGER_PATH || '/api-docs'
+    });
   });
+
+  // Centralized error handling
+  app.use(errorHandlingMiddleware);
+
+  // 404 handler at the very end
+  // (kept inline to avoid circular import in some TS setups)
+  app.all('*', (req, _res, next: NextFunction) => {
+    const AppError = require('./utils/appError').default;
+    next(new AppError(`Not found: ${req.method} ${req.originalUrl}`, 404));
+  });
+
+  serverConfig(server).startServer();
+})().catch((err) => {
+  console.error(colorHEX('#FF5252', `[BOOT] Failed to start: ${err?.message || err}`));
+  process.exit(1);
 });
 
-//* handles server side errors
-app.use(errorHandlingMiddleware);
-
-//* catch 404 and forward to error handler
-import AppError from './utils/appError';
-app.all('*', (req, _res, next: NextFunction) => {
-  next(new AppError(`Not found: ${req.method} ${req.originalUrl}`, 404));
-});
-
-//* starting the server with server config
-serverConfig(server).startServer();
-
-export type RedisClient = typeof redisClient;
+export type RedisClient = ReturnType<typeof createRedisClient>;

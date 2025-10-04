@@ -399,6 +399,25 @@ const courseRouter = (redisClient: RedisClient) => {
 
   /**
    * @swagger
+   * /api/courses/instructors/get-course-by-instructor/{courseId}:
+   *   get:
+   *     summary: Get course by instructor ID
+   *     tags: [Course]
+   *     parameters:
+   *       - in: path
+   *         name: courseId
+   *         required: true
+   *         schema: { type: string }
+   *     responses:
+   *       200: { description: Course details }
+   */
+  router.get(
+    '/instructors/get-course-by-instructor/:courseId',
+    controller.getCourseByInstructor
+  );
+
+  /**
+   * @swagger
    * /api/courses/search-course:
    *   get:
    *     summary: Search courses by keyword

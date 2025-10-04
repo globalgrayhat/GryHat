@@ -51,7 +51,26 @@ export const s3Service = (customConfig?: StorageCredentials) => {
     };
     const command = new PutObjectCommand(params);
     await s3.send(command);
-    return {
+    
+/**
+ * Upload a file to an explicit S3 object key (no randomization).
+ * The key should include any folders (e.g., "courses/<courseId>/<kind>/.../name.ext").
+ */
+const uploadAtKey = async (file: Express.Multer.File, key: string) => {
+  const params = {
+    Bucket: bucketName,
+    Key: key,
+    Body: file.buffer ?? file, // for memoryStorage; fallback if needed
+    ContentType: (file as any).mimetype || 'application/octet-stream',
+    ACL: 'public-read' as ObjectCannedACL
+  };
+  const command = new PutObjectCommand(params);
+  await s3.send(command);
+  const url = `https://${bucketName}.s3.amazonaws.com/${key}`;
+  return { name: file.originalname, key, url };
+};
+
+  return {
       name: file.originalname,
       key
     };
@@ -69,7 +88,26 @@ export const s3Service = (customConfig?: StorageCredentials) => {
     const command = new PutObjectCommand(params);
     await s3.send(command);
     const url = `https://${bucketName}.s3.amazonaws.com/${key}`;
-    return {
+    
+/**
+ * Upload a file to an explicit S3 object key (no randomization).
+ * The key should include any folders (e.g., "courses/<courseId>/<kind>/.../name.ext").
+ */
+const uploadAtKey = async (file: Express.Multer.File, key: string) => {
+  const params = {
+    Bucket: bucketName,
+    Key: key,
+    Body: file.buffer ?? file, // for memoryStorage; fallback if needed
+    ContentType: (file as any).mimetype || 'application/octet-stream',
+    ACL: 'public-read' as ObjectCannedACL
+  };
+  const command = new PutObjectCommand(params);
+  await s3.send(command);
+  const url = `https://${bucketName}.s3.amazonaws.com/${key}`;
+  return { name: file.originalname, key, url };
+};
+
+  return {
       name: file.originalname,
       key,
       url
@@ -120,9 +158,29 @@ export const s3Service = (customConfig?: StorageCredentials) => {
     await s3.send(command);
   };
 
+  
+/**
+ * Upload a file to an explicit S3 object key (no randomization).
+ * The key should include any folders (e.g., "courses/<courseId>/<kind>/.../name.ext").
+ */
+const uploadAtKey = async (file: Express.Multer.File, key: string) => {
+  const params = {
+    Bucket: bucketName,
+    Key: key,
+    Body: file.buffer ?? file, // for memoryStorage; fallback if needed
+    ContentType: (file as any).mimetype || 'application/octet-stream',
+    ACL: 'public-read' as ObjectCannedACL
+  };
+  const command = new PutObjectCommand(params);
+  await s3.send(command);
+  const url = `https://${bucketName}.s3.amazonaws.com/${key}`;
+  return { name: file.originalname, key, url };
+};
+
   return {
     uploadFile,
     uploadAndGetUrl,
+    uploadAtKey,
     getFile,
     getVideoStream,
     getCloudFrontUrl,

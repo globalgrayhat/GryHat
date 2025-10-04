@@ -33,12 +33,12 @@ const NavItems = [
     name: "My profile",
     icon: CgProfile 
   },
-  {
-    path: "/dashboard/settings",
-    name: "Settings",
-    icon: FiSettings
+  // {
+  //   path: "/dashboard/settings",
+  //   name: "Settings",
+  //   icon: FiSettings
 
-  },
+  // },
   {
     path: "",
     name: "Log Out",

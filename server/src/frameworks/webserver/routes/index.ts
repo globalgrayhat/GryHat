@@ -12,6 +12,7 @@ import storageConfigRouter from './storageConfig';
 import metricsRouter from './metrics';
 import userManagementRouter from './userManagement';
 import liveStreamRouter from './liveStream';
+import uploadsRouter from './uploads';
 
 import jwtAuthMiddleware from '../middlewares/userAuth';
 import roleCheckMiddleware from '../middlewares/roleCheckMiddleware';
@@ -98,7 +99,7 @@ const routes = (app: Application, redisClient: RedisClient) => {
   app.use('/api/courses', courseRouter(redisClient));
 
   // Instructors
-  app.use('/api/instructors', jwtAuthMiddleware, instructorRouter());
+  app.use('/api/instructors', instructorRouter());
 
   // Students (factory needs redisClient)
   app.use('/api/students', jwtAuthMiddleware, studentRouter(redisClient));

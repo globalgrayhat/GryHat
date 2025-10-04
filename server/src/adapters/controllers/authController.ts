@@ -97,12 +97,13 @@ const authController = (
   /** -------------------- INSTRUCTOR --------------------- */
 
   const registerInstructor = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    // Certificates/profilePic come via multer: req.files
+    // Files (multer memory storage)
     const files = (req.files as { [fieldname: string]: Express.Multer.File[] }) || {};
     const instructor: InstructorInterface = req.body;
-
+  
+    // Delegate everything (including uploads) to the use-case (DRY)
     await instructorRegister(instructor, files, dbRepositoryInstructor, authService);
-
+  
     ok(
       res,
       'Your registration is pending verification by the administrators. You will receive an email once your registration is approved',

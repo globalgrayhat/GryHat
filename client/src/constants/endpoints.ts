@@ -17,7 +17,7 @@ const END_POINTS = {
     GET_ALL_COURSES:'api/courses/get-all-courses',
     GET_COURSE:'api/courses/get-course',
     REFRESH_TOKEN:'api/all/refresh-token/refresh',
-    GET_COURSES_BY_INSTRUCTORS:'api/courses/get-course-by-instructor',
+    GET_COURSES_BY_INSTRUCTORS:'api/instructors/get-course-by-instructor',
     GET_LESSONS_BY_COURSE:'api/courses/instructors/get-lessons-by-course',
     ADD_LESSON:'api/courses/instructors/add-lesson',
     EDIT_LESSON:'api/courses/instructors/edit-lesson',

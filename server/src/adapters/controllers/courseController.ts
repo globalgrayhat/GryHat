@@ -3,6 +3,7 @@
 import { ok, created, fail } from '../../shared/http/respond';
 import { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
+import { mediaService } from '../../app/services/mediaService';
 
 import { CourseRepositoryMongoDbInterface } from '../../frameworks/database/mongodb/repositories/courseReposMongoDb';
 import { CourseDbRepositoryInterface } from '../../app/repositories/courseDbRepository';
@@ -179,30 +180,45 @@ const courseController = (
 
       // Attach uploads (thumbnail/guidelines/introduction) if present
       if (files.thumbnail?.length) {
-        const up = await cloud.uploadAndGetUrl(files.thumbnail[0]);
-        body.thumbnail = {
-          name: files.thumbnail[0].originalname,
-          url: up.url,
-          key: up.key
-        };
-      }
+      const media = mediaService();
+      const fileRef = files.thumbnail[0];
+      const up = await media.uploadWithContext(fileRef, { courseId, kind: 'images' });
+      body.thumbnail = {
+        name: fileRef.originalname,
+        url: up.url,
+        key: up.key
+      };
+    }
       if (files.guidelines?.length) {
-        const up = await cloud.uploadAndGetUrl(files.guidelines[0]);
-        body.guidelines = {
-          name: files.guidelines[0].originalname,
-          url: up.url,
-          key: up.key
-        };
-      }
+      const media = mediaService();
+      const fileRef = files.guidelines[0];
+      const isArchive = (fileRef.mimetype?.includes('zip') || /\.(zip|rar|7z|tar|gz)$/i.test(fileRef.originalname));
+      const kind = isArchive ? 'archives' : 'documents';
+      const up = await media.uploadWithContext(fileRef, { courseId, kind });
+      body.guidelines = {
+        name: fileRef.originalname,
+        url: up.url,
+        key: up.key
+      };
+    }
       if (files.introduction?.length) {
-        const up = await cloud.uploadAndGetUrl(files.introduction[0]);
-        body.introduction = {
-          name: files.introduction[0].originalname,
-          url: up.url,
-          key: up.key
-        };
-        delete (body as any).introductionKey;
-      } else if (body.introductionKey) {
+      const media = mediaService();
+      const fileRef = files.introduction[0];
+      const up = await media.uploadWithContext(fileRef, { courseId, kind: 'introduction' });
+      body.introduction = {
+        name: fileRef.originalname,
+        url: up.url,
+        key: up.key
+      };
+      delete (body as any).introductionKey;
+    } else if (body.introductionKey) {
+      (body as any).introduction = {
+        name: 'introduction',
+        url: body.introductionKey,
+        key: body.introductionKey
+      };
+      delete (body as any).introductionKey;
+    } else if (body.introductionKey) {
         (body as any).introduction = {
           name: 'introduction',
           url: body.introductionKey,
@@ -417,7 +433,7 @@ const courseController = (
         ? ((req as any).files as Express.Multer.File[])
         : files.resources || [];
       const uploaded = await Promise.all(
-        resourceFiles.map(async (f) => await cloud.uploadAndGetUrl(f))
+        resourceFiles.map(async (f) => await mediaService().uploadWithContext(f, { courseId, kind: (f.mimetype?.includes('zip') ? 'archives' : 'documents'), lessonId: body.lessonId }))
       );
       const resources = uploaded.map((u) => ({
         name: u.name || 'resource',
@@ -502,7 +518,7 @@ const courseController = (
         : files.resources || [];
       if (resourceFiles.length) {
         const uploaded = await Promise.all(
-          resourceFiles.map(async (f) => await cloud.uploadAndGetUrl(f))
+          resourceFiles.map(async (f) => await mediaService().uploadWithContext(f, { courseId, kind: (f.mimetype?.includes('zip') ? 'archives' : 'documents'), lessonId: body.lessonId }))
         );
         patch.resources = uploaded.map((u) => ({
           name: u.name || 'resource',
@@ -570,6 +586,14 @@ const courseController = (
       const courseId = req.params.courseId;
       const lessons = await getLessonsByCourseIdU(courseId, dbRepositoryLesson);
       ok(res, 'Successfully retrieved lessons based on the course', lessons);
+    }
+  );
+
+ const getCourseByInstructor = asyncHandler(
+    async (req: CustomRequest, res: Response): Promise<void> => {
+      const courseId = req.params.courseId;
+      const course = await getCourseByInstructorU(courseId, dbRepositoryCourse);
+      ok(res, 'Successfully retrieved course based on the instructor', course);
     }
   );
 
@@ -721,6 +745,7 @@ const courseController = (
     getRecommendedCourseByStudentInterest,
     getTrendingCourses,
     getCourseByStudent,
+    getCourseByInstructor,
     searchCourse,
     submitCourse,
     moderateCourse,
