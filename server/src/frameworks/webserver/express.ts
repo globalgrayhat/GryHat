@@ -48,15 +48,17 @@ const expressConfig = (app: Application) => {
   app.options('*', cors(corsOptions));
 
   // Parsers & security
-  app.use(express.json());
-  app.use(express.urlencoded({ extended: true }));
+  // IMPROVEMENT: Increased the limit for JSON and URL-encoded bodies.
+  app.use(express.json({ limit: '10mb' }));
+  app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+  
   app.use(cookieParser());
   app.use(limiter);
   app.use(
     helmet.contentSecurityPolicy({
       directives: {
         imgSrc: ["'self'", 'data:'],
-        frameSrc: ["'self'", 'https:'] // allow YouTube/Vimeo/Swagger frames over https
+        frameSrc: ["'self'", 'https:'] 
       }
     })
   );

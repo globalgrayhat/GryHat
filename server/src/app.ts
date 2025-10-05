@@ -81,13 +81,17 @@ app.use(express.static(path.join(__dirname, 'public')));
   app.use(errorHandlingMiddleware);
 
   // 404 handler at the very end
-  // (kept inline to avoid circular import in some TS setups)
   app.all('*', (req, _res, next: NextFunction) => {
     const AppError = require('./utils/appError').default;
     next(new AppError(`Not found: ${req.method} ${req.originalUrl}`, 404));
   });
 
   serverConfig(server).startServer();
+  
+  // FIX: Set server timeout to 1 hour (in milliseconds) to match Nginx.
+  // This is the definitive fix for the "Timeout was reached" error.
+  server.setTimeout(3600 * 1000);
+
 })().catch((err) => {
   console.error(colorHEX('#FF5252', `[BOOT] Failed to start: ${err?.message || err}`));
   process.exit(1);
