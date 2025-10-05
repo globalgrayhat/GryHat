@@ -22,7 +22,7 @@ const ensureDir = (dir: string) => { if (!fs.existsSync(dir)) fs.mkdirSync(dir, 
 // ---- Zod meta for a chunked session
 const metaSchema = z.object({
   courseId: z.string().min(1),
-  kind: z.enum(COURSE_KINDS),           // لا تعمل cast mutating
+  kind: z.enum(COURSE_KINDS),
   lessonId: z.string().optional(),
   filename: z.string().min(1),
   mime: z.string().optional(),
@@ -40,7 +40,7 @@ const toU8 = (buf: Buffer | Uint8Array | ArrayBuffer): Uint8Array => {
 
 const sha256 = (buf: Buffer | Uint8Array): string => {
   const h = crypto.createHash('sha256');
-  h.update(toU8(buf));  // BinaryLike = ArrayBufferView ✔ (NOT Buffer)
+  h.update(toU8(buf));
   return h.digest('hex');
 };
 
@@ -61,7 +61,7 @@ const putChunk = async (uploadId: string, partNumber: number, buf: Buffer | Uint
   ensureDir(dir);
   const partPath = path.join(dir, `part-${partNumber}`);
 
-  const data = toU8(buf); // <-- Uint8Array not Buffer
+  const data = toU8(buf);
   await fs.promises.writeFile(partPath, data as unknown as NodeJS.ArrayBufferView);
   return { ok: true };
 };
@@ -93,11 +93,17 @@ const completeChunk = async (uploadId: string) => {
   }
   await new Promise<void>((resolve) => out.end(() => resolve()));
 
-  // Best-effort checksum
+  // FIX: The following block is disabled because fs.promises.readFile()
+  // loads the ENTIRE file into RAM, which will crash the server on large files.
+  // To re-enable this safely, a streaming SHA256 implementation is required.
+  /*
   try {
-    const s = await fs.promises.readFile(merged);     // returns Buffer
+    const s = await fs.promises.readFile(merged); // <-- THIS IS THE PROBLEMATIC LINE
     await fs.promises.writeFile(path.join(dir, 'sha256.txt'), sha256(s), 'utf-8');
-  } catch {}
+  } catch (e) {
+    console.error('Could not compute checksum for merged file:', e);
+  }
+  */
 
   const size = (await fs.promises.stat(merged)).size;
   return { uploadId, size };
