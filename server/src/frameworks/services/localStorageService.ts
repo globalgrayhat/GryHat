@@ -1,113 +1,139 @@
-// --- FULLY CORRECTED FILE ---
-
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
-import { Writable } from 'stream';
 
 /**
- * This service handles file storage on the local server disk.
- * CRITICAL FIX: It uses Node.js Streams to move files instead of reading them
- * into memory, which is essential for handling large file uploads and preventing timeouts.
+ * A service for managing file storage on the local filesystem.
+ * This is suitable for development or single-server deployments.
+ * It mimics a cloud storage interface for consistency.
  */
 export const localStorageService = () => {
-    const uploadDir = path.resolve(process.cwd(), 'uploads');
+  const UPLOAD_DIR = path.resolve(process.cwd(), 'uploads');
 
-    /**
-     * Moves a file from a temporary path to a final destination using streams.
-     * This is highly memory-efficient.
-     * @param sourcePath The temporary path of the uploaded file (from multer).
-     * @param destinationPath The final path where the file should be saved.
-     */
-    const moveFileWithStream = (sourcePath: string, destinationPath: string): Promise<void> => {
-        return new Promise((resolve, reject) => {
-            const readStream = fs.createReadStream(sourcePath);
-            const writeStream = fs.createWriteStream(destinationPath);
+  /**
+   * Generates a unique, random filename while preserving the original extension.
+   * @param originalName The original name of the uploaded file.
+   * @returns A new, randomized filename.
+   */
+  const generateFilename = (originalName: string) => {
+    const randomString = crypto.randomBytes(16).toString('hex');
+    const ext = path.extname(originalName);
+    return `${randomString}${ext}`;
+  };
 
-            readStream.on('error', reject);
-            writeStream.on('error', reject);
-            writeStream.on('finish', resolve); // The 'finish' event confirms the write is complete.
+  /**
+   * Reads the content of a Multer file object, whether it's in a buffer or a temporary path.
+   * This provides flexibility in handling different Multer storage strategies.
+   * @param file The Multer file object.
+   * @returns A promise that resolves to the file content as a Uint8Array.
+   */
+  const readFileContent = async (file: Express.Multer.File): Promise<Uint8Array> => {
+    // The file object type can be inconsistent, so we cast to 'any' for robust property checking.
+    const anyFile = file as any;
 
-            readStream.pipe(writeStream);
-        });
-    };
-    
-    /**
-     * Generates a unique, random filename while preserving the original extension.
-     * @param originalName The original filename from the upload.
-     */
-    const generateFilename = (originalName: string) => {
-        const randomString = crypto.randomBytes(16).toString('hex');
-        const ext = path.extname(originalName);
-        return `${randomString}${ext}`;
-    };
+    if (anyFile.buffer && Buffer.isBuffer(anyFile.buffer)) {
+      // If content is in a buffer (e.g., from memoryStorage), use it directly.
+      return Uint8Array.from(anyFile.buffer as Buffer);
+    }
 
-    /**
-     * Uploads a file to a specific relative key (path) under the main upload directory.
-     * This is the core function that now uses streams.
-     * @param file The multer file object.
-     * @param key The relative path to save the file to (e.g., "courses/courseId/video.mp4").
-     */
-    const uploadAtPath = async (file: Express.Multer.File, key: string) => {
-        // Multer must be configured to save files to disk for this to work.
-        if (!file.path) {
-            throw new Error('File path is missing. Ensure multer is configured to save files to disk.');
-        }
+    if (anyFile.path) {
+      // If content is in a file path (e.g., from diskStorage), read it from disk.
+      const buffer = await fs.promises.readFile(anyFile.path as string);
+      return Uint8Array.from(buffer);
+    }
 
-        const destinationPath = path.join(uploadDir, key);
-        // Ensure the destination directory exists.
-        await fs.promises.mkdir(path.dirname(destinationPath), { recursive: true });
+    throw new Error('No file buffer or path was available for upload.');
+  };
 
-        // Move the file efficiently using streams.
-        await moveFileWithStream(file.path, destinationPath);
-        
-        return { name: file.originalname, key };
-    };
+  /**
+   * Uploads a file to a specific, structured path (key) within the upload directory.
+   * @param file The Multer file object to upload.
+   * @param key The relative destination path (e.g., "courses/course123/image.jpg").
+   * @returns An object containing the original name and the storage key.
+   */
+  const uploadAtPath = async (file: Express.Multer.File, key: string) => {
+    const absolutePath = path.join(UPLOAD_DIR, key);
+    // Ensure the destination directory exists.
+    await fs.promises.mkdir(path.dirname(absolutePath), { recursive: true });
 
-    /**
-     * Uploads a file with a randomly generated name.
-     * @param file The multer file object.
-     */
-    const uploadFile = async (file: Express.Multer.File) => {
-        const filename = generateFilename(file.originalname);
-        await uploadAtPath(file, filename);
-        return { name: file.originalname, key: filename };
-    };
+    const fileContent = await readFileContent(file);
+    await fs.promises.writeFile(absolutePath, fileContent);
 
-    /**
-     * Uploads a file and returns its public-facing URL.
-     * @param file The multer file object.
-     */
-    const uploadAndGetUrl = async (file: Express.Multer.File) => {
-        const result = await uploadFile(file);
-        return { ...result, url: `/uploads/${result.key}` };
-    };
+    return { name: file.originalname, key };
+  };
 
-    const getFile = async (fileKey: string) => path.join(uploadDir, fileKey);
+  /**
+   * Uploads a file with a randomly generated name to the root of the upload directory.
+   * @param file The Multer file object to upload.
+   * @returns An object containing the original name and the generated storage key.
+   */
+  const uploadFile = async (file: Express.Multer.File) => {
+    await fs.promises.mkdir(UPLOAD_DIR, { recursive: true });
+    const filename = generateFilename(file.originalname);
+    const filePath = path.join(UPLOAD_DIR, filename);
 
-    const getVideoStream = async (key: string) =>
-        fs.createReadStream(path.join(uploadDir, key));
+    const fileContent = await readFileContent(file);
+    await fs.promises.writeFile(filePath, fileContent);
 
-    const getCloudFrontUrl = async (fileKey: string) => `/uploads/${fileKey}`;
+    return { name: file.originalname, key: filename };
+  };
 
-    const removeFile = async (fileKey: string) => {
-        const filePath = path.join(uploadDir, fileKey);
-        try { 
-            await fs.promises.unlink(filePath); 
-        } catch { 
-            // Ignore if file doesn't exist.
-        }
-    };
+  /**
+   * Uploads a file and returns its public-facing URL.
+   * @param file The Multer file object to upload.
+   * @returns An object with the name, key, and a URL to access the file.
+   */
+  const uploadAndGetUrl = async (file: Express.Multer.File) => {
+    const result = await uploadFile(file);
+    // The URL is constructed based on a conventional public path.
+    return { ...result, url: `/uploads/${result.key}` };
+  };
 
-    return {
-        uploadFile,
-        uploadAndGetUrl,
-        uploadAtPath,
-        getFile,
-        getVideoStream,
-        getCloudFrontUrl,
-        removeFile
-    };
+  /**
+   * Gets the absolute filesystem path for a given storage key.
+   * @param fileKey The key (filename) of the file.
+   * @returns The absolute path to the file.
+   */
+  const getFile = async (fileKey: string) => path.join(UPLOAD_DIR, fileKey);
+
+  /**
+   * Creates a readable stream for a file, useful for video streaming.
+   * @param key The key (filename) of the file.
+   * @returns A readable stream of the file content.
+   */
+  const getVideoStream = async (key: string) =>
+    fs.createReadStream(path.join(UPLOAD_DIR, key));
+
+  /**
+   * Returns a publicly accessible URL for a file. For local storage, this is a direct path.
+   * @param fileKey The key (filename) of the file.
+   * @returns A URL path string.
+   */
+  const getCloudFrontUrl = async (fileKey: string) => `/uploads/${fileKey}`;
+
+  /**
+   * Deletes a file from the local storage.
+   * @param fileKey The key (filename) of the file to remove.
+   */
+  const removeFile = async (fileKey: string) => {
+    const filePath = path.join(UPLOAD_DIR, fileKey);
+    try {
+      await fs.promises.unlink(filePath);
+    } catch {
+      // Ignore errors if the file doesn't exist, making the operation idempotent.
+    }
+  };
+
+  // Expose all public methods of the service.
+  return {
+    uploadFile,
+    uploadAndGetUrl,
+    uploadAtPath,
+    getFile,
+    getVideoStream,
+    getCloudFrontUrl,
+    removeFile
+  };
 };
 
-export type LocalStorageService = typeof localStorageService;
+export type LocalStorageService = ReturnType<typeof localStorageService>;
