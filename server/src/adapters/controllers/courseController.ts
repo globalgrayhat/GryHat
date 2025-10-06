@@ -20,7 +20,10 @@ import {
   getTrendingCourseU
 } from '../../app/usecases/course/recommendation';
 import { searchCourseU } from '../../app/usecases/course/search';
-
+import { getApprovedCoursesU } from '../../app/usecases/course/getApprovedCourses';
+import { getRejectedCoursesU } from '../../app/usecases/course/getRejectedCourses';
+import { getApprovedCoursesByInstructorU } from '../../app/usecases/course/getApprovedCoursesByInstructor';
+import { getRejectedCoursesByInstructorU } from '../../app/usecases/course/getRejectedCoursesByInstructor';
 import { addLessonsU } from '../../app/usecases/lessons/addLesson';
 import { editLessonsU } from '../../app/usecases/lessons/editLesson';
 import { deleteLessonU } from '../../app/usecases/lessons/deleteLesson';
@@ -148,6 +151,7 @@ const courseController = (
   const addCourse = asyncHandler(
     async (req: CustomRequest, res: Response): Promise<void> => {
       const instructorId = req.user?.Id;
+    if (!instructorId) throw new AppError('Instructor ID not found', HttpStatusCodes.UNAUTHORIZED);
       const body: AddCourseInfoInterface = req.body;
       const files = (req.files as Record<string, Express.Multer.File[]>) || {};
 
@@ -174,6 +178,7 @@ const courseController = (
     async (req: CustomRequest, res: Response): Promise<void> => {
       const courseId = req.params.courseId;
       const instructorId = req.user?.Id;
+if (!instructorId) throw new AppError('Instructor ID not found', HttpStatusCodes.UNAUTHORIZED);
       const body: EditCourseInfo = req.body;
       const files = (req.files as Record<string, Express.Multer.File[]>) || {};
 
@@ -217,6 +222,7 @@ const courseController = (
   const getCoursesByInstructor = asyncHandler(
     async (req: CustomRequest, res: Response): Promise<void> => {
       const instructorId = req.user?.Id;
+if (!instructorId) throw new AppError('Instructor ID not found', HttpStatusCodes.UNAUTHORIZED);
       const courses = await getCourseByInstructorU(
         instructorId,
         dbRepositoryCourse
@@ -272,7 +278,62 @@ const courseController = (
     }
   );
 
-  const searchCourse = asyncHandler(
+// ======= GET APPROVED COURSES ======= 
+const getApprovedCourses = asyncHandler(
+    async (_req: Request, res: Response): Promise<void> => {
+      // Fetch all approved courses from the repository
+      const courses = await getApprovedCoursesU(dbRepositoryCourse);
+  
+      // Send success response with the retrieved courses
+      ok(res, 'Approved courses retrieved successfully', courses);
+    }
+  );
+  
+  // ======= GET REJECTED COURSES =======
+  const getRejectedCourses = asyncHandler(
+    async (_req: Request, res: Response): Promise<void> => {
+      // Fetch all rejected courses from the repository
+      const courses = await getRejectedCoursesU(dbRepositoryCourse);
+  
+      // Send success response with the retrieved rejected courses
+      ok(res, 'Rejected courses retrieved successfully', courses);
+    }
+  );  
+  
+// ======= GET APPROVED COURSES BY INSTRUCTOR =======
+const getApprovedCoursesByInstructor = asyncHandler(
+    async (req: CustomRequest, res: Response): Promise<void> => {
+      const instructorId = req.user?.Id;
+      if (!instructorId) throw new AppError('Instructor ID not found', HttpStatusCodes.UNAUTHORIZED);
+      // Ensure the instructor ID exists in the authenticated user payload
+      if (!instructorId) {
+        throw new AppError('Instructor ID not found in token', HttpStatusCodes.UNAUTHORIZED);
+      }
+      // Fetch approved courses for this instructor
+      const courses = await getApprovedCoursesByInstructorU(instructorId, dbRepositoryCourse);
+      // Respond with the list of approved courses
+      ok(res, 'Instructor approved courses retrieved successfully', courses);
+    }
+  );
+  
+  // ======= GET REJECTED COURSES BY INSTRUCTOR =======
+  const getRejectedCoursesByInstructor = asyncHandler(
+    async (req: CustomRequest, res: Response): Promise<void> => {
+      const instructorId = req.user?.Id;
+      if (!instructorId) throw new AppError('Instructor ID not found', HttpStatusCodes.UNAUTHORIZED);
+      // Check if instructor ID is present before proceeding
+      if (!instructorId) {
+        throw new AppError('Instructor ID not found in token', HttpStatusCodes.UNAUTHORIZED);
+      }
+      // Fetch rejected courses for this instructor
+      const courses = await getRejectedCoursesByInstructorU(instructorId, dbRepositoryCourse);
+  
+      // Send the list of rejected courses in response
+      ok(res, 'Instructor rejected courses retrieved successfully', courses);
+    }
+  );
+
+    const searchCourse = asyncHandler(
     async (req: Request, res: Response): Promise<void> => {
       const { search = '', filter = '' } = req.query as {
         search?: string;
@@ -354,6 +415,7 @@ const courseController = (
     async (req: CustomRequest, res: Response): Promise<void> => {
       const { courseId } = req.params;
       const instructorId = req.user?.Id;
+if (!instructorId) throw new AppError('Instructor ID not found', HttpStatusCodes.UNAUTHORIZED);
       const files = (req.files as Record<string, Express.Multer.File[]>) || {};
 
       // Refactored: Pass the files object directly to the use case.
@@ -377,6 +439,7 @@ const courseController = (
     async (req: CustomRequest, res: Response): Promise<void> => {
       const lessonId = req.params.lessonId;
       const instructorId = req.user?.Id;
+if (!instructorId) throw new AppError('Instructor ID not found', HttpStatusCodes.UNAUTHORIZED);
       const files = (req.files as Record<string, Express.Multer.File[]>) || {};
       
       if (!instructorId) {
@@ -403,11 +466,7 @@ const courseController = (
     async (req: CustomRequest, res: Response): Promise<void> => {
       const lessonId = req.params.lessonId;
       const instructorId = req.user?.Id;
-
-      if (!instructorId) {
-        fail(res, 'Unauthorized', 401);
-        return;
-      }
+if (!instructorId) throw new AppError('Instructor ID not found', HttpStatusCodes.UNAUTHORIZED);
       if (!lessonId) {
         fail(res, 'Missing lessonId', 400);
         return;
@@ -609,8 +668,12 @@ const courseController = (
     submitCourse,
     moderateCourse,
     deleteCourse,
-
-    // Lessons
+    getApprovedCourses,
+    getRejectedCourses,
+    getApprovedCoursesByInstructor,
+    getRejectedCoursesByInstructor,
+    
+    // Lessons
     addLesson,
     editLesson,
     deleteLesson,

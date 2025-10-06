@@ -50,6 +50,18 @@ export const courseDbRepository = (
   const deleteCourse = async (courseId: string) =>
     await repository.deleteCourse(courseId);
 
+  const getApprovedCourses = async () =>
+    await repository.getApprovedCourses();
+
+  const getRejectedCourses = async () =>
+    await repository.getRejectedCourses();
+
+  const getRejectedCoursesByInstructor = async (instructorId: string) =>
+    await repository.getRejectedCoursesByInstructor(instructorId);
+
+  const getApprovedCoursesByInstructor = async (instructorId: string) =>
+    await repository.getApprovedCoursesByInstructor(instructorId);
+
   return {
     addCourse,
     editCourse,
@@ -65,7 +77,11 @@ export const courseDbRepository = (
     getNumberOfCoursesAddedInEachMonth,
     getStudentsByCourseForInstructor,
     searchCourse,
-    deleteCourse
+    deleteCourse,
+    getApprovedCourses,
+    getRejectedCourses,
+    getRejectedCoursesByInstructor,
+    getApprovedCoursesByInstructor,
   };
 };
 export type CourseDbRepositoryInterface = typeof courseDbRepository;

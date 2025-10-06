@@ -438,6 +438,77 @@ const courseRouter = (redisClient: RedisClient) => {
     controller.searchCourse
   );
 
+  // ==================== GET ROUTES FOR MODERATION ====================
+
+  /**
+   * @swagger
+   * /api/courses/admin/get-approved-courses:
+   *   get:
+   *     summary: Get all approved courses (Admin only)
+   *     tags: [Moderation]
+   *     security: [ { bearerAuth: [] } ]
+   *     responses:
+   *       200: { description: List of approved courses }
+   */
+  router.get(
+    '/admin/get-approved-courses',
+    jwtAuthMiddleware,
+    roleCheckMiddleware(UserRole.Admin),
+    controller.getApprovedCourses
+  );
+
+  /**
+   * @swagger
+   * /api/courses/admin/get-rejected-courses:
+   *   get:
+   *     summary: Get all rejected courses (Admin only)
+   *     tags: [Moderation]
+   *     security: [ { bearerAuth: [] } ]
+   *     responses:
+   *       200: { description: List of rejected courses }
+   */
+  router.get(
+    '/admin/get-rejected-courses',
+    jwtAuthMiddleware,
+    roleCheckMiddleware(UserRole.Admin),
+    controller.getRejectedCourses
+  );
+
+  /**
+   * @swagger
+   * /api/courses/instructors/get-approved-courses:
+   *   get:
+   *     summary: Get approved courses by instructor
+   *     tags: [Moderation]
+   *     security: [ { bearerAuth: [] } ]
+   *     responses:
+   *       200: { description: List of approved courses for the authenticated instructor }
+   */
+  router.get(
+    '/instructors/get-approved-courses',
+    jwtAuthMiddleware,
+    roleCheckMiddleware(UserRole.Instructor),
+    controller.getApprovedCoursesByInstructor
+  );
+
+  /**
+   * @swagger
+   * /api/courses/instructors/get-rejected-courses:
+   *   get:
+   *     summary: Get rejected courses by instructor
+   *     tags: [Moderation]
+   *     security: [ { bearerAuth: [] } ]
+   *     responses:
+   *       200: { description: List of rejected courses for the authenticated instructor }
+   */
+  router.get(
+    '/instructors/get-rejected-courses',
+    jwtAuthMiddleware,
+    roleCheckMiddleware(UserRole.Instructor),
+    controller.getRejectedCoursesByInstructor
+  );
+
+
   // ==================== PUT ROUTES ====================
 
   /**

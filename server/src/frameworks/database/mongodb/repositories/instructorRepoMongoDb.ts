@@ -10,12 +10,12 @@ export const instructorRepoMongoDb = () => {
   };
   const getInstructorByEmail = async (email: string) => {
     const instructor: SavedInstructorInterface | null =
-      await Instructor.findOne({ email });
+      await Instructor.findOne({ email }).select('-password').lean();
     return instructor;
   };
   const getInstructorRequests = async () => {
     const instructors: SavedInstructorInterface[] | null =
-      await Instructor.find({ isVerified: false });
+      await Instructor.find({ isVerified: false, rejected: false });
     return instructors;
   };
   const acceptInstructorRequest = async (instructorId: string) => {
@@ -55,8 +55,10 @@ export const instructorRepoMongoDb = () => {
     return response;
   };
   const getAllInstructors = async () => {
-    const instructors: SavedInstructorInterface[] | null =
-      await Instructor.find({});
+    // Find all instructors who are verified and not rejected, excluding the 'password' field
+    const instructors: SavedInstructorInterface[] | null = 
+      await Instructor.find({ isVerified: true, rejected: false })
+        .select('-password'); // Exclude the password field
     return instructors;
   };
   const blockInstructors = async (instructorId: string, reason: string) => {
@@ -86,11 +88,16 @@ export const instructorRepoMongoDb = () => {
     return blockedInstructors;
   };
   const getInstructorById = async (instructorId: string) => {
-    const instructor: SavedInstructorInterface | null =
+    // Find the instructor by ID, exclude the 'password' field, only return verified and not rejected instructors
+    const instructor: SavedInstructorInterface | null = 
       await Instructor.findOne({
         _id: new mongoose.Types.ObjectId(instructorId)
-      });
-    return instructor;
+      })
+      .select('-password') // Exclude the password field
+      .where('isVerified').equals(true) // Only return verified instructors
+      .where('rejected').equals(false) // Only return instructors who have not been rejected
+      .lean(); 
+      return instructor;
   };
   const getTotalNumberOfInstructors = async () => {
     const total = await Instructor.find().count();

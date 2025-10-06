@@ -283,6 +283,36 @@ const newCourse = new Course(normalized);
     return totalCourses;
   };
 
+  const getApprovedCourses = async () => {
+    const approvedCourses = await Course.find({ status: 'approved' })
+      .populate('instructorId', 'firstName lastName email profilePic')
+      .populate('category', 'name');
+    return approvedCourses;
+  };
+
+  const getRejectedCourses = async () => {
+    const rejectedCourses = await Course.find({ status: 'rejected' })
+      .populate('instructorId', 'firstName lastName email profilePic')
+      .populate('category', 'name');
+    return rejectedCourses;
+  };
+
+  const getRejectedCoursesByInstructor = async (instructorId: string) => {
+    const courses = await Course.find({
+      instructorId: new mongoose.Types.ObjectId(instructorId),
+      status: 'rejected'
+    });
+    return courses;
+  };
+
+  const getApprovedCoursesByInstructor = async (instructorId: string) => {
+    const courses = await Course.find({
+      instructorId: new mongoose.Types.ObjectId(instructorId),
+      status: 'approved'
+    });
+    return courses;
+  };
+  
   const getNumberOfCoursesAddedInEachMonth = async () => {
     const courseCountsByMonth = await Course.aggregate([
       {
@@ -392,7 +422,11 @@ const newCourse = new Course(normalized);
     getNumberOfCoursesAddedInEachMonth,
     getStudentsByCourseForInstructor,
     searchCourse,
-    deleteCourse
+    deleteCourse,
+    getApprovedCourses,
+    getRejectedCourses,
+    getRejectedCoursesByInstructor,
+    getApprovedCoursesByInstructor
   };
 };
 
