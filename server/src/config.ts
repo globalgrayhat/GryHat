@@ -9,10 +9,14 @@ const configKeys = {
   // ================== Core Environment ===================
   NODE_ENV: process.env.NODE_ENV || 'development',
   PORT: num(process.env.PORT, 3000),
+  
+  // ================== CORS =================== 
+  CORS_ORIGINS : process.env.CORS_ORIGINS_URL || 'http://localhost:3000',
+  CORS_CREDENTIALS: process.env.CORS_CREDENTIALS_BOLL || 'http://localhost:3000',
 
   // ================== Base URLs ===================
   PUBLIC_BASE_URL: process.env.PUBLIC_BASE_URL || 'http://localhost:3000',
-  ORIGIN_PORT: process.env.ORIGIN_PORT || 'http://localhost:3000',
+ 
 
   // ================== MongoDB ===================
   MONGO_DB_URL: process.env.DATABASE as string,
@@ -95,8 +99,7 @@ const configKeys = {
   // ================== Deprecated / Fallback ===================
   STORAGE_PROVIDER: process.env.STORAGE_PROVIDER || 'local',
   DB_CLUSTER_URL: process.env.DB_CLUSTER_URL || '',
-  CORS_ORIGINS : process.env.CORS_ORIGINS_URL,
-  CORS_CREDENTIALS: process.env.CORS_CREDENTIALS_BOLL
+
   
 };
 

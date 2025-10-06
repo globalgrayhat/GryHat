@@ -168,7 +168,7 @@ Contributions to the project are welcome. To contribute, please follow the guide
 
 For any questions, feedback, or inquiries, please reach out to:
 
-- Abin T H
+- Abin
   - Email: abinth250@example.com
   - LinkedIn: [linkedin-profile](https://www.linkedin.com/in/abin-th-170676245/)
 

@@ -9,7 +9,8 @@ import { UserRole } from '../../constants/enums';
 
 /**
  * Live stream controller (thin): schedule/start/end/chat/get.
- * Uses in-memory service; persistence/media are out of scope.
+ * Use
+ *  in-memory service; persistence/media are out of scope.
  */
 export const liveStreamController = () => {
   const service = liveStreamService();

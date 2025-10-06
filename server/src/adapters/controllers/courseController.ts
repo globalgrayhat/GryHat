@@ -1,7 +1,6 @@
 import { ok, created, fail } from '../../shared/http/respond';
 import { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
-import { mediaService } from '../../app/services/mediaService';
 
 import { CourseRepositoryMongoDbInterface } from '../../frameworks/database/mongodb/repositories/courseReposMongoDb';
 import { CourseDbRepositoryInterface } from '../../app/repositories/courseDbRepository';
@@ -67,7 +66,6 @@ import { AddDiscussionInterface } from '../../types/discussion';
 import { PaymentInfo } from '../../types/payment';
 import { CustomRequest } from '../../types/customRequest';
 
-import { toStringArray } from '../../app/usecases/course/_helpers';
 import HttpStatusCodes from '../../constants/HttpStatusCodes';
 import AppError from '../../utils/appError';
 
@@ -415,7 +413,7 @@ const getApprovedCoursesByInstructor = asyncHandler(
     async (req: CustomRequest, res: Response): Promise<void> => {
       const { courseId } = req.params;
       const instructorId = req.user?.Id;
-if (!instructorId) throw new AppError('Instructor ID not found', HttpStatusCodes.UNAUTHORIZED);
+      if (!instructorId) throw new AppError('Instructor ID not found', HttpStatusCodes.UNAUTHORIZED);
       const files = (req.files as Record<string, Express.Multer.File[]>) || {};
 
       // Refactored: Pass the files object directly to the use case.
@@ -439,7 +437,7 @@ if (!instructorId) throw new AppError('Instructor ID not found', HttpStatusCodes
     async (req: CustomRequest, res: Response): Promise<void> => {
       const lessonId = req.params.lessonId;
       const instructorId = req.user?.Id;
-if (!instructorId) throw new AppError('Instructor ID not found', HttpStatusCodes.UNAUTHORIZED);
+      if (!instructorId) throw new AppError('Instructor ID not found', HttpStatusCodes.UNAUTHORIZED);
       const files = (req.files as Record<string, Express.Multer.File[]>) || {};
       
       if (!instructorId) {
@@ -466,7 +464,7 @@ if (!instructorId) throw new AppError('Instructor ID not found', HttpStatusCodes
     async (req: CustomRequest, res: Response): Promise<void> => {
       const lessonId = req.params.lessonId;
       const instructorId = req.user?.Id;
-if (!instructorId) throw new AppError('Instructor ID not found', HttpStatusCodes.UNAUTHORIZED);
+      if (!instructorId) throw new AppError('Instructor ID not found', HttpStatusCodes.UNAUTHORIZED);
       if (!lessonId) {
         fail(res, 'Missing lessonId', 400);
         return;

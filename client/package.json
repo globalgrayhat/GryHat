@@ -1,5 +1,5 @@
 {
-  "name": "abin",
+  "name": "Ali DeskRam",
   "version": "1.0",
   "private": true,
   "dependencies": {
@@ -88,6 +88,6 @@
   },
   "description": "online learning platfrom",
   "main": "index.js",
-  "author": "abin t h",
+  "author": "Ali DeskRam",
   "license": "MIT"
 }

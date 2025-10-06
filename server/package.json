@@ -1,5 +1,5 @@
 {
-  "name": "abin",
+  "name": "Ali DeskRam",
   "version": "1",
   "description": "learning platfrom",
   "main": "y",
@@ -9,7 +9,7 @@
     "dev": "nodemon ./src/app.ts",
     "setup-admin": "ts-node scripts/setup-default-admin.ts"
   },
-  "author": "abin t h",
+  "author": "Ali DeskRam",
   "license": "ISC",
   "dependencies": {
     "@aws-sdk/client-cloudfront": "^3.363.0",
