@@ -1,5 +1,3 @@
-// server/src/adapters/controllers/authController.ts
-
 import { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
 
