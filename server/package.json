@@ -1,7 +1,7 @@
 {
-  "name": "Ali DeskRam",
-  "version": "1",
-  "description": "learning platfrom",
+  "name": "AliDeskRam",
+ "version": "1",
+  "description": "learningplatfrom",
   "main": "y",
   "scripts": {
     "start": "node ./build/app.js",
@@ -9,7 +9,7 @@
     "dev": "nodemon ./src/app.ts",
     "setup-admin": "ts-node scripts/setup-default-admin.ts"
   },
-  "author": "Ali DeskRam",
+  "author": "AliDeskRam",
   "license": "ISC",
   "dependencies": {
     "@aws-sdk/client-cloudfront": "^3.363.0",
@@ -48,6 +48,7 @@
     "swagger-ui-express": "^5.0.1",
     "tus-node-server": "^0.9.0",
     "vimeo": "^2.3.1",
+    "yarn": "^1.22.22",
     "zod": "^4.1.11"
   },
   "devDependencies": {
