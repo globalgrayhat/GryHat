@@ -1,9 +1,12 @@
 import React from "react";
+
 const InstructorDashboard: React.FC = () => {
   return (
-    <div className="p-32">
-      <h1>instructor dash</h1>
+    <div>
+      <h1 className="text-2xl font-semibold">Welcome to your Dashboard</h1>
+      {/* Your dashboard content goes here */}
     </div>
   );
 };
+
 export default InstructorDashboard;

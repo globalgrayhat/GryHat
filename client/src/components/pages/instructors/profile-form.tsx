@@ -6,46 +6,49 @@ import { UpdateProfileInfo } from "../../../api/types/instructor/instructor";
 import { Avatar } from "@material-tailwind/react";
 import { InstructorApiResponse } from "../../../api/types/apiResponses/api-response-instructors";
 import { useLanguage } from '../../../contexts/LanguageContext';
+import { getFullUrl } from "../../../utils/helpers";
+
+import {
+  PencilIcon,
+  ArrowDownTrayIcon,
+  XMarkIcon,
+  PhotoIcon,
+  ArrowPathIcon,
+} from '@heroicons/react/24/outline';
 
 interface Props {
   editMode: boolean;
   setEditMode: (val: boolean) => void;
 }
+
 const ProfileForm: React.FC<Props> = ({ editMode, setEditMode }) => {
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
-  const [profileLoading, setProfileLoading] = useState(false);
-  const [instructor, setInstructor] = useState<InstructorApiResponse | null>(
-    null
-  );
-  const [profileUrl, setProfileUrl] = useState<string>("");
-  const [updated, setUpdated] = useState(false);
   const { t } = useLanguage();
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviewImage(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-      formik.setFieldValue("profilePic", file);
-    } else {
-      setPreviewImage(null);
-      formik.setFieldValue("profilePic", null);
-    }
-  };
-  const fetchInstructor = async () => {
-    try {
-      setProfileLoading(true);
-      const response = await getInstructorDetails();
-      setInstructor(response?.data);
-      setProfileLoading(false);
-    } catch (error) {
-      setProfileLoading(false);
-    }
-  };
+  // State
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [instructor, setInstructor] = useState<InstructorApiResponse | null>(null);
+  const [profileUrl, setProfileUrl] = useState("");
+  const [updated, setUpdated] = useState(false);
 
+  // Fetch instructor data
+  useEffect(() => {
+    const fetchInstructor = async () => {
+      try {
+        setProfileLoading(true);
+        const response = await getInstructorDetails();
+        setInstructor(response?.data);
+      } catch {
+        toast.error(t('settings.fetchError') || "Failed to fetch instructor data");
+      } finally {
+        setProfileLoading(false);
+      }
+    };
+
+    fetchInstructor();
+  }, [updated, t]);
+
+  // Update profile URL & form values when instructor changes
   useEffect(() => {
     if (instructor) {
       formik.setValues({
@@ -53,300 +56,224 @@ const ProfileForm: React.FC<Props> = ({ editMode, setEditMode }) => {
         firstName: instructor.firstName || "",
         lastName: instructor.lastName || "",
         mobile: instructor.mobile || "",
-        qualification: instructor?.qualification || "",
-        // subjects: instructor?.subjects || "",
-        experience: instructor?.experience || "",
-        skills: instructor?.skills || "",
-        about: instructor?.about || "",
+        qualification: instructor.qualification || "",
+        experience: instructor.experience || "",
+        skills: instructor.skills || "",
+        about: instructor.about || "",
+        profilePic: null,
       });
+      setProfileUrl(getFullUrl(instructor.profilePic?.url) ?? "");
+      setPreviewImage(null);
     }
-    setProfileUrl(instructor?.profilePic?.url ?? "");
   }, [instructor]);
 
-  useEffect(() => {
-    fetchInstructor();
-  }, [updated]);
-
+  // Formik setup
   const formik = useFormik({
     initialValues: {
-      email: instructor?.email || "",
-      firstName: instructor?.firstName || "",
-      lastName: instructor?.lastName || "",
-      mobile: instructor?.mobile || "",
-      qualification: instructor?.qualification || "",
-      // subjects: instructor?.subjects || "",
-      experience: instructor?.experience || "",
-      skills: instructor?.skills || "",
-      about: instructor?.about || "",
+      email: "",
+      firstName: "",
+      lastName: "",
+      mobile: "",
+      qualification: "",
+      experience: "",
+      skills: "",
+      about: "",
+      profilePic: null,
     },
-    onSubmit: (values) => {
-      handleSubmit(values);
+    onSubmit: async (values) => {
+      try {
+        const formData = new FormData();
+        if (values.profilePic) formData.append("image", values.profilePic);
+        formData.append("email", values.email);
+        formData.append("firstName", values.firstName);
+        formData.append("lastName", values.lastName);
+        formData.append("mobile", values.mobile);
+        formData.append("qualification", values.qualification);
+        formData.append("experience", values.experience);
+        formData.append("skills", values.skills);
+
+        const response = await updateProfile(formData);
+        toast.success(response?.data?.message || t('settings.updateSuccess'));
+        setPreviewImage(null);
+        (document.getElementById("file_input") as HTMLInputElement).value = "";
+        setUpdated(prev => !prev);
+        setEditMode(false);
+      } catch (error: any) {
+        toast.error(error?.data?.message || t('settings.updateError'));
+      }
     },
   });
 
-  const handleSubmit = async (profileInfo: UpdateProfileInfo) => {
-    try {
-      const formData = new FormData();
-      if (profileInfo.profilePic) {
-        formData.append("image", profileInfo.profilePic);
-      }
-      formData.append("email", profileInfo.email || "");
-      formData.append("firstName", profileInfo.firstName || "");
-      formData.append("lastName", profileInfo.lastName || "");
-      formData.append("mobile", profileInfo.mobile || "");
-      formData.append("qualification",profileInfo.qualification||"")
-      formData.append("experience",profileInfo.experience||"")
-      formData.append("skills",profileInfo.skills||"")
-
-      const response = await updateProfile(formData);
-      // formik.resetForm();  
+  // Handle file input change
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => setPreviewImage(reader.result as string);
+      reader.readAsDataURL(file);
+    } else {
       setPreviewImage(null);
-      const fileInput = document.getElementById(
-        "file_input"
-      ) as HTMLInputElement;
-      if (fileInput) {
-        fileInput.value = "";
-      }
-      setUpdated(!updated);
-      setEditMode(false);
-      toast.success(response?.data?.message, {
-        position: toast.POSITION.BOTTOM_RIGHT,
-      });
-    } catch (error: any) {
-      setUpdated(!updated);
-      toast.error(error?.data?.message, {
-        position: toast.POSITION.BOTTOM_RIGHT,
-      });
     }
+    formik.setFieldValue("profilePic", file);
   };
 
   if (profileLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex justify-center items-center h-48">
+        <ArrowPathIcon className="w-10 h-10 text-blue-600 animate-spin" />
+        <span className="sr-only">{t('settings.loading') || "Loading..."}</span>
+      </div>
+    );
   }
 
   return (
-    <form onSubmit={formik.handleSubmit}>
-      {/* Profile picture */}
-      <div className='p-5 flex'>
+    <form
+      onSubmit={formik.handleSubmit}
+      className="max-w-3xl mx-auto p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md"
+    >
+      {/* Profile Picture */}
+      <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 mb-8">
         <Avatar
           src={previewImage || profileUrl || "../profile.jpg"}
-          alt='avatar'
-          size='xl'
+          alt="avatar"
+          size="xl"
+          className="shadow-lg"
         />
-        <div className='pl-4'>
+        <div className="flex flex-col flex-1">
           <label
-            className='block mb-2 text-sm font-medium text-gray-900 dark:text-gray-200'
-            htmlFor='file_input'
+            htmlFor="file_input"
+            className="flex items-center cursor-pointer text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition font-semibold"
           >
-            {t('settings.uploadProfilePhoto') || 'Upload profile photo'}
+            <PhotoIcon className="w-6 h-6 mr-2" />
+            {t('settings.uploadProfilePhoto') || 'Upload Profile Photo'}
           </label>
           <input
-            className='block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400'
-            id='file_input'
+            type="file"
+            id="file_input"
+            accept="image/*"
+            disabled={!editMode}
             onChange={handleFileChange}
-            type='file'
+            className="hidden"
           />
+          {previewImage && (
+            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+              {t('settings.imagePreview') || 'Image preview available'}
+            </p>
+          )}
         </div>
       </div>
-      <div className='grid md:grid-cols-2 md:gap-6'>
-        <div className='relative z-0 w-full mb-6 group'>
-          <input
-            type='text'
-            name='firstName'
-            id='floating_first_name'
-            value={formik.values.firstName}
-            onChange={formik.handleChange}
-            disabled={!editMode}
-            onBlur={formik.handleBlur}
-            className='block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer'
-            placeholder=' '
-            required
-          />
-          <label
-            htmlFor='floating_first_name'
-            className={`peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] ${
-              formik.values.firstName ? 'peer-placeholder-shown:scale-100' : ''
-            } peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6`}
-          >
-            {t('settings.firstName') || 'First name'}
-          </label>
-        </div>
-        <div className='relative z-0 w-full mb-6 group'>
-          <input
-            type='text'
-            name='lastName'
-            id='floating_last_name'
-            value={formik.values.lastName}
+
+      {/* Input Fields Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {[
+          { id: "firstName", label: t('settings.firstName') || "First Name", required: true },
+          { id: "lastName", label: t('settings.lastName') || "Last Name", required: true },
+          { id: "email", label: t('settings.email') || "Email Address", type: "email", required: true, colSpan: 2 },
+          { id: "mobile", label: t('settings.mobile') || "Mobile", required: true },
+          { id: "qualification", label: t('settings.qualification') || "Qualification", required: true },
+          { id: "experience", label: t('settings.experience') || "Experience", required: true },
+          { id: "skills", label: t('settings.skills') || "Skills", required: true },
+        ].map(({ id, label, type = "text", required = false, colSpan = 1 }) => (
+          <InputField
+            key={id}
+            id={id}
+            label={label}
+            type={type}
+            value={formik.values[id as keyof typeof formik.values] as string}
             onChange={formik.handleChange}
             onBlur={formik.handleBlur}
             disabled={!editMode}
-            className='block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer'
-            placeholder=' '
-            required
+            required={required}
+            colSpan={colSpan}
           />
-          <label
-            htmlFor='floating_last_name'
-            className={`peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] ${
-              formik.values.lastName ? 'peer-placeholder-shown:scale-100' : ''
-            } peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6`}
-          >
-            {t('settings.lastName') || 'Last name'}
-          </label>
-        </div>
+        ))}
       </div>
-      <div className='relative z-0 w-full mb-6 group'>
-        <input
-          type='email'
-          name='email'
-          id='floating_email'
-          disabled={!editMode}
-          value={formik.values.email}
-          onChange={formik.handleChange}
-          onBlur={formik.handleBlur}
-          className='block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer'
-          placeholder=' '
-          required
-        />
-        <label
-          htmlFor='floating_email'
-          className={`peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] ${
-            formik.values.email ? 'peer-placeholder-shown:scale-100' : ''
-          } peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6`}
-        >
-          {t('settings.email') || 'Email address'}
-        </label>
-      </div>
-      <div className='relative z-0 w-full mb-6 group'>
-        <input
-          type='text'
-          name='mobile'
-          id='floating_phone'
-          disabled={!editMode}
-          value={formik.values.mobile}
-          onChange={formik.handleChange}
-          onBlur={formik.handleBlur}
-          className='block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer'
-          placeholder=' '
-          required
-        />
-        <label
-          htmlFor='floating_phone'
-          className={`peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] ${
-            formik.values.mobile ? 'peer-placeholder-shown:scale-100' : ''
-          } peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6`}
-        >
-          {t('settings.mobile') || 'Mobile'}
-        </label>
-      </div>
-      <div className='relative z-0 w-full mb-6 group'>
-        <input
-          type='text'
-          name='qualification'
-          id='floating_qualification'
-          disabled={!editMode}
-          value={formik.values.qualification}
-          onChange={formik.handleChange}
-          onBlur={formik.handleBlur}
-          className='block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer'
-          placeholder=' '
-          required
-        />
-        <label
-          htmlFor='floating_qualification'
-        className={`peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] ${
-            formik.values.qualification ? 'peer-placeholder-shown:scale-100' : ''
-          } peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6`}
-        >
-          {t('settings.qualification') || 'Qualification'}
-        </label>
-      </div>
-      {/* <div className='relative z-0 w-full mb-6 group'>
-        <input
-          type='text'
-          name='subjects'
-          id='floating_subject'
-          disabled={!editMode}
-          value={formik.values.mobile}
-          onChange={formik.handleChange}
-          onBlur={formik.handleBlur}
-          className='block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer'
-          placeholder=' '
-          required
-        />
-        <label
-          htmlFor='floating_subjects'
-          className={`peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] ${
-            formik.values.mobile ? "peer-placeholder-shown:scale-100" : ""
-          } peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6`}
-        >
-          Subjects
-        </label>
-      </div> */}
-      <div className='relative z-0 w-full mb-6 group'>
-        <input
-          type='text'
-          name='experience'
-          id='floating_experience'
-          disabled={!editMode}
-          value={formik.values.experience}
-          onChange={formik.handleChange}
-          onBlur={formik.handleBlur}
-          className='block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer'
-          placeholder=' '
-          required
-        />
-        <label
-          htmlFor='floating_experience'
-        className={`peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] ${
-            formik.values.experience ? 'peer-placeholder-shown:scale-100' : ''
-          } peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6`}
-        >
-          {t('settings.experience') || 'Experience'}
-        </label>
-      </div>
-      <div className='relative z-0 w-full mb-6 group'>
-        <input
-          type='text'
-          name='skills'
-          id='floating_skills'
-          disabled={!editMode}
-          value={formik.values.skills}
-          onChange={formik.handleChange}
-          onBlur={formik.handleBlur}
-          className='block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer'
-          placeholder=' '
-          required
-        />
-        <label
-          htmlFor='floating_skills'
-        className={`peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] ${
-            formik.values.skills ? 'peer-placeholder-shown:scale-100' : ''
-          } peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6`}
-        >
-          {t('settings.skills') || 'Skills'}
-        </label>
-      </div>
-      <div className='relative pt-10 pr-1'>
-        {editMode && (
-          <div className='flex justify-end gap-3'>
+
+      {/* Action Buttons */}
+      <div className="flex justify-end gap-4 mt-8">
+        {editMode ? (
+          <>
             <button
-              type='button'
+              type="button"
               onClick={() => setEditMode(false)}
-              className='bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-800 dark:text-gray-200 font-medium px-4 py-2 rounded'
+              className="flex items-center gap-2 px-5 py-2 rounded-md bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition"
             >
-              {t('settings.cancel') || 'Cancel'}
+              <XMarkIcon className="w-5 h-5" />
+              {t('settings.cancel') || "Cancel"}
             </button>
             <button
-              type='submit'
-              className='bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600 text-white font-medium px-4 py-2 rounded'
+              type="submit"
+              className="flex items-center gap-2 px-5 py-2 rounded-md bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600 transition"
             >
-              {t('settings.save') || 'Save'}
+              <ArrowDownTrayIcon className="w-5 h-5" />
+              {t('settings.save') || "Save"}
             </button>
-          </div>
+          </>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setEditMode(true)}
+            className="flex items-center gap-2 px-5 py-2 rounded-md bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600 transition"
+          >
+            <PencilIcon className="w-5 h-5" />
+            {t('settings.editProfile') || "Edit Profile"}
+          </button>
         )}
       </div>
     </form>
   );
 };
+
+// Reusable InputField component with floating labels
+interface InputFieldProps {
+  id: string;
+  label: string;
+  type?: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onBlur: (e: React.FocusEvent<HTMLInputElement>) => void;
+  disabled: boolean;
+  required?: boolean;
+  colSpan?: number;
+}
+
+const InputField: React.FC<InputFieldProps> = ({
+  id,
+  label,
+  type = "text",
+  value,
+  onChange,
+  onBlur,
+  disabled,
+  required = false,
+  colSpan = 1,
+}) => (
+  <div className={`relative z-0 w-full mb-6 group ${colSpan > 1 ? `md:col-span-${colSpan}` : ""}`}>
+    <input
+      type={type}
+      name={id}
+      id={`floating_${id}`}
+      value={value}
+      onChange={onChange}
+      onBlur={onBlur}
+      disabled={disabled}
+      placeholder=" "
+      required={required}
+      className={`block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2
+        border-gray-300 appearance-none dark:text-white dark:border-gray-600
+        dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer
+        ${disabled ? "opacity-70 cursor-not-allowed" : "cursor-text"}`}
+    />
+    <label
+      htmlFor={`floating_${id}`}
+      className={`peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400
+        duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0]
+        ${value ? "peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0" : ""}
+        peer-focus:scale-75 peer-focus:-translate-y-6`}
+    >
+      {label}
+    </label>
+  </div>
+);
 
 export default ProfileForm;

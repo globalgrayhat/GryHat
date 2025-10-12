@@ -1,10 +1,11 @@
 export interface InstructorInterface {
   firstName: string;
   lastName: string;
-  profilePic: {
+  profilePic?: {
     name: string;
     url: string;
   };
+  
   email: string;
   mobile: number;
   qualifications: string;

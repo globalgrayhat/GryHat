@@ -10,7 +10,7 @@ export const instructorRepoMongoDb = () => {
   };
   const getInstructorByEmail = async (email: string) => {
     const instructor: SavedInstructorInterface | null =
-      await Instructor.findOne({ email }).select('-password').lean();
+      await Instructor.findOne({ email }).select('+password').lean();
     return instructor;
   };
   const getInstructorRequests = async () => {

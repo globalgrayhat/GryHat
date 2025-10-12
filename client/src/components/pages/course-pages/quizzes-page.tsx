@@ -5,19 +5,18 @@ import {
   Question,
   Option,
 } from "../../../api/types/apiResponses/api-response-quizzes";
-import { Link } from "react-router-dom";
-import { selectIsLoggedIn } from "../../../redux/reducers/authSlice";
 import { useSelector } from "react-redux";
+import { selectIsLoggedIn } from "../../../redux/reducers/authSlice";
 import { Card, CardBody, Button, Chip, Typography } from "@material-tailwind/react";
 
-/**
- * Quizzes — brand-aligned, responsive UI
- * - Clean card container + compact paddings for mobile
- * - Progress, counter chip, and polished option buttons
- */
+// Import student login modal
+import StudentLoginModal from "../../pages/students/StudentLoginModal";
 
 const Quizzes: React.FC<{ lessonId: string | undefined }> = ({ lessonId }) => {
   const isLoggedIn = useSelector(selectIsLoggedIn);
+
+  // State for student login modal
+  const [isLoginModalOpen, setLoginModalOpen] = useState(false);
 
   const [quizzes, setQuizzes] = useState<Question[] | null>(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);
@@ -26,7 +25,6 @@ const Quizzes: React.FC<{ lessonId: string | undefined }> = ({ lessonId }) => {
   const [answeredCorrectly, setAnsweredCorrectly] = useState<boolean | undefined>(undefined);
   const [score, setScore] = useState<number>(0);
 
-  // Load quizzes on lesson change
   useEffect(() => {
     const fetchQuizzes = async (id: string) => {
       try {
@@ -43,6 +41,7 @@ const Quizzes: React.FC<{ lessonId: string | undefined }> = ({ lessonId }) => {
         });
       }
     };
+
     if (lessonId) fetchQuizzes(lessonId);
   }, [lessonId]);
 
@@ -64,7 +63,6 @@ const Quizzes: React.FC<{ lessonId: string | undefined }> = ({ lessonId }) => {
       if (selected.isCorrect) setScore((s) => s + 1);
     }
 
-    // Delay to show feedback color, then move next
     setTimeout(() => {
       setSelectedOptionId(undefined);
       setCurrentQuestionIndex((idx) => idx + 1);
@@ -73,23 +71,41 @@ const Quizzes: React.FC<{ lessonId: string | undefined }> = ({ lessonId }) => {
     }, 800);
   };
 
-  // Gate when not logged in
+  // If user is not logged in: show login prompt
   if (!isLoggedIn) {
     return (
-      <Card shadow={false} className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-        <CardBody className="p-4 sm:p-6">
-          <div className="flex flex-col items-center text-center">
-            <Typography variant="h6" className="!m-0 text-gray-900 dark:text-white">
-              Please login to solve quizzes
-            </Typography>
-            <Link to="/login" className="mt-2 text-sm text-blue-600 hover:underline">Login</Link>
-          </div>
-        </CardBody>
-      </Card>
+      <>
+        <Card shadow={false} className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+          <CardBody className="p-4 sm:p-6">
+            <div className="flex flex-col items-center text-center">
+              <Typography variant="h6" className="!m-0 text-gray-900 dark:text-white">
+                Please login to solve quizzes
+              </Typography>
+              {/* Button to open login modal */}
+              <button
+                onClick={() => setLoginModalOpen(true)}
+                className="mt-2 text-sm text-blue-600 hover:underline"
+              >
+                Login
+              </button>
+            </div>
+          </CardBody>
+        </Card>
+
+        {/* Student Login Modal */}
+        <StudentLoginModal
+          isOpen={isLoginModalOpen}
+          onClose={() => setLoginModalOpen(false)}
+          onSwitchToRegister={() => {
+            setLoginModalOpen(false);
+            // Optional: implement if switching to register modal
+          }}
+        />
+      </>
     );
   }
 
-  // Finished
+  // Result after finishing
   if (total > 0 && currentQuestionIndex >= total) {
     return (
       <Card shadow={false} className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
@@ -102,7 +118,7 @@ const Quizzes: React.FC<{ lessonId: string | undefined }> = ({ lessonId }) => {
     );
   }
 
-  // Empty
+  // No quizzes
   if (!total) {
     return (
       <Card shadow={false} className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
@@ -115,7 +131,7 @@ const Quizzes: React.FC<{ lessonId: string | undefined }> = ({ lessonId }) => {
     );
   }
 
-  // In-progress
+  // Quiz in progress
   return (
     <Card shadow={false} className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
       <CardBody className="p-4 sm:p-6">
@@ -146,11 +162,11 @@ const Quizzes: React.FC<{ lessonId: string | undefined }> = ({ lessonId }) => {
           {currentQuestion?.question}
         </p>
 
-        {/* Options — grid responsive */}
+        {/* Options */}
         <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
           {currentQuestion?.options.map((option: Option) => {
             const isSelected = selectedOptionId === option._id;
-            // Decide color state
+
             let cls =
               "w-full rounded-lg border text-left px-3 py-2 sm:px-4 sm:py-3 text-sm transition ring-1 ring-black/5 dark:ring-white/10";
             if (isSelected && nextClicked) {
@@ -160,7 +176,8 @@ const Quizzes: React.FC<{ lessonId: string | undefined }> = ({ lessonId }) => {
             } else if (isSelected) {
               cls += " bg-blue-600 text-white border-blue-700";
             } else {
-              cls += " bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700/60 border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200";
+              cls +=
+                " bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700/60 border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200";
             }
 
             return (
@@ -173,7 +190,7 @@ const Quizzes: React.FC<{ lessonId: string | undefined }> = ({ lessonId }) => {
           })}
         </ul>
 
-        {/* Next */}
+        {/* Next Button */}
         <div className="mt-4">
           <Button
             onClick={handleNextQuestion}

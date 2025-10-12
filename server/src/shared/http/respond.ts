@@ -1,3 +1,4 @@
+import HttpStatusCodes from '../../constants/HttpStatusCodes';
 import { Response } from 'express';
 
 /**
@@ -6,20 +7,32 @@ import { Response } from 'express';
  * - status: 'success' | 'fail' | 'error'
  * - Keep controllers thin & consistent.
  */
-type Payload<T> = { status: 'success'|'fail'|'error'; message: string; data?: T|null };
+type Payload<T> = { 
+  status: 'success' | 'fail' | 'error' | 'info' | 'notification'; 
+  message: string; 
+  data?: T | null;
+};
 
-export const ok = <T>(res: Response, message: string, data?: T, code = 200): void => {
-  res.status(code).json({ status: 'success', message, data } as Payload<T>);
+export const ok = <T>(res: Response, message: string, data?: T, code = HttpStatusCodes.OK): void => {
+  res.status(code).json({ status: 'success', message, data: data ?? null } as Payload<T>);
+};
+
+export const info = <T>(res: Response, message: string, data?: T, code = HttpStatusCodes.OK): void => {
+  res.status(code).json({ status: 'info', message, data: data ?? null } as Payload<T>);
+};
+
+export const notification = <T>(res: Response, message: string, data?: T, code = HttpStatusCodes.OK): void => {
+  res.status(code).json({ status: 'notification', message, data: data ?? null } as Payload<T>);
 };
 
 export const created = <T>(res: Response, message: string, data?: T): void => {
-  ok(res, message, data, 201);
+  ok(res, message, data, HttpStatusCodes.CREATED);
 };
 
-export const fail = (res: Response, message: string, code = 400): void => {
+export const fail = (res: Response, message: string, code = HttpStatusCodes.BAD_REQUEST): void => {
   res.status(code).json({ status: 'fail', message, data: null } as Payload<null>);
 };
 
-export const err = (res: Response, message: string, code = 500): void => {
+export const err = (res: Response, message: string, code = HttpStatusCodes.INTERNAL_SERVER_ERROR): void => {
   res.status(code).json({ status: 'error', message, data: null } as Payload<null>);
 };

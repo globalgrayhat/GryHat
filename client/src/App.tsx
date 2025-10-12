@@ -3,77 +3,67 @@ import { Outlet } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import "react-toastify/dist/ReactToastify.css";
 
+// Common Components
 import StudentHeader from "./components/partials/student-header";
 import StudentFooter from "./components/partials/student-footer";
 import YouAreOffline from "./components/common/you-are-offline";
 import SessionExpired from "./components/common/session-expired-modal";
 
-import InstructorSideNav from "./components/pages/instructors/instructor-side-nav";
-import InstructorHeader from "./components/pages/instructors/instructor-header";
-import InstructorLoginPage from "./components/pages/instructors/instructor-login-page";
+// Instructor Components
+import InstructorLoginPage from "./components/pages/instructors/instructor-login-modal";
+import InstructorLayout from "./components/pages/instructors/InstructorLayout"; // ✅ 1. استيراد المكون الجديد
 
+// Admin Components
 import AdminLoginPage from "./components/pages/admin/admin-login-page";
 import { AdminSideNav } from "./components/pages/admin/admin-side-nav";
 
+// Redux
 import { selectIsLoggedIn, selectUserType } from "./redux/reducers/authSlice";
 import { selectStudent, fetchStudentData } from "./redux/reducers/studentSlice";
 import { selectInstructor, setDetails } from "./redux/reducers/instructorSlice";
 import { selectIsFooterVisible } from "./redux/reducers/helperSlice";
 
+// API & Hooks
 import { getInstructorDetails } from "./api/endpoints/instructor";
 import useIsOnline from "./hooks/useOnline";
 import { toast } from "react-toastify";
 import { useLanguage } from "./contexts/LanguageContext";
 
-/**
- * Layouts for Student / Instructor / Admin apps
- * - Theme-aware backgrounds (light/dark)
- * - i18n-aware direction (rtl/ltr)
- * - Correct effect dependencies so data is fetched when auth state changes
- * - Avoid calling instructor API when not logged in as instructor
- */
-
-// Typed dispatch if you use thunks; adjust to your AppDispatch type if available
-// const dispatch = useDispatch<AppDispatch>();
-// For generic safety:
 type AnyDispatch = ReturnType<typeof useDispatch>;
 
+// =============================
+// STUDENT LAYOUT
+// =============================
 export const Student: React.FC = () => {
+  // ... (No changes in this section)
   const isOnline = useIsOnline();
   const isLoggedIn = useSelector(selectIsLoggedIn);
   const userType = useSelector(selectUserType);
   const footerVisible = useSelector(selectIsFooterVisible);
   const student = useSelector(selectStudent);
-
   const dispatch: AnyDispatch = useDispatch();
   const { t, lang } = useLanguage() as { t: (k: string) => string; lang?: "ar" | "en" };
   const dir = lang === "ar" ? "rtl" : "ltr";
-
   const [showSessionExpired, setShowSessionExpired] = useState(false);
 
   const handleCloseSessionExpired = () => setShowSessionExpired(false);
 
-  // Listen for "sessionExpired" events from interceptor
   useEffect(() => {
     const handleSessionExpired = () => setShowSessionExpired(true);
     window.addEventListener("sessionExpired", handleSessionExpired);
     return () => window.removeEventListener("sessionExpired", handleSessionExpired);
   }, []);
 
-  // Fetch student data when user logs in as student (and when auth state changes)
   useEffect(() => {
     if (isLoggedIn && userType === "student") {
       dispatch(fetchStudentData());
     }
   }, [dispatch, isLoggedIn, userType]);
 
-  // Header wrapper classes (theme-aware)
-  const headerWrapper =
-    "bg-gray-100 dark:bg-gray-900 opacity-100 transition-opacity duration-300";
+  const headerWrapper = "bg-gray-100 dark:bg-gray-900 opacity-100 transition-opacity duration-300";
 
   if (!isOnline) return <YouAreOffline />;
 
-  // Blocked student
   if (student?.studentDetails?.isBlocked) {
     return (
       <div
@@ -84,8 +74,7 @@ export const Student: React.FC = () => {
           {t("auth.blockedTitle") || "Account Blocked"}
         </h1>
         <p className="mt-2 max-w-md text-center text-gray-700 dark:text-gray-300">
-          {t("auth.blockedMessage") ||
-            "Your account has been blocked and you cannot access the platform."}
+          {t("auth.blockedMessage") || "Your account has been blocked and you cannot access the platform."}
         </p>
       </div>
     );
@@ -93,26 +82,21 @@ export const Student: React.FC = () => {
 
   return (
     <>
-      {showSessionExpired && (
-        <SessionExpired show={showSessionExpired} onClose={handleCloseSessionExpired} />
-      )}
-
-      <div
-        dir={dir}
-        className="min-h-screen bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100 font-sans"
-      >
+      {showSessionExpired && <SessionExpired show={showSessionExpired} onClose={handleCloseSessionExpired} />}
+      <div dir={dir} className="min-h-screen bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100 font-sans">
         <div className={headerWrapper}>
           <StudentHeader />
         </div>
-
         <Outlet />
-
         {footerVisible && <StudentFooter />}
       </div>
     </>
   );
 };
 
+// =============================
+// INSTRUCTOR LAYOUT (UPDATED)
+// =============================
 export const Instructor: React.FC = () => {
   const isOnline = useIsOnline();
   const isLoggedIn = useSelector(selectIsLoggedIn);
@@ -122,14 +106,13 @@ export const Instructor: React.FC = () => {
   const { t, lang } = useLanguage() as { t: (k: string) => string; lang?: "ar" | "en" };
   const dir = lang === "ar" ? "rtl" : "ltr";
 
-  // Fetch instructor details only when logged in as instructor
+  // Fetch instructor details (this logic remains the same)
   useEffect(() => {
     const load = async () => {
       try {
         const response = await getInstructorDetails();
         dispatch(setDetails({ details: response.data }));
       } catch {
-        // Avoid noisy errors on guest/other roles
         if (isLoggedIn && userType === "instructor") {
           toast.error("Something went wrong", { position: "bottom-right" });
         }
@@ -142,16 +125,20 @@ export const Instructor: React.FC = () => {
 
   if (!isOnline) return <YouAreOffline />;
 
-  // Not logged in as instructor
+  // Case 1: Not logged in as an instructor, show login page
   if (!(isLoggedIn && userType === "instructor")) {
     return (
       <div dir={dir} className="bg-gray-100 dark:bg-gray-900 min-h-screen">
-        <InstructorLoginPage />
+        <InstructorLoginPage isOpen={false} onClose={function (): void {
+          throw new Error("Function not implemented.");
+        } } onSwitchToRegister={function (): void {
+          throw new Error("Function not implemented.");
+        } } />
       </div>
     );
   }
 
-  // Blocked instructor
+  // Case 2: Instructor is blocked, show blocked message
   if (instructor?.instructorDetails?.isBlocked) {
     return (
       <div
@@ -162,45 +149,33 @@ export const Instructor: React.FC = () => {
           {t("auth.blockedTitle") || "Account Blocked"}
         </h1>
         <p className="mt-2 max-w-md text-center text-gray-700 dark:text-gray-300">
-          {t("auth.blockedMessage") ||
-            "Your account has been blocked and you cannot use the platform."}
+          {t("auth.blockedMessage") || "Your account has been blocked and you cannot use the platform."}
         </p>
       </div>
     );
   }
 
+  // ✅ 2. إذا نجحت كل الشروط، قم بعرض التصميم المتجاوب الجديد
+  // The <Outlet /> is now rendered inside the InstructorLayout component.
   return (
-    <div
-      dir={dir}
-      className="fixed inset-0 flex flex-col bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100"
-    >
-      {/* Header */}
-      <InstructorHeader />
-
-      {/* Body */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Side nav */}
-        <aside className="w-64 shrink-0 overflow-y-auto border-r border-gray-200 dark:border-gray-800">
-          <InstructorSideNav />
-        </aside>
-
-        {/* Main content area */}
-        <main className="flex-1 overflow-y-auto p-4">
-          <Outlet />
-        </main>
-      </div>
+    <div dir={dir}>
+      <InstructorLayout />
     </div>
   );
 };
 
+
+// =============================
+// ADMIN LAYOUT
+// =============================
 export const Admin: React.FC = () => {
+  // ... (No changes in this section)
   const isOnline = useIsOnline();
   const isLoggedIn = useSelector(selectIsLoggedIn);
   const userType = useSelector(selectUserType);
 
   if (!isOnline) return <YouAreOffline />;
 
-  // Logged in admin
   if (isLoggedIn && userType === "admin") {
     return (
       <div className="flex min-h-screen items-start justify-center bg-gray-100 text-gray-900 dark:bg-gray-900 dark:text-gray-100 font-sans">
@@ -214,7 +189,6 @@ export const Admin: React.FC = () => {
     );
   }
 
-  // Guest / non-admin user
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
       <AdminLoginPage />

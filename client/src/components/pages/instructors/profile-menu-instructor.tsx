@@ -1,125 +1,96 @@
-import React,{ useState} from "react";
-import {
-  Button,
-  Menu,    
-  MenuHandler,
-  MenuList,
-  Avatar,       
-  MenuItem,
-  Typography
-} from "@material-tailwind/react";
+import React from "react";
+import { Menu, Transition } from "@headlessui/react";
+import { Fragment } from "react";
 import {
   ChevronDownIcon,
   InboxArrowDownIcon,
   LifebuoyIcon,
   PowerIcon,
+  UserCircleIcon,
 } from "@heroicons/react/24/outline";
-import {UserCircleIcon} from "@heroicons/react/24/outline";
-import { useSelector,useDispatch } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { selectInstructor } from "../../../redux/reducers/instructorSlice";
 import { clearToken } from "../../../redux/reducers/authSlice";
 import { clearDetails } from "../../../redux/reducers/instructorSlice";
 import { USER_AVATAR } from "../../../constants/common";
 import { useNavigate } from "react-router-dom";
-
+import { getFullUrl } from "../../../utils/helpers";
 
 const profileMenuItems = [
-  {
-    label: "My Profile",
-    icon: UserCircleIcon,
-  },
-  {
-    label: "Inbox",
-    icon: InboxArrowDownIcon,
-  },   
-  {
-    label: "Help",
-    icon: LifebuoyIcon,
-  },
-  {
-    label: "Sign Out",
-    icon: PowerIcon,
-  },
+  { label: "My Profile", icon: UserCircleIcon, action: "profile" },
+  { label: "Inbox", icon: InboxArrowDownIcon, action: "inbox" },
+  { label: "Help", icon: LifebuoyIcon, action: "help" },
+  { label: "Sign Out", icon: PowerIcon, action: "signout" },
 ];
 
 export function ProfileMenu() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const instructor = useSelector(selectInstructor)
-  const navigate = useNavigate()
-  const dispatch = useDispatch()
+  const instructor = useSelector(selectInstructor);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const handleAction = (action: string) => {
-    switch (action) {
-      case "My Profile":
-        navigate("/instructors/view-profile");
-        break;
-      case "Settings":
-        break;
-      case "Inbox":
-        break;
-      case "Help":  
-        break;
-      case "Sign Out":
-        dispatch(clearToken());
-        dispatch(clearDetails())
-        navigate("/instructors/login");
-        break;
-      default:
-        break;
+    if (action === "signout") {
+      dispatch(clearToken());
+      dispatch(clearDetails());
+      navigate("/");
     }
+    // Add other actions if needed
   };
 
   return (
-    <Menu open={isMenuOpen} handler={setIsMenuOpen} placement="bottom-end">
-      <MenuHandler>
-        <Button
-          variant="text"
-          color="blue-gray"
-          className="flex items-center gap-1 rounded-full py-0.5 pr-2 pl-0.5 lg:ml-auto"
-        >
-          <Avatar
-            variant="circular"
-            size="sm"
-            alt="candice wu"
-            className="border border-blue-500 p-0.5"
-            src={instructor.instructorDetails?.profilePic?.url||USER_AVATAR}
+    <Menu as="div" className="relative inline-block text-left">
+      <div>
+        <Menu.Button className="flex items-center gap-1 rounded-full p-1 text-sm font-medium text-gray-700 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all">
+          <img
+            className="h-8 w-8 rounded-full border-2 border-indigo-500 object-cover"
+            src={getFullUrl(instructor.instructorDetails?.profilePic?.url) || USER_AVATAR}
+            alt="Instructor avatar"
           />
-          <ChevronDownIcon
-            strokeWidth={2.5}
-            className={`h-3 w-3 transition-transform ${
-              isMenuOpen ? "rotate-180" : ""
-            }`}
-          />
-        </Button>
-      </MenuHandler>
-      <MenuList className="p-1">{profileMenuItems?.map(({ label, icon }, key) => {
-          const isLastItem = key === profileMenuItems.length - 1;
-           return (
-             <MenuItem
-               key={label}
-              onClick={()=>handleAction(label)}
-               className={`flex items-center gap-2 rounded ${
-                 isLastItem
-                   ? "hover:bg-red-500/10 focus:bg-red-500/10 active:bg-red-500/10"
-                   : ""
-               }`}
-             >
-               {React.createElement(icon, {
-                 className: `h-4 w-4 ${isLastItem ? "text-red-500" : ""}`,
-                 strokeWidth: 2,
-               })}
-               <Typography
-                 as="span"
-                 variant="small"
-                 className="font-normal"
-                 color={isLastItem ? "red" : "inherit"}
-               >
-                 {label}
-               </Typography>
-             </MenuItem>
-           );
-        })}
-      </MenuList>
+          <ChevronDownIcon className="h-5 w-5 text-gray-500" aria-hidden="true" />
+        </Menu.Button>
+      </div>
+
+      <Transition
+        as={Fragment}
+        enter="transition ease-out duration-150"
+        enterFrom="transform opacity-0 scale-95"
+        enterTo="transform opacity-100 scale-100"
+        leave="transition ease-in duration-75"
+        leaveFrom="transform opacity-100 scale-100"
+        leaveTo="transform opacity-0 scale-95"
+      >
+        <Menu.Items className="absolute right-0 mt-2 w-56 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+          <div className="px-1 py-1">
+            {profileMenuItems.map(({ label, icon: Icon, action }) => {
+              const isLastItem = action === "signout";
+              return (
+                <Menu.Item key={label}>
+                  {({ active }) => (
+                    <button
+                      onClick={() => handleAction(action)}
+                      className={`${
+                        active
+                          ? 'bg-indigo-600 text-white'
+                          : isLastItem
+                          ? 'text-red-600 hover:bg-red-50'
+                          : 'text-gray-900 hover:bg-gray-100'
+                      } group flex w-full items-center rounded-md px-2 py-2 text-sm transition-all`}
+                    >
+                      <Icon
+                        className={`mr-2 h-5 w-5 ${
+                          isLastItem && !active ? 'text-red-500' : ''
+                        }`}
+                        aria-hidden="true"
+                      />
+                      {label}
+                    </button>
+                  )}
+                </Menu.Item>
+              );
+            })}
+          </div>
+        </Menu.Items>
+      </Transition>
     </Menu>
   );
 }

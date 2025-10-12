@@ -1,6 +1,12 @@
-import { Fragment } from "react";
-import { Button, Dialog, DialogHeader, DialogBody, DialogFooter } from "@material-tailwind/react";
-import { useNavigate } from "react-router-dom";
+import { Fragment, useState } from "react";
+import {
+  Button,
+  Dialog,
+  DialogHeader,
+  DialogBody,
+  DialogFooter,
+} from "@material-tailwind/react";
+import StudentLoginModal from "../pages/students/StudentLoginModal";
 
 interface Props {
   confirm: boolean;
@@ -8,24 +14,27 @@ interface Props {
 }
 
 const LoginConfirmation: React.FC<Props> = ({ confirm, setConfirm }) => {
-  const navigate = useNavigate();
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
 
-  const handleOpen = () => setConfirm(false);
+  // Close confirmation dialog
+  const handleCloseConfirm = () => setConfirm(false);
+
+  // Show login modal
   const handleConfirm = () => {
-    setConfirm(false);
-    // Check if the user is logged in here (you can implement your own logic)
-    navigate("/login")
+    setConfirm(false);         // Close confirmation dialog
+    setIsLoginOpen(true);      // Open login modal
   };
 
   return (
     <Fragment>
-      <Dialog open={confirm} size={"sm"} handler={handleOpen}>
+      {/* Confirmation Dialog */}
+      <Dialog open={confirm} size="sm" handler={handleCloseConfirm}>
         <DialogHeader>Login Confirmation</DialogHeader>
         <DialogBody divider>
           To purchase this course, you need to be logged in. Please log in to continue.
         </DialogBody>
         <DialogFooter>
-          <Button variant="text" color="red" onClick={handleOpen} className="mr-1">
+          <Button variant="text" color="red" onClick={handleCloseConfirm} className="mr-1">
             <span>Cancel</span>
           </Button>
           <Button variant="gradient" color="blue" onClick={handleConfirm}>
@@ -33,6 +42,16 @@ const LoginConfirmation: React.FC<Props> = ({ confirm, setConfirm }) => {
           </Button>
         </DialogFooter>
       </Dialog>
+
+      {/* Student Login Modal */}
+      <StudentLoginModal
+        isOpen={isLoginOpen}
+        onClose={() => setIsLoginOpen(false)}
+        onSwitchToRegister={() => {
+          setIsLoginOpen(false);
+          // Optionally open registration modal here if needed
+        }}
+      />
     </Fragment>
   );
 };

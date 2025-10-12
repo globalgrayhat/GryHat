@@ -25,7 +25,8 @@ import { AdminRepositoryMongoDb } from '@src/frameworks/database/mongodb/reposit
 import { RefreshTokenDbInterface } from '@src/app/repositories/refreshTokenDBRepository';
 import { RefreshTokenRepositoryMongoDb } from '@src/frameworks/database/mongodb/repositories/refreshTokenRepoMongoDb';
 
-import { ok } from '../../shared/http/respond';
+import { fail, info, ok } from '../../shared/http/respond';
+import HttpStatusCodes from '../../constants/HttpStatusCodes';
 
 /**
  * Auth controller
@@ -98,7 +99,7 @@ const authController = (
     // Files (multer memory storage)
     const files = (req.files as { [fieldname: string]: Express.Multer.File[] }) || {};
     const instructor: InstructorInterface = req.body;
-  
+  try {
     // Delegate everything (including uploads) to the use-case (DRY)
     await instructorRegister(instructor, files, dbRepositoryInstructor, authService);
   
@@ -107,18 +108,37 @@ const authController = (
       'Your registration is pending verification by the administrators. You will receive an email once your registration is approved',
       null
     );
+  } catch (error: any) {
+    if (error.message === 'Instructor with the same email already exists..!') {
+        // 
+        info(res, error.message, null, HttpStatusCodes.CONFLICT);
+        return;
+      }
+      // For other errors, use fail
+      fail(res, error.message);
+    }
   });
 
   const loginInstructor = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const { email, password } = req.body as { email: string; password: string };
-    const { accessToken, refreshToken } = await instructorLogin(
-      email,
-      password,
-      dbRepositoryInstructor,
-      dbRepositoryRefreshToken,
-      authService
-    );
-    ok(res, 'Instructor logged in successfully', { accessToken, refreshToken });
+    try {
+      const { accessToken, refreshToken } = await instructorLogin(
+        email,
+        password,
+        dbRepositoryInstructor,
+        dbRepositoryRefreshToken,
+        authService
+      );
+      ok(res, 'Instructor logged in successfully', { accessToken, refreshToken });
+    } catch (error: any) {
+      if (error.message === 'Your details is under verification please try again later') {
+        // Use info status for verification pending
+        info(res, error.message, null, HttpStatusCodes.ACCEPTED);
+        return;
+      }
+      // For other errors, use fail
+      fail(res, error.message);
+    }
   });
 
   /** ----------------------- ADMIN ----------------------- */

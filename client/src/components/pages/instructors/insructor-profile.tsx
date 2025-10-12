@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from "react";
 import ProfileForm from "./profile-form";
 import ChangePasswordForm from "./password-form";
-// Note: instructor profile fetch is handled within the ProfileForm itself
-import { FiEdit } from "react-icons/fi";
-import { useLanguage } from '../../../contexts/LanguageContext';
+import { PencilIcon, LockClosedIcon } from "@heroicons/react/24/outline"; // Importing icons from Heroicons
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 type Props = {};
 
@@ -12,55 +11,62 @@ const InstructorProfile: React.FC = (props: Props) => {
   const { t } = useLanguage();
 
   useEffect(() => {
-    // No need to fetch student data here; instructor details are loaded in ProfileForm
+    // Data fetching logic can be added here if necessary
   }, []);
 
   const handleEditClick = () => {
-    setEditMode(true);  
+    setEditMode(true); // Toggle edit mode for forms
   };
 
   return (
-    <div className='w-full flex justify-center items-center'>
-      <div className='w-11/12'>
-        <div>
-          <div className='pt-5 pb-6 w-full'>
-            <h2 className='text-3xl font-semibold text-gray-800 dark:text-gray-100'>
-              {t('settings.editProfileInfo') || 'Edit profile info'}
-            </h2>
-          </div>  
-        </div>
-        <div className='flex flex-col md:flex-row gap-x-10 h-full pb-20'>
-          <div className='border md:w-7/12 w-full h-full rounded-md bg-white dark:bg-[#3b4252] border-gray-200 dark:border-gray-600 shadow-sm'>
-            <div className='flex justify-between'>
-              <h3 className='pl-5 pt-5 text-lg font-semibold text-gray-800 dark:text-gray-100'>
-                {t('settings.accountInfo') || 'Account Info'}
-              </h3>
-              <div>
-                <button className='p-5' onClick={handleEditClick}>
-                  <FiEdit className='text-gray-600 dark:text-gray-300 text-lg' />
+    <div className="w-full flex justify-center bg-gray-50 dark:bg-gray-800 py-8">
+      <div className="max-w-7xl w-full px-6 sm:px-8 lg:px-10">
+        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl p-6">
+          <h2 className="text-3xl font-semibold text-gray-800 dark:text-gray-100">
+            {t("settings.editProfileInfo") || "Edit Profile Information"}
+          </h2>
+
+          {/* Account Info Section */}
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Account Info */}
+            <div className="bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 shadow-sm">
+              <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-600 p-6">
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
+                  {t("settings.accountInfo") || "Account Info"}
+                </h3>
+                <button
+                  onClick={handleEditClick}
+                  className="text-indigo-600 hover:text-indigo-800"
+                >
+                  <PencilIcon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
                 </button>
-              </div>  
+              </div>
+              <div className="p-6">
+                <ProfileForm editMode={editMode} setEditMode={setEditMode} />
+              </div>
             </div>
-            <div className='p-6'>
-              <ProfileForm editMode={editMode} setEditMode={setEditMode} />
-            </div>  
-          </div>   
-          <div className='border my-7 md:mt-0 pt-5 pb-10 md:w-5/12 w-full h-full rounded-md bg-white dark:bg-[#3b4252] border-gray-200 dark:border-gray-600 shadow-sm'>
-            <div className='flex justify-between'>
-              <h3 className='pl-5 text-lg font-semibold text-gray-800 dark:text-gray-100'>
-                {t('settings.changePassword') || 'Change password'}
-              </h3>
-              <button className='pr-3' onClick={handleEditClick}>
-                <FiEdit className='text-gray-600 dark:text-gray-300 text-lg' />
-              </button>
-            </div>
-            <div className='p-6'>
-              <ChangePasswordForm />
+
+            {/* Change Password Section */}
+            <div className="bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 shadow-sm">
+              <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-600 p-6">
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
+                  {t("settings.changePassword") || "Change Password"}
+                </h3>
+                <button
+                  onClick={handleEditClick}
+                  className="text-indigo-600 hover:text-indigo-800"
+                >
+                  <LockClosedIcon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                </button>
+              </div>
+              <div className="p-6">
+                <ChangePasswordForm />
+              </div>
             </div>
           </div>
         </div>
-      </div>    
-    </div>        
+      </div>
+    </div>
   );
 };
 

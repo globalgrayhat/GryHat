@@ -100,16 +100,16 @@ const LazyStudentHomePage = lazy(
 );
 
 const LazyStudentLogin = lazy(
-  () => import("./components/pages/students/student-login-page")
+  () => import("./components/pages/students/StudentLoginModal")
 );
 const LazyStudentRegister = lazy(
-  () => import("./components/pages/students/student-registration-page")
+  () => import("./components/pages/students/StudentRegisterModal")
 );
 const LazyInstructorLogin = lazy(
-  () => import("./components/pages/instructors/instructor-login-page")
+  () => import("./components/pages/instructors/instructor-login-modal")
 );
 const LazyInstructorRegister = lazy(
-  () => import("./components/pages/instructors/instructor-register-page")
+  () => import("./components/pages/instructors/instructor-register-modal")
 );
 const LazyAdminHome = lazy(
   () => import("./components/pages/admin/admin-home-page")
@@ -257,7 +257,11 @@ const AppRouter = createBrowserRouter([
     path: "/login",
     element: (
       <Suspense fallback={<div>Loading...</div>}>
-        <LazyStudentLogin />
+        <LazyStudentLogin isOpen={false} onClose={function (): void {
+          throw new Error("Function not implemented.");
+        } } onSwitchToRegister={function (): void {
+          throw new Error("Function not implemented.");
+        } } />
       </Suspense>
     ),
   },
@@ -265,7 +269,11 @@ const AppRouter = createBrowserRouter([
     path: "/register",
     element: (
       <Suspense fallback={<div>Loading...</div>}>
-        <LazyStudentRegister />
+        <LazyStudentRegister isOpen={false} onClose={function (): void {
+          throw new Error("Function not implemented.");
+        } } onSwitchToLogin={function (): void {
+          throw new Error("Function not implemented.");
+        } } />
       </Suspense>
     ),
   },
@@ -273,7 +281,11 @@ const AppRouter = createBrowserRouter([
     path: "/instructors/login",
     element: (
       <Suspense fallback={<div>Loading...</div>}>
-        <LazyInstructorLogin />
+        <LazyInstructorLogin isOpen={false} onClose={function (): void {
+          throw new Error("Function not implemented.");
+        } } onSwitchToRegister={function (): void {
+          throw new Error("Function not implemented.");
+        } } />
       </Suspense>
     ),
   },
@@ -281,7 +293,11 @@ const AppRouter = createBrowserRouter([
     path: "/instructors/register",
     element: (
       <Suspense fallback={<div>Loading...</div>}>
-        <LazyInstructorRegister />
+        <LazyInstructorRegister isOpen={false} onClose={function (): void {
+          throw new Error("Function not implemented.");
+        } } onSwitchToLogin={function (): void {
+          throw new Error("Function not implemented.");
+        } } />
       </Suspense>
     ),
   },

@@ -511,6 +511,20 @@ const getApprovedCoursesByInstructor = asyncHandler(
     }
   );
 
+ const getCourseSelf = asyncHandler(
+    async (req: CustomRequest, res: Response): Promise<void> => {
+        const userId = req.user?.Id ?? '';
+        if (!userId) {
+          return fail(res, 'Instructor ID not found.', HttpStatusCodes.NOT_FOUND);
+        }
+      const course = await getCourseByInstructorU(userId, dbRepositoryCourse);
+      if (!course) {
+        return fail(res, 'No course found for this instructor.', HttpStatusCodes.NOT_FOUND);
+      }
+      ok(res, 'Course successfully retrieved for the instructor.', course);
+    }
+  );
+
   const getLessonsByCoursePublic = asyncHandler(
     async (req: CustomRequest, res: Response): Promise<void> => {
       const courseId = req.params.courseId;
@@ -571,7 +585,7 @@ const getApprovedCoursesByInstructor = asyncHandler(
       const userId = req.user?.Id;
       const discussion: AddDiscussionInterface = req.body;
       if (!userId) {
-          throw new AppError('Unauthorized: User ID not found.', HttpStatusCodes.UNAUTHORIZED);
+        return fail(res, 'Unauthorized: User ID not found.', HttpStatusCodes.UNAUTHORIZED);
       }
       await addDiscussionU(
         userId,
@@ -670,6 +684,7 @@ const getApprovedCoursesByInstructor = asyncHandler(
     getRejectedCourses,
     getApprovedCoursesByInstructor,
     getRejectedCoursesByInstructor,
+    getCourseSelf,
     
     // Lessons
     addLesson,

@@ -155,6 +155,12 @@ export const instructorLogin = async (
       HttpStatusCodes.UNAUTHORIZED
     );
   }
+  if (!instructor.password) {
+    throw new AppError(
+      'Password is not set for this instructor',
+      HttpStatusCodes.UNAUTHORIZED
+    );
+  }
   const isPasswordCorrect = await authService.comparePassword(
     password,
     instructor.password

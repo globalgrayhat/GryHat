@@ -25,25 +25,19 @@ import { getIndividualCourse } from "../../../api/endpoints/course/course";
 import { getLessonsByCourse } from "../../../api/endpoints/course/lesson";
 
 import { CourseInterface } from "../../../types/course";
-import { formatToINR, formatToUSD, getFullUrl } from "../../../utils/helpers";
+import { formatToINR, getFullUrl } from "../../../utils/helpers";
 
 import useApiData from "../../../hooks/useApiCall";
 import { setCourse } from "../../../redux/reducers/courseSlice";
 import { selectStudentId } from "../../../redux/reducers/studentSlice";
 import { selectIsLoggedIn } from "../../../redux/reducers/authSlice";
 
-/* =========================
-   Helper utilities (pure, tiny)
-   ========================= */
-
-// Clamp numeric range
-const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n));
-
-// Basic file type checks
+/** Helpers */
+const clamp = (n: number, min: number, max: number) =>
+  Math.max(min, Math.min(max, n));
 const isPdfExt = (url?: string) => !!url && /\.pdf(\?|$)/i.test(url);
-const isArchiveExt = (url?: string) => !!url && /\.(zip|rar|7z|tar|gz|bz2)$/i.test(url);
-
-// Extract filename from URL for downloads
+const isArchiveExt = (url?: string) =>
+  !!url && /\.(zip|rar|7z|tar|gz|bz2)$/i.test(url);
 const filenameFromUrl = (url?: string) => {
   if (!url) return "file";
   try {
@@ -55,8 +49,6 @@ const filenameFromUrl = (url?: string) => {
     return parts[parts.length - 1] || "file";
   }
 };
-
-// Bytes formatting for modal UX
 const formatBytes = (bytes?: number | null) => {
   if (!bytes || bytes <= 0) return "";
   const k = 1024;
@@ -65,21 +57,36 @@ const formatBytes = (bytes?: number | null) => {
   return `${(bytes / Math.pow(k, i)).toFixed(1)} ${sizes[i]}`;
 };
 
-// Simple rating stars (12px)
+/** Tolerant shape */
+type CourseViewData = CourseInterface & {
+  instructorId?: any;
+  category?: any;
+  thumbnail?: { url?: string };
+};
+
 const Stars: React.FC<{ rating?: number }> = ({ rating }) => {
   const r = Math.round(clamp(rating ?? 0, 0, 5));
   return (
     <div className="flex items-center gap-0.5 text-[11px] sm:text-[12px]">
       {Array.from({ length: 5 }).map((_, i) => (
-        <span key={i} className={i < r ? "text-amber-500" : "text-gray-300 dark:text-gray-500"}>★</span>
+        <span
+          key={i}
+          className={i < r ? "text-amber-500" : "text-gray-300 dark:text-gray-500"}
+        >
+          ★
+        </span>
       ))}
-      <span className="ml-1 text-gray-700 dark:text-gray-200">{(rating ?? 0).toFixed(1)}</span>
+      <span className="ml-1 text-gray-700 dark:text-gray-200">
+        {(rating ?? 0).toFixed(1)}
+      </span>
     </div>
   );
 };
 
-// Instructor chip (name + avatar)
-const InstructorPin: React.FC<{ name?: string; avatar?: string }> = ({ name, avatar }) => {
+const InstructorPin: React.FC<{ name?: string; avatar?: string }> = ({
+  name,
+  avatar,
+}) => {
   if (!name && !avatar) return null;
   return (
     <div className="pointer-events-none absolute top-2 right-2 flex items-center gap-1">
@@ -108,19 +115,6 @@ const InstructorPin: React.FC<{ name?: string; avatar?: string }> = ({ name, ava
   );
 };
 
-/* =========================
-   Types (tolerant to API variability)
-   ========================= */
-
-// Backend sometimes returns objects for instructor/category/thumbnail.
-// We keep CourseInterface for app contracts but tolerate raw object shapes via "any".
-type CourseViewData = CourseInterface & {
-  instructorId?: any;
-  category?: any;
-  thumbnail?: { url?: string };
-  videoUrl?: any;
-};
-
 const ViewCourseStudent: React.FC = () => {
   const { courseId } = useParams();
   const location = useLocation();
@@ -129,35 +123,36 @@ const ViewCourseStudent: React.FC = () => {
   const studentId = useSelector(selectStudentId);
   const isLoggedIn = useSelector(selectIsLoggedIn);
 
-  // UI state
   const [expandedIndex, setExpandedIndex] = useState<number | null>(0);
   const [openPaymentConfirmation, setOpenPaymentConfirmation] = useState(false);
   const [loginConfirmation, setLoginConfirmation] = useState(false);
-  const [successToastShown, setSuccessToastShown] = useState(false);
 
-  // PDF lightbox state
+  // PDF lightbox viewer states
   const [pdfOpen, setPdfOpen] = useState(false);
   const [pdfPage, setPdfPage] = useState(1);
   const zoomLevels = ["page-width", "100", "125", "150"] as const;
   const [zoomIndex, setZoomIndex] = useState(0);
-  const [viewerUrl, setViewerUrl] = useState<string | null>(null); // server URL
-  const [pdfSrc, setPdfSrc] = useState<string | null>(null);        // blob URL
+  const [viewerUrl, setViewerUrl] = useState<string | null>(null); // raw server URL
+  const [pdfSrc, setPdfSrc] = useState<string | null>(null); // object URL (blob)
   const [pdfLoading, setPdfLoading] = useState(false);
   const [pdfError, setPdfError] = useState<string | null>(null);
 
-  // Non-PDF download confirm
+  // Download confirm (non-PDF)
   const [downloadOpen, setDownloadOpen] = useState(false);
   const [downloadTargetUrl, setDownloadTargetUrl] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
   const [downloadSize, setDownloadSize] = useState<number | null>(null);
 
-  // API calls
+  const [successToastShown, setSuccessToastShown] = useState(false);
+
   const fetchCourse = async (id: string): Promise<CourseInterface> => {
     try {
       const course = await getIndividualCourse(id);
       return course?.data?.data as CourseInterface;
     } catch (error: any) {
-      toast.error(error?.data?.message || "Failed to load course", { position: toast.POSITION.BOTTOM_RIGHT });
+      toast.error(error?.data?.message || "Failed to load course", {
+        position: toast.POSITION.BOTTOM_RIGHT,
+      });
       throw error;
     }
   };
@@ -167,46 +162,66 @@ const ViewCourseStudent: React.FC = () => {
       const lessons = await getLessonsByCourse(id);
       return lessons?.data;
     } catch (error: any) {
-      toast.error(error?.data?.message || "Failed to load lessons", { position: toast.POSITION.BOTTOM_RIGHT });
+      toast.error(error?.data?.message || "Failed to load lessons", {
+        position: toast.POSITION.BOTTOM_RIGHT,
+      });
       throw error;
     }
   };
 
-  const { data: courseRaw, isLoading, refreshData } = useApiData(fetchCourse, courseId);
-  const { data: lessonsRaw, isLoading: isLessonsLoading } = useApiData(fetchLessons, courseId);
+  const { data: courseRaw, isLoading, refreshData } = useApiData(
+    fetchCourse,
+    courseId
+  );
+  const { data: lessonsRaw, isLoading: isLessonsLoading } = useApiData(
+    fetchLessons,
+    courseId
+  );
 
   const course = courseRaw as CourseViewData | null;
-  if (course) dispatch(setCourse({ course }));
+  course && dispatch(setCourse({ course }));
 
-  // Normalize fields that may be objects/strings
   const categoryRaw = (course as any)?.category;
-  const categoryName = typeof categoryRaw === "string" ? categoryRaw : categoryRaw?.name;
+  const categoryName =
+    typeof categoryRaw === "string" ? categoryRaw : categoryRaw?.name;
 
   const instructor = (course as any)?.instructorId;
-  const instructorName = instructor ? `${instructor?.firstName ?? ""} ${instructor?.lastName ?? ""}`.trim() : undefined;
-  const instructorAvatar = instructor?.profilePic?.url ? getFullUrl(instructor.profilePic.url) : undefined;
+  const instructorName = instructor
+    ? `${instructor?.firstName ?? ""} ${instructor?.lastName ?? ""}`.trim()
+    : undefined;
+  const instructorAvatar = instructor?.profilePic?.url
+    ? getFullUrl(instructor.profilePic.url)
+    : undefined;
+  // Intro Section
+    const introduction = course?.introduction?.url
+    ? getFullUrl(course.introduction.url)
+    : undefined;
+    const isSupportedVideo = (url: string): boolean => {
+      if (!url) return false;
+      return (
+        url.includes('youtube.com') ||
+        url.includes('youtu.be') ||
+        url.includes('vimeo.com') ||
+        /\.(mp4|webm|ogg)$/i.test(url)
+      );
+    };    
 
-  const coverUrl = getFullUrl(course?.thumbnailUrl || (course as any)?.thumbnail?.url || "");
-
-  // Intro video (YouTube/Vimeo/direct)
-  const IntroVideo = course?.videoUrl ? getFullUrl(course.videoUrl) : undefined;
-  const isSupportedVideo = (url: string): boolean =>
-    !!url &&
-    (url.includes("youtube.com") ||
-      url.includes("youtu.be") ||
-      url.includes("vimeo.com") ||
-      /\.(mp4|webm|ogg)$/i.test(url));
-
-  // Guidelines URL: accept both `guidelinesUrl` and nested `guidelines.url`
-  const guidelinesUrl = getFullUrl((course as any)?.guidelinesUrl || (course as any)?.guidelines?.url || "");
-
+    const coverUrl = getFullUrl(
+      course?.thumbnailUrl || (course as any)?.thumbnail?.url || ""
+    );
+  // 👇 مهم: ناخذ من fieldين حسب الرِسبون
+  const guidelinesUrl = getFullUrl(
+    (course as any)?.guidelinesUrl || (course as any)?.guidelines?.url || ""
+  );
   const paidFlag =
     typeof course?.isPaid === "boolean"
       ? course.isPaid
       : typeof course?.price === "number"
       ? (course?.price ?? 0) > 0
       : false;
-  const isFree = !paidFlag || (typeof course?.price === "number" && (course?.price ?? 0) === 0);
+  const isFree =
+    !paidFlag ||
+    (typeof course?.price === "number" && (course?.price ?? 0) === 0);
 
   const enrolled = useMemo(() => {
     if (!course || !Array.isArray(course.coursesEnrolled)) return false;
@@ -218,18 +233,20 @@ const ViewCourseStudent: React.FC = () => {
     return Array.isArray(arr) ? arr : [];
   }, [lessonsRaw]);
 
-  const safeRating = clamp(typeof course?.rating === "number" ? course.rating : 0, 0, 5);
+  const safeRating = clamp(
+    typeof course?.rating === "number" ? course.rating : 0,
+    0,
+    5
+  );
 
-  // Toggle syllabus module
-  const handleToggle = (index: number) => setExpandedIndex(index === expandedIndex ? null : index);
-
-  // Enroll CTA
+  const handleToggle = (index: number) =>
+    setExpandedIndex(index === expandedIndex ? null : index);
   const handleEnroll = () => {
     if (!isLoggedIn) setLoginConfirmation(true);
     else setOpenPaymentConfirmation(true);
   };
 
-  // Open guidelines: PDF -> viewer; else -> download confirm
+  // افتح الدليل: PDF -> viewer داخل Dialog، غير PDF -> دايلوق تأكيد تحميل
   const openGuidelines = () => {
     if (!guidelinesUrl) return;
     if (isPdfExt(guidelinesUrl)) {
@@ -243,15 +260,16 @@ const ViewCourseStudent: React.FC = () => {
     }
   };
 
-  // Success toast when redirected with #success
+  // Toast بعد نجاح انضمام
   useEffect(() => {
     if (location.hash === "#success" && !successToastShown) {
-      toast.success("Successfully enrolled into the course", { position: toast.POSITION.BOTTOM_RIGHT });
+      toast.success("Successfully enrolled into the course", {
+        position: toast.POSITION.BOTTOM_RIGHT,
+      });
       setSuccessToastShown(true);
     }
   }, [location.hash, successToastShown]);
 
-  // Load PDF as blob to bypass frame-ancestors/XFO
   useEffect(() => {
     let revokeUrl: string | null = null;
     const loadPdf = async () => {
@@ -259,10 +277,10 @@ const ViewCourseStudent: React.FC = () => {
       setPdfLoading(true);
       setPdfError(null);
       try {
-        // 1) Try simple GET (no headers/credentials) to avoid CORS preflight
+
         let res = await fetch(viewerUrl, { credentials: "omit" });
         if (!res.ok) {
-          // 2) Retry with credentials/Authorization if needed
+
           const token = localStorage.getItem("token");
           res = await fetch(viewerUrl, {
             credentials: "include",
@@ -278,7 +296,10 @@ const ViewCourseStudent: React.FC = () => {
         revokeUrl = url;
         setPdfSrc(url);
       } catch (e: any) {
-        setPdfError(`Failed to load PDF inline${e?.message ? `: ${e.message}` : ""}`);
+
+        setPdfError(
+          `Failed to load PDF inline${e?.message ? `: ${e.message}` : ""}`
+        );
         setPdfSrc(null);
       } finally {
         setPdfLoading(false);
@@ -291,13 +312,16 @@ const ViewCourseStudent: React.FC = () => {
     };
   }, [pdfOpen, viewerUrl]);
 
-  // Peek non-PDF size for better UX
   useEffect(() => {
     let active = true;
     const peek = async () => {
-      if (!downloadOpen || !downloadTargetUrl || isPdfExt(downloadTargetUrl)) return;
+      if (!downloadOpen || !downloadTargetUrl || isPdfExt(downloadTargetUrl))
+        return;
       try {
-        const head = await fetch(downloadTargetUrl, { method: "HEAD", credentials: "include" });
+        const head = await fetch(downloadTargetUrl, {
+          method: "HEAD",
+          credentials: "include",
+        });
         const len = head.headers.get("content-length");
         if (active && len) setDownloadSize(parseInt(len, 10));
       } catch {
@@ -309,261 +333,259 @@ const ViewCourseStudent: React.FC = () => {
       active = false;
     };
   }, [downloadOpen, downloadTargetUrl]);
-  const getEmbedUrl = (url: string): string | null => {
-  try {
-    const parsed = new URL(url);
 
-    // ✅ YouTube
-    if (parsed.hostname.includes("youtube.com") || parsed.hostname.includes("youtu.be")) {
-      let videoId: string | null = null;
-
-      if (parsed.hostname.includes("youtu.be")) {
-        // https://youtu.be/VIDEO_ID
-        videoId = parsed.pathname.slice(1);
-      } else if (parsed.searchParams.has("v")) {
-        // https://www.youtube.com/watch?v=VIDEO_ID
-        videoId = parsed.searchParams.get("v");
-      }
-
-      if (videoId) {
-        return `https://www.youtube.com/embed/${videoId}`;
-      }
-    }
-
-    // ✅ Vimeo
-    if (parsed.hostname.includes("vimeo.com")) {
-      // https://vimeo.com/VIDEO_ID
-      const videoId = parsed.pathname.split("/")[1];
-      if (videoId) {
-        return `https://player.vimeo.com/video/${videoId}`;
-      }
-    }
-
-    // ❌ غير مدعوم
-    return null;
-  } catch {
-    return null;
-  }
-};
   if (isLoading || isLessonsLoading) return <ViewCourseShimmer />;
 
   return (
     <div className="w-full bg-white dark:bg-gray-900">
-      <LoginConfirmation confirm={loginConfirmation} setConfirm={setLoginConfirmation} />
+      <LoginConfirmation
+        confirm={loginConfirmation}
+        setConfirm={setLoginConfirmation}
+      />
       <PaymentConfirmationModal
         open={openPaymentConfirmation}
         setUpdated={refreshData}
-        courseDetails={{ price: course?.price ?? 0, overview: course?.description ?? "", isPaid: course?.isPaid ?? false }}
+        courseDetails={{
+          price: course?.price ?? 0,
+          overview: course?.description ?? "",
+          isPaid: course?.isPaid ?? false,
+        }}
         setOpen={setOpenPaymentConfirmation}
       />
 
-      {/* Breadcrumbs */}
       <div className="flex flex-col px-3 sm:px-6 pt-3 md:pt-5 md:px-12 lg:px-20">
         <CustomBreadCrumbs paths={location.pathname} />
       </div>
 
-      {/* ===== HERO ===== */}
+      {/* HERO */}
       <section className="mx-auto max-w-6xl p-2 sm:p-4 md:p-6">
-        <Card shadow={false} className="overflow-hidden rounded-2xl border border-gray-200 bg-white transition hover:shadow-md dark:border-gray-700 dark:bg-gray-800">
+        <Card
+          shadow={false}
+          className="overflow-hidden rounded-2xl border border-gray-200 bg-white transition hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
+        >
           {/* Cover */}
-          <div className="relative w-full aspect-[21/9] sm:aspect-[21/9] md:aspect-[21/8] lg:aspect-[21/10] rounded-2xl overflow-hidden  shadow-md transition-all duration-300">
+          <div className="relative aspect-[16/8] w-full sm:aspect-[16/8] md:aspect-[21/9]">
             {coverUrl ? (
-              <img 
-                src={coverUrl} 
-                alt={course?.title || "Course cover"} 
-                className="h-full cursor-pointer w-full object-contain transition-transform duration-300 hover:scale-105" 
-                loading="lazy" 
+              <img
+                src={coverUrl}
+                alt={course?.title || "Course cover"}
+                className="h-full w-full object-cover"
+                loading="lazy"
               />
             ) : (
-              <div className="h-full w-full bg-gradient-to-br from-blue-200 via-purple-200 to-pink-200 dark:from-blue-800 dark:via-purple-800 dark:to-pink-800 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="w-16 h-16 mx-auto mb-4 bg-white/20 rounded-full flex items-center justify-center">
-                    <AcademicCapIcon className="w-8 h-8 text-white" />
-                  </div>
-                  <p className="text-white/80 text-sm font-medium">Course Cover</p>
-                </div>
-              </div>
+              <div className="h-full w-full bg-gradient-to-br from-gray-200 to-gray-100 dark:from-gray-700 dark:to-gray-600" />
             )}
 
-            {/* Enhanced overlay for better text readability */}
-            <div className="absolute inset-0 bg-gradient-to-tr from-black/40 via-black/15 to-transparent dark:from-black/60 dark:via-black/25" />
+            <div className="absolute inset-0 bg-gradient-to-tr from-black/35 via-black/10 to-transparent dark:from-black/55 dark:via-black/20" />
 
-            {/* Badges (top-left) */}
-            <div className="absolute top-3 left-3 flex flex-wrap gap-2">
+            {/* top-left badges */}
+            <div className="absolute top-2 left-2 flex flex-wrap gap-2">
               {categoryName && (
-                <span className="rounded-full px-3 py-1.5 text-xs sm:text-sm font-semibold bg-white/95 text-gray-900 ring-1 ring-black/5 shadow-lg backdrop-blur-sm dark:bg-blue-500 dark:text-white dark:ring-blue-400/40">
+                <span className="rounded-full px-2 py-0.5 text-[10px] sm:px-2.5 sm:py-1 sm:text-[11px] font-semibold bg-white/95 text-gray-900 ring-1 ring-black/5 dark:bg-blue-500 dark:text-white dark:ring-blue-400/40">
                   {categoryName}
                 </span>
               )}
-              {(typeof course?.price === "number" || typeof course?.isPaid === "boolean") && (
+              {(typeof course?.price === "number" ||
+                typeof course?.isPaid === "boolean") && (
                 <span
                   className={
                     isFree
-                      ? "rounded-full px-3 py-1.5 text-xs sm:text-sm font-semibold text-white bg-green-600 shadow-lg dark:bg-green-500"
-                      : "rounded-full px-3 py-1.5 text-xs sm:text-sm font-semibold text-gray-900 bg-white/95 ring-1 ring-black/5 shadow-lg backdrop-blur-sm dark:bg-indigo-500 dark:text-white dark:ring-indigo-400/40"
+                      ? "rounded-full px-2 py-0.5 text-[10px] sm:px-2.5 sm:py-1 sm:text-[11px] font-semibold text-white bg-green-600 dark:bg-green-500"
+                      : "rounded-full px-2 py-0.5 text-[10px] sm:px-2.5 sm:py-1 sm:text-[11px] font-semibold text-gray-900 bg-white/95 ring-1 ring-black/5 dark:bg-indigo-500 dark:text-white dark:ring-indigo-400/40"
                   }
                 >
-                  {isFree ? "FREE" : formatToUSD?.(course?.price as number) ?? `$${course?.price}`}
+                  {isFree
+                    ? "FREE"
+                    : formatToINR?.(course?.price as number) ??
+                      `₹${course?.price}`}
                 </span>
               )}
             </div>
 
-            {/* Instructor (top-right) */}
+            {/* top-right instructor */}
             <InstructorPin name={instructorName} avatar={instructorAvatar} />
 
-            {/* Enhanced Title + meta (bottom) */}
-            <div className="absolute inset-x-0 bottom-0 p-3 sm:p-6">
-              <div className="rounded-2xl bg-white/95 p-4 sm:p-6 ring-1 ring-black/5 backdrop-blur-md shadow-xl dark:bg-gray-900/90 dark:ring-white/10">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <Typography variant="h4" className="!m-0 font-bold text-gray-900 dark:text-white text-lg sm:text-xl md:text-2xl lg:text-3xl leading-tight">
+            {/* bottom content */}
+            <div className="absolute inset-x-0 bottom-0 p-2 sm:p-4">
+              <div className="rounded-xl bg-white/95 p-2.5 sm:p-3 ring-1 ring-black/5 backdrop-blur dark:bg-gray-900/85 dark:ring-white/10">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <Typography
+                    variant="h5"
+                    className="!m-0 font-semibold text-gray-900 dark:text-white text-sm sm:text-base md:text-lg lg:text-xl"
+                  >
                     {course?.title}
                   </Typography>
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 text-[12px] text-gray-700 dark:text-gray-300">
                       {typeof course?.duration === "number" && (
-                        <span className="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full">
-                          <span>⏱</span>
-                          <span className="font-medium">{course?.duration}h</span>
-                        </span>
+                        <span>⏱ {course?.duration}h</span>
                       )}
-                      {course?.level && (
-                        <span className="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full">
-                          <span>🎯</span>
-                          <span className="font-medium">{course?.level}</span>
-                        </span>
-                      )}
+                      {course?.level && <span>• 🎯 {course?.level}</span>}
                       {Array.isArray(course?.coursesEnrolled) && (
-                        <span className="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full">
-                          <span>👥</span>
-                          <span className="font-medium">{course?.coursesEnrolled.length}</span>
-                        </span>
+                        <span>• 👥 {course?.coursesEnrolled.length}</span>
                       )}
                     </div>
                     <Stars rating={safeRating} />
                   </div>
                 </div>
                 {course?.description && (
-                  <p className="mt-3 line-clamp-2 sm:line-clamp-3 text-sm sm:text-base leading-relaxed text-gray-700 dark:text-gray-200">
-                    {course?.description}
+                  <p className="mt-0.5 line-clamp-1 sm:line-clamp-2 text-[12px] sm:text-[13px] leading-5 text-gray-700 dark:text-gray-200">
+                    {course.description}
                   </p>
                 )}
               </div>
             </div>
           </div>
 
-          {/* ===== BODY ===== */}
+          {/* Body */}
           <CardBody className="grid gap-4 sm:gap-6 lg:gap-8 p-3 sm:p-6 md:grid-cols-[2fr_1fr]">
-            {/* LEFT: Syllabus + About + Requirements */}
+            {/* LEFT */}
             <div className="min-w-0">
               {/* Syllabus */}
               <section>
-                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">Syllabus</h3>
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">
+                  Syllabus
+                </h3>
                 <ul className="mt-3 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
-                  {/* Module 1 */}
-                  <li className="border-b border-gray-200 dark:border-gray-700">
+   {/* Module 1: Introduction */}
+   <li className='border-b border-gray-200 dark:border-gray-700'>
                     <button
-                      type="button"
+                      type='button'
                       onClick={() => handleToggle(0)}
                       className={`flex w-full items-center gap-2 p-2.5 sm:p-3 text-left text-sm sm:text-base transition hover:bg-gray-50 dark:hover:bg-gray-700/60 ${
-                        expandedIndex === 0 ? "bg-gray-50 dark:bg-gray-700/60" : ""
+                        expandedIndex === 0
+                          ? "bg-gray-50 dark:bg-gray-700/60"
+                          : ""
                       }`}
                     >
-                      <span className="text-blue-500 text-lg sm:text-base">•</span>
-                      <span className="flex-1">Module 1: Introduction to the Course</span>
+                      <span className='text-blue-500 text-lg sm:text-base'>•</span>
+                      <span className='flex-1'>
+                        Module 1: Introduction to the Course
+                      </span>
                       {expandedIndex === 0 ? <FaAngleUp /> : <FaAngleDown />}
                     </button>
-
                     {expandedIndex === 0 && (
-                      <ul className="divide-y divide-gray-200 dark:divide-gray-700">
-                        <li>
-                          {/* Introduction video (optional) */}
-                          {IntroVideo && isSupportedVideo(IntroVideo) ? (
-                            (() => {
-                              const embedUrl = getEmbedUrl(IntroVideo);
-                              if (embedUrl) {
-                                return (
-                                  <div className="aspect-video w-full">
-                                    <iframe
-                                      className="w-full h-full rounded-md"
-                                      src={embedUrl}
-                                      title="Intro Video"
-                                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                      allowFullScreen
-                                    />
-                                  </div>
-                                );
+                      <div className="p-2.5 sm:p-3 space-y-3">
+                        {/* Introduction Video */}
+                        {introduction && isSupportedVideo(introduction) ? (
+                          <>
+                            {/* YouTube embed */}
+                            {introduction.includes("youtube.com") ||
+                            introduction.includes("youtu.be") ? (
+                              <div className='aspect-video w-full'>
+                                <iframe
+                                  className='w-full h-full rounded-md'
+                                  src={introduction.replace("watch?v=", "embed/")}
+                                  title='YouTube video'
+                                  allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture'
+                                  allowFullScreen
+                                ></iframe>
+                              </div>
+                            ) : /* Vimeo embed */
+                            introduction.includes("vimeo.com") ? (
+                              <div className='aspect-video w-full'>
+                                <iframe
+                                  className='w-full h-full rounded-md'
+                                  src={introduction.replace(
+                                    "vimeo.com",
+                                    "player.vimeo.com/video"
+                                  )}
+                                  title='Vimeo video'
+                                  frameBorder='0'
+                                  allow='autoplay; fullscreen; picture-in-picture'
+                                  allowFullScreen
+                                ></iframe>
+                              </div>
+                            ) : (
+                              /* Direct video file (mp4/webm/ogg) */
+                              <div className='w-full'>
+                                <video controls className='w-full rounded-md' src={introduction}>
+                                  Your browser does not support the video tag.
+                                </video>
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <div className='flex items-center gap-2 p-2.5 sm:p-3 opacity-70'>
+                            <BiVideo />
+                            <span className='flex-1'>
+                              No introduction video provided
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Guidelines Document */}
+                        {guidelinesUrl ? (
+                          <button
+                            type='button'
+                            onClick={openGuidelines}
+                            className='flex items-center justify-between w-full gap-2 px-3 py-2 sm:px-4 sm:py-3 rounded-md bg-white dark:bg-gray-800 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700/60 transition border border-gray-200 dark:border-gray-700'
+                          >
+                            <div className='flex items-center gap-2'>
+                              <IoBookSharp className='text-blue-500 text-lg sm:text-xl' />
+                              <span className='text-sm sm:text-base font-medium'>
+                                Important guidelines
+                              </span>
+                            </div>
+                            <Chip
+                              variant='ghost'
+                              size='sm'
+                              value={
+                                isPdfExt(guidelinesUrl)
+                                  ? "PDF"
+                                  : isArchiveExt(guidelinesUrl)
+                                  ? "ZIP"
+                                  : "FILE"
                               }
-                              return (
-                                <div className="w-full p-2.5 sm:p-3">
-                                  <video controls className="w-full rounded-md" src={IntroVideo}>
-                                    Your browser does not support the video tag.
-                                  </video>
-                                </div>
-                              );
-                            })()
-                          ) : (
-                            <div className="flex items-center gap-2 p-2.5 sm:p-3 opacity-70">
-                              <IoBookSharp />
-                              <span className="flex-1">No introduction provided</span>
-                            </div>
-                          )}
-
-
-                          {/* Guidelines entry (PDF in dialog, else confirm download) */}
-                          {guidelinesUrl ? (
-                            <button
-                              type="button"
-                              onClick={openGuidelines}
-                              className="flex items-center justify-between w-full gap-2 px-3 py-2 sm:px-4 sm:py-3 rounded-md bg-white dark:bg-gray-800 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700/60 transition"
-                            >
-                              <div className="flex items-center gap-2">
-                                <IoBookSharp className="text-blue-500 text-lg sm:text-xl" />
-                                <span className="text-sm sm:text-base font-medium">Important guidelines</span>
-                              </div>
-                              <Chip
-                                variant="ghost"
-                                size="sm"
-                                value={isPdfExt(guidelinesUrl) ? "PDF" : isArchiveExt(guidelinesUrl) ? "ZIP" : "FILE"}
-                                className="rounded-full text-xs sm:text-sm"
-                              />
-                            </button>
-                          ) : (
-                            <div className="flex items-center justify-between gap-2 px-3 py-2 sm:px-4 sm:py-3 opacity-70 bg-gray-100 dark:bg-gray-800 rounded-md">
-                              <div className="flex items-center gap-2">
-                                <IoBookSharp className="text-gray-500 text-lg sm:text-xl" />
-                                <span className="text-sm sm:text-base">No guidelines provided</span>
-                              </div>
-                            </div>
-                          )}
-                        </li>
-                      </ul>
+                              className='rounded-full text-xs sm:text-sm'
+                            />
+                          </button>
+                        ) : (
+                           <div className='flex items-center justify-between gap-2 px-3 py-2 sm:px-4 sm:py-3 opacity-70 bg-gray-100 dark:bg-gray-800 rounded-md'>
+                               <div className='flex items-center gap-2'>
+                                   <IoBookSharp className='text-gray-500 text-lg sm:text-xl' />
+                                   <span className='text-sm sm:text-base'>No guidelines provided</span>
+                               </div>
+                           </div>
+                        )}
+                      </div>
                     )}
                   </li>
 
-                  {/* Module 2 */}
-                  <li>
+                  {/* Module 2: Lessons */}
+                  <li className='border-b border-gray-200 dark:border-gray-700'>
                     <button
-                      type="button"
+                      type='button'
                       onClick={() => handleToggle(1)}
                       className={`flex w-full items-center gap-2 p-2.5 sm:p-3 text-left text-sm sm:text-base transition hover:bg-gray-50 dark:hover:bg-gray-700/60 ${
-                        expandedIndex === 1 ? "bg-gray-50 dark:bg-gray-700/60" : ""
+                        expandedIndex === 1
+                          ? "bg-gray-50 dark:bg-gray-700/60"
+                          : ""
                       }`}
                     >
-                      <span className="text-blue-500 text-lg sm:text-base">•</span>
-                      <span className="flex-1">Module 2: Advanced Techniques</span>
+                      <span className='text-blue-500 text-lg sm:text-base'>•</span>
+                      <span className='flex-1'>
+                        Module 2: Course Lessons
+                      </span>
                       {expandedIndex === 1 ? <FaAngleUp /> : <FaAngleDown />}
                     </button>
-
                     {expandedIndex === 1 && (
-                      <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+                      <ul className='divide-y divide-gray-200 dark:divide-gray-700'>
                         {lessons.length === 0 && (
-                          <li className="p-3 text-sm text-gray-500 dark:text-gray-400">Lessons will appear here once published.</li>
+                          <li className='p-3 text-sm text-gray-500 dark:text-gray-400'>
+                            Lessons will appear here once published.
+                          </li>
                         )}
-                        {lessons.map((lesson: any) => (
+                        {lessons.map((lesson) => (
                           <li key={lesson?._id}>
-                            <Link to={`watch-lessons/${lesson?._id}`} className="flex items-center gap-2 p-2.5 sm:p-3 text-sm sm:text-base hover:bg-gray-50 dark:hover:bg-gray-700/60">
-                              <BiVideo className="text-blue-500" />
-                              <span className="flex-1 truncate">{lesson?.title}</span>
+                            <Link
+                              to={`watch-lessons/${lesson?._id}`}
+                              className='flex items-center gap-2 p-2.5 sm:p-3 text-sm sm:text-base hover:bg-gray-50 dark:hover:bg-gray-700/60'
+                            >
+                              <BiVideo className='text-blue-500' />
+                              <span className='flex-1 truncate'>
+                                {lesson?.title}
+                              </span>
                             </Link>
                           </li>
                         ))}
@@ -575,7 +597,9 @@ const ViewCourseStudent: React.FC = () => {
 
               {/* About */}
               <section className="mt-6">
-                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">About this course</h3>
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">
+                  About this course
+                </h3>
                 <div className="mt-2 whitespace-pre-wrap break-words rounded-xl border border-gray-200 bg-white p-3 sm:p-4 text-gray-700 shadow-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200">
                   {course?.about || "—"}
                 </div>
@@ -583,17 +607,27 @@ const ViewCourseStudent: React.FC = () => {
 
               {/* Requirements */}
               <section className="mt-6">
-                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">Requirements</h3>
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">
+                  Requirements
+                </h3>
                 <ul className="mt-2 divide-y divide-gray-200 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:divide-gray-700 dark:border-gray-700 dark:bg-gray-800">
-                  {Array.isArray(course?.requirements) && (course?.requirements?.length ?? 0) > 0 ? (
-                    ((course?.requirements ?? []) as string[]).map((item, idx) => (
-                      <li key={idx} className="flex items-start gap-2 p-2.5 sm:p-3 text-gray-700 dark:text-gray-200">
-                        <span className="pt-1 text-blue-500">•</span>
-                        <span className="flex-1">{item}</span>
-                      </li>
-                    ))
+                  {Array.isArray(course?.requirements) &&
+                  (course?.requirements?.length ?? 0) > 0 ? (
+                    ((course?.requirements ?? []) as string[]).map(
+                      (item, idx) => (
+                        <li
+                          key={idx}
+                          className="flex items-start gap-2 p-2.5 sm:p-3 text-gray-700 dark:text-gray-200"
+                        >
+                          <span className="pt-1 text-blue-500">•</span>
+                          <span className="flex-1">{item}</span>
+                        </li>
+                      )
+                    )
                   ) : (
-                    <li className="p-3 text-sm text-gray-500 dark:text-gray-400">No specific requirements.</li>
+                    <li className="p-3 text-sm text-gray-500 dark:text-gray-400">
+                      No specific requirements.
+                    </li>
                   )}
                 </ul>
               </section>
@@ -602,15 +636,22 @@ const ViewCourseStudent: React.FC = () => {
             {/* RIGHT: purchase card */}
             <aside className="md:sticky md:top-4">
               <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-                {/* Price & CTA */}
                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                   <div className="flex items-center gap-2">
-                    {(typeof course?.price === "number" || typeof course?.isPaid === "boolean") &&
+                    {(typeof course?.price === "number" ||
+                      typeof course?.isPaid === "boolean") &&
                       (isFree ? (
-                        <Chip color="green" value="FREE" variant="filled" size="sm" className="rounded-full w-full md:w-auto" />
+                        <Chip
+                          color="green"
+                          value="FREE"
+                          variant="filled"
+                          size="sm"
+                          className="rounded-full w-full md:w-auto"
+                        />
                       ) : (
                         <span className="text-2xl font-bold text-gray-900 dark:text-white">
-                          {formatToUSD?.(course?.price as number) ?? `$${course?.price}`}
+                          {formatToINR?.(course?.price as number) ??
+                            `₹${course?.price}`}
                         </span>
                       ))}
                   </div>
@@ -625,11 +666,14 @@ const ViewCourseStudent: React.FC = () => {
                   </Button>
                 </div>
 
-                {/* Meta mini-cards */}
                 <div className="mt-3 grid grid-cols-2 md:grid-cols-3 gap-2 text-[11px] sm:text-[12px] text-gray-700 dark:text-gray-300">
                   <div className="rounded-lg border border-gray-200 p-1.5 sm:p-2 text-center dark:border-gray-700">
                     <div className="font-semibold">Duration</div>
-                    <div>{typeof course?.duration === "number" ? `${course?.duration}h` : "—"}</div>
+                    <div>
+                      {typeof course?.duration === "number"
+                        ? `${course?.duration}h`
+                        : "—"}
+                    </div>
                   </div>
                   <div className="rounded-lg border border-gray-200 p-1.5 sm:p-2 text-center dark:border-gray-700">
                     <div className="font-semibold">Level</div>
@@ -637,70 +681,120 @@ const ViewCourseStudent: React.FC = () => {
                   </div>
                   <div className="rounded-lg border border-gray-200 p-1.5 sm:p-2 text-center dark:border-gray-700">
                     <div className="font-semibold">Enrolled</div>
-                    <div>{Array.isArray(course?.coursesEnrolled) ? course?.coursesEnrolled.length : 0}</div>
+                    <div>
+                      {Array.isArray(course?.coursesEnrolled)
+                        ? course?.coursesEnrolled.length
+                        : 0}
+                    </div>
                   </div>
                 </div>
 
-                {/* Instructor */}
                 {(instructorName || instructorAvatar) && (
                   <div className="mt-4 flex items-center gap-3">
                     {instructorAvatar ? (
-                      <img src={instructorAvatar} className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 rounded-full object-cover" alt={instructorName || "Instructor"} />
+                      <img
+                        src={instructorAvatar}
+                        className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 rounded-full object-cover"
+                        alt={instructorName || "Instructor"}
+                      />
                     ) : (
                       <div className="h-10 w-10 rounded-full bg-gray-200 dark:bg-gray-700" />
                     )}
                     <div className="min-w-0">
-                      <div className="text-sm font-medium text-gray-900 dark:text-white">{instructorName || "—"}</div>
-                      <div className="text-xs text-gray-600 dark:text-gray-400">Instructor</div>
+                      <div className="text-sm font-medium text-gray-900 dark:text-white">
+                        {instructorName || "—"}
+                      </div>
+                      <div className="text-xs text-gray-600 dark:text-gray-400">
+                        Instructor
+                      </div>
                     </div>
                   </div>
                 )}
 
-                {/* Rating */}
-                <div className="mt-3"><Stars rating={safeRating} /></div>
+                <div className="mt-3">
+                  <Stars rating={safeRating} />
+                </div>
               </div>
             </aside>
           </CardBody>
         </Card>
 
-        {/* ===== PDF Lightbox ===== */}
+        {/* PDF Lightbox */}
         <Dialog
           open={pdfOpen}
           handler={() => setPdfOpen(false)}
           size="xl"
-          className="bg-transparent shadow-none flex items-center justify-center" // ensure centering
+          className="bg-transparent shadow-none"
         >
-          <DialogBody className="p-2 sm:p-3">
-            <div
-              className="
-                mx-auto rounded-2xl ring-1 ring-black/10 dark:ring-white/10
-                overflow-hidden bg-white dark:bg-gray-900
-              "
-              // EXACT 5px margins: width = viewport - 10px, but capped at 64rem (max-w-5xl)
-              style={{ width: "min(calc(100vw - 10px), 64rem)" }}
-            >
-              {/* Toolbar */}
-              <div className="flex items-center justify-between px-2.5 py-2 sm:px-3 sm:py-2.5 border-b border-gray-200 dark:border-gray-800">
-                <div className="flex items-center gap-1.5 sm:gap-2">
-                  <Button variant="text" size="sm" className="normal-case px-2 py-1" onClick={() => setPdfPage((p) => Math.max(1, p - 1))}>Prev</Button>
-                  <div className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 min-w-[70px] text-center">Page {pdfPage}</div>
-                  <Button variant="text" size="sm" className="normal-case px-2 py-1" onClick={() => setPdfPage((p) => p + 1)}>Next</Button>
-                  <span className="mx-1.5 sm:mx-2 h-5 w-px bg-gray-200 dark:bg-gray-700" />
-                  <Button variant="text" size="sm" className="normal-case px-2 py-1" onClick={() => setZoomIndex((i) => Math.max(0, i - 1))}>-</Button>
-                  <div className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 min-w-[56px] text-center">
-                    {zoomLevels[zoomIndex] === "page-width" ? "Fit" : `${zoomLevels[zoomIndex]}%`}
+          <DialogBody className="p-2">
+            <div className="mx-auto w-[96vw] max-w-5xl rounded-2xl bg-white dark:bg-gray-900 ring-1 ring-black/10 dark:ring-white/10 overflow-hidden">
+              {/* toolbar */}
+              <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-gray-800">
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="text"
+                    size="sm"
+                    className="normal-case px-2 py-1"
+                    onClick={() => setPdfPage((p) => Math.max(1, p - 1))}
+                  >
+                    Prev
+                  </Button>
+                  <div className="text-sm text-gray-700 dark:text-gray-300">
+                    Page {pdfPage}
                   </div>
-                  <Button variant="text" size="sm" className="normal-case px-2 py-1" onClick={() => setZoomIndex((i) => Math.min(zoomLevels.length - 1, i + 1))}>+</Button>
-                  <Button variant="text" size="sm" className="normal-case px-2 py-1" onClick={() => setZoomIndex(0)}>Fit</Button>
+                  <Button
+                    variant="text"
+                    size="sm"
+                    className="normal-case px-2 py-1"
+                    onClick={() => setPdfPage((p) => p + 1)}
+                  >
+                    Next
+                  </Button>
+                  <span className="mx-2 h-5 w-px bg-gray-200 dark:bg-gray-700" />
+                  <Button
+                    variant="text"
+                    size="sm"
+                    className="normal-case px-2 py-1"
+                    onClick={() => setZoomIndex((i) => Math.max(0, i - 1))}
+                  >
+                    -
+                  </Button>
+                  <div className="text-sm text-gray-700 dark:text-gray-300 min-w-[52px] text-center">
+                    {zoomLevels[zoomIndex] === "page-width"
+                      ? "Fit"
+                      : `${zoomLevels[zoomIndex]}%`}
+                  </div>
+                  <Button
+                    variant="text"
+                    size="sm"
+                    className="normal-case px-2 py-1"
+                    onClick={() =>
+                      setZoomIndex((i) => Math.min(zoomLevels.length - 1, i + 1))
+                    }
+                  >
+                    +
+                  </Button>
+                  <Button
+                    variant="text"
+                    size="sm"
+                    className="normal-case px-2 py-1"
+                    onClick={() => setZoomIndex(0)}
+                  >
+                    Fit
+                  </Button>
                 </div>
-                <Button variant="text" size="sm" className="normal-case px-2 py-1" onClick={() => setPdfOpen(false)}>Close</Button>
+                <Button
+                  variant="text"
+                  size="sm"
+                  className="normal-case px-2 py-1"
+                  onClick={() => setPdfOpen(false)}
+                >
+                  Close
+                </Button>
               </div>
 
-              {/* Viewer (kept inside rounded corners) */}
-              <div
-                className="relative bg-gray-50 dark:bg-gray-800"
-                style={{ height: "min(76vh, 88svh)", overscrollBehavior: "contain", contain: "paint" }}
-              >
+              {/* viewer */}
+              <div className="h-[65vh] sm:h-[70vh] bg-gray-50 dark:bg-gray-800">
                 {pdfLoading && (
                   <div className="flex h-full w-full items-center justify-center text-sm text-gray-500 dark:text-gray-400">
                     Loading PDF…
@@ -712,35 +806,46 @@ const ViewCourseStudent: React.FC = () => {
                   </div>
                 )}
                 {!pdfLoading && !pdfError && pdfSrc ? (
-                  <div className="absolute inset-0 p-2 sm:p-3">
-                    <div className="h-full w-full rounded-xl overflow-hidden ring-1 ring-black/5 dark:ring-white/10">
-                      <iframe
-                        key={`${pdfPage}-${zoomLevels[zoomIndex]}`}
-                        src={`${pdfSrc}#page=${pdfPage}&zoom=${zoomLevels[zoomIndex]}&pagemode=none`}
-                        title={`course-pdf-${course?._id || "doc"}`}
-                        className="h-full w-full"
-                        loading="lazy"
-                        referrerPolicy="no-referrer"
-                      />
-                    </div>
-                  </div>
+                  <iframe
+                    key={`${pdfPage}-${zoomLevels[zoomIndex]}`}
+                    src={`${pdfSrc}#page=${pdfPage}&zoom=${zoomLevels[zoomIndex]}&pagemode=none`}
+                    title={`viewer-${course?._id ?? ""}`}
+                    className="h-full w-full"
+                  />
                 ) : null}
               </div>
             </div>
           </DialogBody>
         </Dialog>
 
-        {/* ===== Non-PDF download confirm ===== */}
-        <Dialog open={downloadOpen} handler={() => setDownloadOpen(false)} size="sm" className="bg-transparent shadow-none">
+        {/* Non-PDF download confirm */}
+        <Dialog
+          open={downloadOpen}
+          handler={() => setDownloadOpen(false)}
+          size="sm"
+          className="bg-transparent shadow-none"
+        >
           <DialogBody className="p-2">
             <div className="mx-auto w-[92vw] max-w-md rounded-2xl bg-white dark:bg-gray-900 ring-1 ring-black/10 dark:ring-white/10 overflow-hidden">
-              <div className="px-3 pt-3 text-base font-semibold">Confirm download</div>
+              <div className="px-3 pt-3 text-base font-semibold">
+                Confirm download
+              </div>
               <div className="px-3 pb-2 text-sm text-gray-700 dark:text-gray-300">
-                You are about to download <span className="font-medium">{filenameFromUrl(downloadTargetUrl || undefined)}</span>
+                You are about to download{" "}
+                <span className="font-medium">
+                  {filenameFromUrl(downloadTargetUrl || undefined)}
+                </span>
                 {downloadSize ? ` (${formatBytes(downloadSize)})` : ""}. Proceed?
               </div>
               <div className="flex items-center justify-end gap-2 px-3 py-2">
-                <Button variant="text" size="sm" className="normal-case" onClick={() => setDownloadOpen(false)}>Cancel</Button>
+                <Button
+                  variant="text"
+                  size="sm"
+                  className="normal-case"
+                  onClick={() => setDownloadOpen(false)}
+                >
+                  Cancel
+                </Button>
                 <Button
                   color="blue"
                   size="sm"
@@ -753,7 +858,9 @@ const ViewCourseStudent: React.FC = () => {
                       const token = localStorage.getItem("token");
                       const res = await fetch(downloadTargetUrl, {
                         credentials: "include",
-                        headers: token ? { Authorization: `Bearer ${token}` } : {},
+                        headers: token
+                          ? { Authorization: `Bearer ${token}` }
+                          : {},
                       });
                       if (!res.ok) throw new Error(`HTTP ${res.status}`);
                       const blob = await res.blob();
@@ -775,9 +882,24 @@ const ViewCourseStudent: React.FC = () => {
                 >
                   {downloading ? (
                     <span className="inline-flex items-center">
-                      <svg className="mr-2 h-4 w-4 animate-spin" viewBox="0 0 24 24" aria-hidden="true">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                      <svg
+                        className="mr-2 h-4 w-4 animate-spin"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                        />
                       </svg>
                       Downloading…
                     </span>

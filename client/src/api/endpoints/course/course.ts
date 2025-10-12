@@ -25,6 +25,10 @@ export const getCourseByInstructor = () => {
   return getCoursesByInstructorService(END_POINTS.GET_COURSES_BY_INSTRUCTORS);
 };
 
+export const getCourseSelf = () => {
+  return getCoursesByInstructorService(END_POINTS.GET_COURSES_SELF);
+};
+
 export const getAllCourses = () => {
   return getAllCoursesService(END_POINTS.GET_ALL_COURSES);
 };

@@ -14,6 +14,8 @@ export interface CourseInterface {
     requirements: string[];
     thumbnailUrl: string;
     guidelinesUrl:string;
+    videoSource:string;
+    videoUrl:string;
     coursesEnrolled: any[];
     rating: number;
     isVerified: boolean;

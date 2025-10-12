@@ -418,6 +418,27 @@ const courseRouter = (redisClient: RedisClient) => {
 
   /**
    * @swagger
+   * /api/courses/instructors/get-course-self:
+   *   get:
+   *     summary: Get course by instructor ID
+   *     tags: [Course]
+   *     parameters:
+   *       - in: path
+   *         name: courseId
+   *         required: true
+   *         schema: { type: string }
+   *     responses:
+   *       200: { description: Course details }
+   */
+  router.get(
+    '/instructors/get-course-self',
+    jwtAuthMiddleware,
+    roleCheckMiddleware(UserRole.Instructor),
+    controller.getCourseSelf
+  );
+
+  /**
+   * @swagger
    * /api/courses/search-course:
    *   get:
    *     summary: Search courses by keyword

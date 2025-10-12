@@ -1,6 +1,12 @@
-import React, { Fragment } from "react";
-import { Button, Dialog, DialogHeader, DialogBody, DialogFooter } from "@material-tailwind/react";
-import { useNavigate } from "react-router-dom";
+import React, { Fragment, useState } from "react";
+import {
+  Button,
+  Dialog,
+  DialogHeader,
+  DialogBody,
+  DialogFooter,
+} from "@material-tailwind/react";
+import StudentLoginModal from "../pages/students/StudentLoginModal";
 
 interface Props {
   show: boolean;
@@ -8,17 +14,17 @@ interface Props {
 }
 
 const SessionExpired: React.FC<Props> = ({ show, onClose }) => {
-  const navigate = useNavigate();
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
   const handleConfirm = () => {
-    onClose();
-    // Check if the user is logged in here (you can implement your own logic)
-    navigate("/login");
+    onClose();                  // Close the session expired dialog
+    setIsLoginModalOpen(true); // Open the login modal
   };
 
   return (
     <Fragment>
-      <Dialog open={show} size={"sm"} handler={onClose}>
+      {/* Session Expired Dialog */}
+      <Dialog open={show} size="sm" handler={onClose}>
         <DialogHeader className="text-xl font-bold">Session Expired</DialogHeader>
         <DialogBody divider>
           <p className="text-gray-700">
@@ -26,24 +32,24 @@ const SessionExpired: React.FC<Props> = ({ show, onClose }) => {
           </p>
         </DialogBody>
         <DialogFooter>
-          <Button
-            variant="text"
-            color="red"
-            onClick={onClose}
-            className="mr-1"
-          >
+          <Button variant="text" color="red" onClick={onClose} className="mr-1">
             <span>Cancel</span>
           </Button>
-          <Button
-            variant="filled"
-            color="blue"
-            onClick={handleConfirm}
-            className="text-white"
-          >
+          <Button variant="filled" color="blue" onClick={handleConfirm} className="text-white">
             <span>Log In</span>
           </Button>
         </DialogFooter>
       </Dialog>
+
+      {/* Student Login Modal */}
+      <StudentLoginModal
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+        onSwitchToRegister={() => {
+          setIsLoginModalOpen(false);
+          // Optional: Open register modal here if needed
+        }}
+      />
     </Fragment>
   );
 };
