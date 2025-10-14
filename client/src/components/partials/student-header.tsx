@@ -11,10 +11,10 @@ import ThemeToggle from "../common/theme-toggle";
 import { useLanguage } from "../../contexts/LanguageContext";
 
 // Import modals for both students and instructors
-import StudentLoginModal from "../pages/students/StudentLoginModal";
-import StudentRegisterModal from "../pages/students/StudentRegisterModal";
-import InstructorLoginModal from "../pages/instructors/instructor-login-modal";
-import InstructorRegisterModal from "../pages/instructors/instructor-register-modal";
+import StudentLoginModal from "../../pages/students/StudentLoginModal";
+import StudentRegisterModal from "../../pages/students/StudentRegisterModal";
+import InstructorLoginModal from "../../pages/instructors/instructor-login-modal";
+import InstructorRegisterModal from "../../pages/instructors/instructor-register-modal";
 
 // Navigation items
 const navKeys = [

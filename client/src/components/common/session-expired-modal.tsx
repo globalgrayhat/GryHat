@@ -6,7 +6,7 @@ import {
   DialogBody,
   DialogFooter,
 } from "@material-tailwind/react";
-import StudentLoginModal from "../pages/students/StudentLoginModal";
+import StudentLoginModal from "../../pages/students/StudentLoginModal";
 
 interface Props {
   show: boolean;

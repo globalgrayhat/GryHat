@@ -10,12 +10,12 @@ import YouAreOffline from "./components/common/you-are-offline";
 import SessionExpired from "./components/common/session-expired-modal";
 
 // Instructor Components
-import InstructorLoginPage from "./components/pages/instructors/instructor-login-modal";
-import InstructorLayout from "./components/pages/instructors/InstructorLayout"; // ✅ 1. استيراد المكون الجديد
+import InstructorLoginPage from "./pages/instructors/instructor-login-modal";
+import InstructorLayout from "./pages/instructors/InstructorLayout"; // ✅ 1. استيراد المكون الجديد
 
 // Admin Components
-import AdminLoginPage from "./components/pages/admin/admin-login-page";
-import { AdminSideNav } from "./components/pages/admin/admin-side-nav";
+import AdminLoginPage from "./pages/admin/admin-login-page";
+import { AdminSideNav } from "./pages/admin/admin-side-nav";
 
 // Redux
 import { selectIsLoggedIn, selectUserType } from "./redux/reducers/authSlice";
