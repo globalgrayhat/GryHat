@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Disclosure } from "@headlessui/react";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
-import { Link, useLocation, NavLink } from "react-router-dom";
+import { Link, useLocation, NavLink, useNavigate } from "react-router-dom";
 import ProfileMenu from "../elements/profile-menu";
 import { selectIsLoggedIn, selectUserType } from "../../redux/reducers/authSlice";
 import { useSelector } from "react-redux";
@@ -42,6 +42,8 @@ type RRNavState = { isActive: boolean };
 // Main Component
 const StudentHeader: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+
   const isLoggedIn = useSelector(selectIsLoggedIn);
   const userType = useSelector(selectUserType);
   const { t } = useLanguage();
@@ -76,6 +78,21 @@ const StudentHeader: React.FC = () => {
     [location.pathname, t]
   );
 
+  // تابع لتحديد الراوت الخاص بالداشبورد حسب نوع المستخدم
+  const getDashboardRoute = () => {
+    if (userType === "admin") return "/admin/";
+    if (userType === "instructor") return "/instructors";
+    return "/dashboard"; // الطالب الافتراضي
+  };
+
+  // لو حاب تستخدم زر مع onClick بدل Link، يمكنك إلغاء التعليق:
+  /*
+  const handleDashboardClick = () => {
+    const route = getDashboardRoute();
+    navigate(route);
+  };
+  */
+
   return (
     <>
       <header
@@ -95,7 +112,7 @@ const StudentHeader: React.FC = () => {
                   {/* === Left: Logo + Nav === */}
                   <div className="flex items-center gap-4 lg:gap-6">
                     <Link to="/" className="flex-shrink-0">
-                      <img className="h-8 md:h-9 lg:h-12 w-auto" src='/Profile.svg' alt="Logo" />
+                      <img className="h-8 md:h-9 lg:h-12 w-auto" src="/Profile.svg" alt="Logo" />
                     </Link>
 
                     {/* Desktop navigation */}
@@ -119,10 +136,13 @@ const StudentHeader: React.FC = () => {
 
                   {/* === Right: Desktop === */}
                   <div className="hidden lg:flex items-center gap-3">
-                    {isLoggedIn && userType === "student" ? (
+                    {isLoggedIn ? (
                       <>
-                        <Link to="/dashboard">
-                          <Button size="md" color="blue-gray">Dashboard</Button>
+                        {/* الزر يتغير المسار حسب نوع المستخدم */}
+                        <Link to={getDashboardRoute()}>
+                          <Button size="md" color="blue-gray">
+                            {t("nav.dashboard") || "Dashboard"}
+                          </Button>
                         </Link>
                         <ProfileMenu />
                         <ThemeToggle />
@@ -191,10 +211,10 @@ const StudentHeader: React.FC = () => {
                 </div>
 
                 <div className="px-3 pt-2 pb-4 border-t border-white/10 dark:border-gray-800">
-                  {isLoggedIn && userType === "student" ? (
-                    <Link to="/dashboard" onClick={() => close()}>
+                  {isLoggedIn ? (
+                    <Link to={getDashboardRoute()} onClick={() => close()}>
                       <button className="w-full bg-blue-gray-600 hover:bg-blue-gray-700 text-white font-semibold py-2 px-3 rounded">
-                        Dashboard
+                        {t("nav.dashboard") || "Dashboard"}
                       </button>
                     </Link>
                   ) : (

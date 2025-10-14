@@ -1,512 +1,551 @@
 import React, { useState, useEffect } from "react";
-import { Formik, Field, Form, ErrorMessage} from "formik";
-import { AddCourseValidationSchema } from "../../../validations/course/AddCourse";
-import { Switch } from "@material-tailwind/react";
+import { Formik, Field, Form, ErrorMessage, FormikHelpers } from "formik";
+import * as Yup from "yup";
 import { toast } from "react-toastify";
-import { getIndividualCourse } from "../../../api/endpoints/course/course";
-import { useParams } from "react-router-dom";
-import { CourseInterface } from "../../../types/course";
-import { ApiResponseCategory } from "../../../api/types/apiResponses/api-response-category";
+import { getIndividualCourse, editCourse } from "../../../api/endpoints/course/course";
 import { getAllCategories } from "../../../api/endpoints/category";
-import Modal from "react-modal";
-import { Document, Page, pdfjs } from "react-pdf";
-import { AiOutlineClose } from "react-icons/ai";
-import { editCourse } from "../../../api/endpoints/course/course";
-pdfjs.GlobalWorkerOptions.workerSrc = "/path/to/pdf.worker.js";
+import { ApiResponseCategory } from "../../../api/types/apiResponses/api-response-category";
+import { useParams, useNavigate } from "react-router-dom";
+import { CourseInterface } from "../../../types/course";
 
-interface InitialValType {
+interface CourseFormValues {
   title: string;
-  instructor: string;
+  duration: number | "";
+  categoryId: string;
+  level: string;
+  tags: string; // comma separated string
+  price: number | "";
+  isPaid: boolean;
   about: string;
-  duration: string | number;
   description: string;
-  requirements: string;
-  lessons: string;
-  category: string;
-  price: string | number;
-  tags: string;
-  syllabus: string;
-  level:string;
-  [key: string]: string | number;
+  syllabus: string; // multiline string
+  requirements: string; // multiline string
+  videoSource: "local" | "s3" | "youtube" | "vimeo" | "";
+  videoUrl: string;
+  introductionFile: File | null;
+  guidelinesFile: File | null;
+  thumbnailFile: File | null;
 }
-const initialValues: InitialValType = {
-  title: "",
-  instructor: "",
-  duration: "",
-  description: "",
-  requirements: "",
-  lessons: "",
-  category: "",
-  price: "",
-  tags: "",
-  about: "",
-  syllabus: "",
-  level:""
+
+const validationSchema = Yup.object().shape({
+  title: Yup.string().notRequired(),
+  duration: Yup.number()
+    .typeError("Duration must be a number")
+    .positive("Duration must be positive")
+    .notRequired(),
+  categoryId: Yup.string().notRequired(),
+  level: Yup.string()
+    .oneOf(["Beginner", "Intermediate", "Advanced", ""], "Invalid level")
+    .notRequired(),
+  tags: Yup.string().notRequired(),
+  isPaid: Yup.boolean().notRequired(),
+  price: Yup.number()
+    .typeError("Price must be a number")
+    .min(0, "Price cannot be negative")
+    .when("isPaid", {
+      is: true,
+      then: (schema) => schema.required("Price is required for paid courses"),
+      otherwise: (schema) => schema.notRequired(),
+    }),
+  about: Yup.string().notRequired(),
+  description: Yup.string().notRequired(),
+  syllabus: Yup.string().notRequired(),
+  requirements: Yup.string().notRequired(),
+  videoSource: Yup.string()
+    .oneOf(["local", "s3", "youtube", "vimeo", ""], "Invalid video source")
+    .notRequired(),
+  videoUrl: Yup.string().when("videoSource", {
+    is: (val: string) => val === "youtube" || val === "vimeo",
+    then: (schema) => schema.required("Video URL is required").url("Must be a valid URL"),
+    otherwise: (schema) => schema.notRequired(),
+  }),
+  introductionFile: Yup.mixed().notRequired(),
+  guidelinesFile: Yup.mixed().notRequired(),
+  thumbnailFile: Yup.mixed().notRequired(),
+});
+
+const transformCourseToFormValues = (course: CourseInterface): CourseFormValues => ({
+  title: course.title || "",
+  duration: course.duration || "",
+  categoryId: course.category || "",
+  level: course.level || "",
+  tags: (course.tags && course.tags.join(", ")) || "",
+  price: course.price || "",
+  isPaid: !!course.isPaid,
+  about: course.about || "",
+  description: course.description || "",
+  syllabus: (course.syllabus && course.syllabus.join("\n")) || "",
+  requirements: (course.requirements && course.requirements.join("\n")) || "",
+  videoSource: (course.introduction as any)?.source || "",
+  videoUrl:
+    (course.introduction as any)?.source === "youtube" || (course.introduction as any)?.source === "vimeo"
+      ? (course.introduction as any)?.url || ""
+      : "",
+  introductionFile: null,
+  guidelinesFile: null,
+  thumbnailFile: null,
+});
+
+const prepareFormData = (
+  values: CourseFormValues,
+  initialValues: CourseFormValues
+): FormData => {
+  const formData = new FormData();
+
+  const addIfChanged = (key: keyof CourseFormValues, value: any, initialValue: any) => {
+    if (["tags", "syllabus", "requirements"].includes(key)) {
+      const currentArray = (value as string)
+        .split("\n")
+        .join(",")
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean);
+      const initialArray = (initialValue as string)
+        .split("\n")
+        .join(",")
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean);
+      if (JSON.stringify(currentArray) !== JSON.stringify(initialArray)) {
+        if (key === "tags") currentArray.forEach((tag) => formData.append("tags[]", tag));
+        else if (key === "syllabus") currentArray.forEach((item) => formData.append("syllabus[]", item));
+        else if (key === "requirements") currentArray.forEach((item) => formData.append("requirements[]", item));
+      }
+    } else if (value instanceof File) {
+      if (value) {
+        if (key === "introductionFile") formData.append("introduction", value);
+        else if (key === "guidelinesFile") formData.append("guidelines", value);
+        else if (key === "thumbnailFile") formData.append("thumbnail", value);
+      }
+    } else {
+      if (value !== initialValue) {
+        formData.append(key, String(value));
+      }
+    }
+  };
+
+  (Object.keys(values) as Array<keyof CourseFormValues>).forEach((key) => {
+    addIfChanged(key, values[key], initialValues[key]);
+  });
+
+  return formData;
 };
-const levels = ["easy", "medium", "hard"];
-const EditCourse: React.FC = () => {
-  const [paid, setPaid] = useState(false);
-  const [thumbnail, setThumbnail] = useState<File | null>(null);
-  const [guidelines, setGuidelines] = useState<File | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [course, setCourse] = useState<CourseInterface | null>(null);
-  const { courseId } = useParams();
-  const [categories, setCategories] = useState<ApiResponseCategory[] | null>(
-    null
-  );
-  const [isThumbnailModalOpen, setIsThumbnailModalOpen] = useState(false);
-  const [isGuidelinesModalOpen, setIsGuidelinesModalOpen] = useState(false);
-  const fetchCategory = async () => {
-    try {
-      const response = await getAllCategories();
-      setCategories(response.data);
-    } catch (error) {
-      toast.error("something went wrong");
-    }
-  };
 
-  const fetchCourse = async (courseId: string) => {
-    try {
-      setLoading(true);
-      const response = await getIndividualCourse(courseId);
-      setCourse(response?.data?.data);
-      setLoading(false);
-    } catch (error) {
-      setLoading(false);
-      toast.error("something went wrong");
-    }
-  };
+const EditCourseForm: React.FC = () => {
+  const { courseId } = useParams<{ courseId: string }>();
+  const navigate = useNavigate();
+
+  const [categories, setCategories] = useState<ApiResponseCategory[]>([]);
+  const [initialValues, setInitialValues] = useState<CourseFormValues | null>(null);
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
-    if (course) {
-      initialValues.title = course.title;
-      initialValues.category = course.category;
-      initialValues.level=course.level
-      initialValues.description = course.description;
-      initialValues.duration = course.duration;
-      initialValues.tags = course.tags.join(" ");
-      initialValues.price = course.price;  
-      initialValues.about = course.about;
-      initialValues.syllabus = course.syllabus.join("");
-      initialValues.requirements = course.requirements.join("");
-      setPaid(course.isPaid);
+    if (!courseId) {
+      toast.error("Course ID missing");
+      navigate(-1);
+      return;
     }
-  }, [course]);
 
-  const handleFormSubmit = async (values: any) => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [courseRes, categoriesRes] = await Promise.all([
+          getIndividualCourse(courseId),
+          getAllCategories(),
+        ]);
+        const course = courseRes.data.data;
+        setCategories(categoriesRes.data);
+
+        const formVals = transformCourseToFormValues(course);
+        setInitialValues(formVals);
+      } catch (error) {
+        toast.error("Failed to fetch course data");
+        navigate(-1);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [courseId, navigate]);
+
+  const onSubmit = async (
+    values: CourseFormValues,
+    { setSubmitting }: FormikHelpers<CourseFormValues>
+  ) => {
+    if (!initialValues || !courseId) return;
+
     try {
-      const formData = new FormData();
-      guidelines && formData.append("files", guidelines);
-      thumbnail && formData.append("files", thumbnail);
-      Object.keys(values).forEach((key) => formData.append(key, values[key]));
-      const response = await editCourse(courseId ?? "", formData);
-      toast.success(response.data.message, {
-        position: toast.POSITION.BOTTOM_RIGHT,
+      setSubmitting(true);
+      const formData = prepareFormData(values, initialValues);
+
+      if (formData.entries().next().done) {
+        toast.info("No changes detected");
+        setSubmitting(false);
+        return;
+      }
+
+      const toastId = toast.loading("Updating course...");
+      await editCourse(courseId, formData);
+      toast.update(toastId, {
+        render: "Course updated successfully!",
+        type: "success",
+        isLoading: false,
+        autoClose: 3000,
+        closeButton: true,
       });
+      navigate(-1);
     } catch (error: any) {
-      toast.error(error.data.message, {
-        position: toast.POSITION.BOTTOM_RIGHT,
-      });
+      toast.error(error?.response?.data?.message || "Failed to update course");
+    } finally {
+      setSubmitting(false);
     }
   };
-
-  useEffect(() => {
-    fetchCategory();
-  }, []);
-  useEffect(() => {
-    if (courseId) {
-      fetchCourse(courseId);
-    }
-  }, []);
 
   if (loading) {
-    return <div>loading...</div>;
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <p className="text-lg">Loading course data...</p>
+      </div>
+    );
   }
 
-  const handlePaid = () => {
-    setPaid(!paid);
-  };
-
-  const toggleThumbnailModal = () => {
-    setIsThumbnailModalOpen(!isThumbnailModalOpen);
-  };
-
-  const toggleGuidelinesModal = () => {
-    setIsGuidelinesModalOpen(!isGuidelinesModalOpen);
-  };
+  if (!initialValues) {
+    return (
+      <div className="text-center mt-10 text-red-600">
+        <p>Unable to load course data.</p>
+      </div>
+    );
+  }
 
   return (
-    <div className='mb-20'>
-      <div className='ml-12 pl-20'>
-        <h1 className='font-bold text-xl text-gray-800'>Edit Course</h1>
-      </div>
+    <div className="max-w-4xl mx-auto bg-white p-8 rounded shadow mt-10" dir="rtl">
+      <h2 className="text-2xl font-bold mb-6 text-center">Edit Course</h2>
       <Formik
         initialValues={initialValues}
+        validationSchema={validationSchema}
+        onSubmit={onSubmit}
         enableReinitialize
-        validationSchema={AddCourseValidationSchema}
-        onSubmit={handleFormSubmit}
       >
-        <Form>
-          <div className='bg-white ml-32  rounded-lg border-2 border-gray-200 mr-32 mb-24 mt-2 p-5'>
-            <div className='flex  w-full justify-center mt-10 pt-3 space-x-14 '>
-              <div>
-                <div className='mb-3'>
-                  <label
-                    htmlFor='title'
-                    className='block text-sm font-medium leading-6 text-gray-900'
-                  >
-                    Title
-                  </label>
-                  <Field
-                    type='text'
-                    id='title'
-                    name='title'
-                    className='pl-2 block w-80 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-700 focus-visible:outline-none focus-visible:ring-blue-600 sm:text-sm sm:leading-6'
-                  />
-                  <ErrorMessage
-                    name='title'
-                    component='div'
-                    className='text-red-500 text-sm'
-                  />
-                </div>
-
-                <div className='mb-3'>
-                  <label
-                    htmlFor='duration'
-                    className='block text-sm font-medium leading-6 text-gray-900'
-                  >
-                    Duration (in weeks)
-                  </label>
-                  <Field
-                    type='number'
-                    id='duration'
-                    name='duration'
-                    className='pl-2 block w-80 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-700 focus-visible:outline-none focus-visible:ring-blue-600 sm:text-sm sm:leading-6'
-                  />
-                  <ErrorMessage
-                    name='duration'
-                    component='div'
-                    className='text-red-500 text-sm'
-                  />
-                </div>
-
-                <div className='mb-3'>
-                  <label
-                    htmlFor='category'
-                    className='block text-sm font-medium leading-6 text-gray-900'
-                  >
-                    Category
-                  </label>
-                  <Field
-                    as='select'
-                    id='category'
-                    name='category'
-                    className='pl-2 block w-80 rounded-md border-0 py-2.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-700 focus-visible:outline-none focus-visible:ring-blue-600 sm:text-sm sm:leading-6'
-                  >
-                    {categories?.map(({ _id, name }, index) => (
-                      <option value={name} key={_id}>
-                        {name}
-                      </option>
-                    ))}
-                  </Field>  
-                  <ErrorMessage
-                    name='category'
-                    component='div'
-                    className='text-red-500 text-sm'
-                  />
-                </div>
-
-                <div className='mb-3'>
-                  <label
-                    htmlFor='level'
-                    className='block text-sm font-medium leading-6 text-gray-900'
-                  >
-                    Level
-                  </label>
-                  <Field
-                    as='select'
-                    id='level'
-                    name='level'
-                    className='pl-2 block w-80 rounded-md border-0 py-2.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-700 focus-visible:outline-none focus-visible:ring-blue-600 sm:text-sm sm:leading-6'
-                  >
-                    {levels.map((level, index) => (
-                      <option key={index} value={level}>
-                        {level}
-                      </option>
-                    ))}
-                  </Field>
-                  <ErrorMessage
-                    name='level'
-                    component='div'
-                    className='text-red-500 text-sm'
-                  />
-                </div>
-                <div className='mb-3'>
-                  <label
-                    htmlFor='tags'
-                    className='block text-sm font-medium leading-6 text-gray-900'
-                  >
-                    Tags
-                  </label>
-                  <Field
-                    type='text'
-                    id='tags'
-                    name='tags'
-                    className='pl-2 block w-80 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-700 focus-visible:outline-none focus-visible:ring-blue-600 sm:text-sm sm:leading-6'
-                  />
-                  <ErrorMessage
-                    name='tags'
-                    component='div'
-                    className='text-red-500 text-sm'
-                  />
-                </div>
-
-                <div className='mb-3'>
-                  <div className='mb-5 mt-2 pl-2 pt-5 '>
-                    <Switch
-                      id='auto-update'
-                      checked={paid}
-                      onChange={handlePaid}
-                      label='Paid'
-                    />
-                  </div>
-
-                  {paid && (
-                    <div className=''>
-                      <label
-                        htmlFor='price'
-                        className='block text-sm font-medium leading-6 text-gray-900'
-                      >
-                        Price
-                      </label>
-                      <Field
-                        type='number'
-                        id='price'
-                        name='price'
-                        className='pl-2 block w-80 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-700 focus-visible:outline-none focus-visible:ring-blue-600 sm:text-sm sm:leading-6'
-                      />
-                      <ErrorMessage
-                        name='price'
-                        component='div'
-                        className='text-red-500 text-sm'
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div>
-                <div className='mb-2'>
-                  <label
-                    htmlFor='about'
-                    className='block text-sm font-medium leading-6 text-gray-900'
-                  >
-                    About
-                  </label>
-                  <Field
-                    as='textarea'
-                    id='about'
-                    name='about'
-                    rows={4}
-                    className='pl-2 block w-80 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-700 focus-visible:outline-none focus-visible:ring-blue-600 sm:text-sm sm:leading-6'
-                  />
-                  <ErrorMessage
-                    name='about'
-                    component='div'
-                    className='text-red-500 text-sm'
-                  />
-                </div>
-                <div className='mb-2'>
-                  <label
-                    htmlFor='description'
-                    className='block text-sm font-medium leading-6 text-gray-900'
-                  >
-                    Description
-                  </label>
-                  <Field
-                    as='textarea'
-                    id='description'
-                    name='description'
-                    rows={4}
-                    className='pl-2 block w-80 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-700 focus-visible:outline-none focus-visible:ring-blue-600 sm:text-sm sm:leading-6'
-                  />
-                  <ErrorMessage
-                    name='description'
-                    component='div'
-                    className='text-red-500 text-sm'
-                  />
-                </div>
-                <div className='mb-2'>
-                  <label
-                    htmlFor='syllabus'
-                    className='block text-sm font-medium leading-6 text-gray-900'
-                  >
-                    Syllabus
-                  </label>
-                  <Field
-                    as='textarea'
-                    id='syllabus'
-                    name='syllabus'
-                    rows={4}
-                    className='pl-2 block w-80 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-700 focus-visible:outline-none focus-visible:ring-blue-600 sm:text-sm sm:leading-6'
-                  />
-                  <ErrorMessage
-                    name='syllabus'
-                    component='div'
-                    className='text-red-500 text-sm'
-                  />
-                </div>
-                <div className='mb-2'>
-                  <label
-                    htmlFor='syllabus'
-                    className='block text-sm font-medium leading-6 text-gray-900'
-                  >
-                    Requirements
-                  </label>
-                  <Field
-                    as='textarea'
-                    id='requirements'
-                    name='requirements'
-                    rows={4}
-                    className='pl-2 block w-80 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-700 focus-visible:outline-none focus-visible:ring-blue-600 sm:text-sm sm:leading-6'
-                  />
-                  <ErrorMessage
-                    name='requirements'
-                    component='div'
-                    className='text-red-500 text-sm'
-                  />
-                </div>
-              </div>
+        {({ setFieldValue, values, isSubmitting }) => (
+          <Form>
+            {/* Title */}
+            <div className="mb-4">
+              <label htmlFor="title" className="block mb-1 font-medium">
+                Title
+              </label>
+              <Field
+                id="title"
+                name="title"
+                placeholder="Course Title"
+                className="w-full border rounded p-2"
+              />
+              <ErrorMessage name="title" component="div" className="text-red-500 text-sm mt-1" />
             </div>
 
-            <div className='flex w-full justify-center mt-14 pt-3 space-x-14'>
-              <div>
-                <div className='mb-2'>
-                  <label
-                    htmlFor='guidelines'
-                    className='block text-sm font-medium leading-6 text-gray-900'
-                  >
-                    Course guidelines
-                  </label>
-                  <input
-                    type='file'
-                    id='guidelines'
-                    name='guidelines'
-                    accept='application/pdf'
-                    onChange={(event) => {
-                      const file = event.target.files?.[0] || null;
-                      setGuidelines(file);
-                    }}
-                    className='pl-2 block w-80 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-700 focus-visible:outline-none focus-visible:ring-blue-600 sm:text-sm sm:leading-6'
-                  />
-                  <ErrorMessage
-                    name='guidelines'
-                    component='div'
-                    className='text-red-500 text-sm'
-                  />
-                  {course?.guidelinesUrl && (
-                    <button
-                      type='button'
-                      onClick={toggleGuidelinesModal}
-                      className='mt-2'
-                    >
-                      View Guidelines PDF
-                    </button>
-                  )}
-                </div>
-              </div>
+            {/* Duration */}
+            <div className="mb-4">
+              <label htmlFor="duration" className="block mb-1 font-medium">
+                Duration (weeks)
+              </label>
+              <Field
+                type="number"
+                id="duration"
+                name="duration"
+                min={1}
+                placeholder="Duration in weeks"
+                className="w-full border rounded p-2"
+              />
+              <ErrorMessage name="duration" component="div" className="text-red-500 text-sm mt-1" />
+            </div>
 
-              <div>
-                <div className='mb-2'>
-                  <label
-                    htmlFor='thumbnail'
-                    className='block text-sm font-medium leading-6 text-gray-900'
-                  >
-                    Thumbnail
-                  </label>
-                  <input
-                    type='file'
-                    id='thumbnail'
-                    name='thumbnail'
-                    accept='image/*'
-                    onChange={(event) => {
-                      const file = event.target.files?.[0] || null;
-                      setThumbnail(file);
-                    }}
-                    className='pl-2 block w-80 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-700 focus-visible:outline-none focus-visible:ring-blue-600 sm:text-sm sm:leading-6'
-                  />
-                  <ErrorMessage
-                    name='thumbnail'
-                    component='div'
-                    className='text-red-500 text-sm'
-                  />
-                  {course?.thumbnailUrl && (
-                    <button
-                      type='button'
-                      onClick={toggleThumbnailModal}
-                      className='mt-2'
-                    >
-                      View Thumbnail
-                    </button>
-                  )}
-                </div>
-              </div>
-              <Modal
-                isOpen={isThumbnailModalOpen}
-                onRequestClose={toggleThumbnailModal}
-                contentLabel='Thumbnail Modal'
+            {/* Category */}
+            <div className="mb-4">
+              <label htmlFor="categoryId" className="block mb-1 font-medium">
+                Category
+              </label>
+              <Field
+                as="select"
+                id="categoryId"
+                name="categoryId"
+                className="w-full border rounded p-2"
               >
-                <button
-                  onClick={toggleThumbnailModal}
-                  className='absolute top-0 right-0 mt-3 mr-3 m-2 hover:bg-red-400 hover:text-white text-gray-600 '
-                >
-                  <AiOutlineClose />
-                </button>
-                {course?.thumbnailUrl && (
-                  <img
-                    src={
-                      thumbnail
-                        ? URL.createObjectURL(thumbnail)
-                        : course.thumbnailUrl
+                <option value="">Select category</option>
+                {categories.map(({ _id, name }) => (
+                  <option key={_id} value={_id}>
+                    {name}
+                  </option>
+                ))}
+              </Field>
+              <ErrorMessage
+                name="categoryId"
+                component="div"
+                className="text-red-500 text-sm mt-1"
+              />
+            </div>
+
+            {/* Level */}
+            <div className="mb-4">
+              <label htmlFor="level" className="block mb-1 font-medium">
+                Level
+              </label>
+              <Field
+                as="select"
+                id="level"
+                name="level"
+                className="w-full border rounded p-2"
+              >
+                <option value="">Select level</option>
+                <option value="Beginner">Beginner</option>
+                <option value="Intermediate">Intermediate</option>
+                <option value="Advanced">Advanced</option>
+              </Field>
+              <ErrorMessage name="level" component="div" className="text-red-500 text-sm mt-1" />
+            </div>
+
+            {/* Tags */}
+            <div className="mb-4">
+              <label htmlFor="tags" className="block mb-1 font-medium">
+                Tags (comma separated)
+              </label>
+              <Field
+                id="tags"
+                name="tags"
+                placeholder="e.g. React, JavaScript"
+                className="w-full border rounded p-2"
+              />
+              <ErrorMessage name="tags" component="div" className="text-red-500 text-sm mt-1" />
+            </div>
+
+            {/* Is Paid & Price */}
+            <div className="mb-4 flex items-center space-x-4">
+              <label className="flex items-center space-x-2">
+                <Field
+                  type="checkbox"
+                  name="isPaid"
+                  checked={values.isPaid}
+                  onChange={() => setFieldValue("isPaid", !values.isPaid)}
+                />
+                <span>Paid Course?</span>
+              </label>
+
+              {values.isPaid && (
+                <div className="flex-1">
+                  <label htmlFor="price" className="block mb-1 font-medium">
+                    Price
+                  </label>
+                  <Field
+                    type="number"
+                    id="price"
+                    name="price"
+                    min={0}
+                    placeholder="Course price"
+                    className="w-full border rounded p-2"
+                  />
+                  <ErrorMessage name="price" component="div" className="text-red-500 text-sm mt-1" />
+                </div>
+              )}
+            </div>
+
+            {/* About */}
+            <div className="mb-4">
+              <label htmlFor="about" className="block mb-1 font-medium">
+                About
+              </label>
+              <Field
+                as="textarea"
+                id="about"
+                name="about"
+                rows={3}
+                className="w-full border rounded p-2"
+              />
+              <ErrorMessage name="about" component="div" className="text-red-500 text-sm mt-1" />
+            </div>
+
+            {/* Description */}
+            <div className="mb-4">
+              <label htmlFor="description" className="block mb-1 font-medium">
+                Description
+              </label>
+              <Field
+                as="textarea"
+                id="description"
+                name="description"
+                rows={5}
+                className="w-full border rounded p-2"
+              />
+              <ErrorMessage name="description" component="div" className="text-red-500 text-sm mt-1" />
+            </div>
+
+            {/* Syllabus */}
+            <div className="mb-4">
+              <label htmlFor="syllabus" className="block mb-1 font-medium">
+                Syllabus (one topic per line)
+              </label>
+              <Field
+                as="textarea"
+                id="syllabus"
+                name="syllabus"
+                rows={5}
+                className="w-full border rounded p-2"
+              />
+              <ErrorMessage name="syllabus" component="div" className="text-red-500 text-sm mt-1" />
+            </div>
+
+            {/* Requirements */}
+            <div className="mb-4">
+              <label htmlFor="requirements" className="block mb-1 font-medium">
+                Requirements (one requirement per line)
+              </label>
+              <Field
+                as="textarea"
+                id="requirements"
+                name="requirements"
+                rows={5}
+                className="w-full border rounded p-2"
+              />
+              <ErrorMessage name="requirements" component="div" className="text-red-500 text-sm mt-1" />
+            </div>
+
+            {/* Video Source */}
+            <div className="mb-4">
+              <label htmlFor="videoSource" className="block mb-1 font-medium">
+                Introduction Video Source
+              </label>
+              <Field
+                as="select"
+                id="videoSource"
+                name="videoSource"
+                className="w-full border rounded p-2"
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+                  setFieldValue("videoSource", e.target.value);
+                  if (e.target.value !== "youtube" && e.target.value !== "vimeo") {
+                    setFieldValue("videoUrl", "");
+                  }
+                }}
+              >
+                <option value="">Select Source</option>
+                <option value="local">Local</option>
+                <option value="s3">S3</option>
+                <option value="youtube">YouTube</option>
+                <option value="vimeo">Vimeo</option>
+              </Field>
+              <ErrorMessage
+                name="videoSource"
+                component="div"
+                className="text-red-500 text-sm mt-1"
+              />
+            </div>
+
+            {/* Video URL */}
+            {(values.videoSource === "youtube" || values.videoSource === "vimeo") && (
+              <div className="mb-4">
+                <label htmlFor="videoUrl" className="block mb-1 font-medium">
+                  Video URL
+                </label>
+                <Field
+                  type="url"
+                  id="videoUrl"
+                  name="videoUrl"
+                  placeholder="https://..."
+                  className="w-full border rounded p-2"
+                />
+                <ErrorMessage name="videoUrl" component="div" className="text-red-500 text-sm mt-1" />
+              </div>
+            )}
+
+            {/* Introduction File */}
+            {(values.videoSource === "local" || values.videoSource === "s3") && (
+              <div className="mb-4">
+                <label htmlFor="introductionFile" className="block mb-1 font-medium">
+                  Introduction Video File
+                </label>
+                <input
+                  id="introductionFile"
+                  name="introductionFile"
+                  type="file"
+                  accept="video/*"
+                  onChange={(e) => {
+                    if (e.currentTarget.files && e.currentTarget.files[0]) {
+                      setFieldValue("introductionFile", e.currentTarget.files[0]);
+                    } else {
+                      setFieldValue("introductionFile", null);
                     }
-                    alt='Thumbnail'
-                    style={{ maxWidth: "100%", maxHeight: "100%" }}
-                  />
-                )}
-              </Modal>
+                  }}
+                  className="w-full border rounded p-2"
+                />
+                <ErrorMessage
+                  name="introductionFile"
+                  component="div"
+                  className="text-red-500 text-sm mt-1"
+                />
+              </div>
+            )}
 
-              <Modal
-                isOpen={isGuidelinesModalOpen}
-                onRequestClose={toggleGuidelinesModal}
-                contentLabel='Guidelines PDF Modal'
-              >
-                {guidelines && (
-                  <Document
-                    file={
-                      guidelines
-                        ? URL.createObjectURL(guidelines)
-                        : course?.guidelinesUrl
-                    }
-                  >
-                    <Page pageNumber={1} />
-                  </Document>
-                )}
-                <button onClick={toggleGuidelinesModal} className='mt-2'>
-                  Close Modal
-                </button>
-              </Modal>
+            {/* Guidelines File */}
+            <div className="mb-4">
+              <label htmlFor="guidelinesFile" className="block mb-1 font-medium">
+                Guidelines File (PDF or DOC)
+              </label>
+              <input
+                id="guidelinesFile"
+                name="guidelinesFile"
+                type="file"
+                accept=".pdf,.doc,.docx"
+                onChange={(e) => {
+                  if (e.currentTarget.files && e.currentTarget.files[0]) {
+                    setFieldValue("guidelinesFile", e.currentTarget.files[0]);
+                  } else {
+                    setFieldValue("guidelinesFile", null);
+                  }
+                }}
+                className="w-full border rounded p-2"
+              />
+              <ErrorMessage
+                name="guidelinesFile"
+                component="div"
+                className="text-red-500 text-sm mt-1"
+              />
             </div>
-            <div className='flex justify-center  mt-8'>
-              <button
-                type='submit'
-                className='bg-blue-500 mt-5 text-white px-3 py-2 rounded-md'
-              >
-                Submit
-              </button>
+
+            {/* Thumbnail File */}
+            <div className="mb-6">
+              <label htmlFor="thumbnailFile" className="block mb-1 font-medium">
+                Thumbnail Image
+              </label>
+              <input
+                id="thumbnailFile"
+                name="thumbnailFile"
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  if (e.currentTarget.files && e.currentTarget.files[0]) {
+                    setFieldValue("thumbnailFile", e.currentTarget.files[0]);
+                  } else {
+                    setFieldValue("thumbnailFile", null);
+                  }
+                }}
+                className="w-full border rounded p-2"
+              />
+              <ErrorMessage
+                name="thumbnailFile"
+                component="div"
+                className="text-red-500 text-sm mt-1"
+              />
             </div>
-          </div>
-        </Form>
+
+            {/* Submit */}
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full bg-blue-600 text-white p-3 rounded hover:bg-blue-700 transition"
+            >
+              {isSubmitting ? "Updating..." : "Update Course"}
+            </button>
+          </Form>
+        )}
       </Formik>
     </div>
   );
 };
 
-export default EditCourse;
+export default EditCourseForm;

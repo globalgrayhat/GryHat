@@ -34,15 +34,22 @@ const server = http.createServer(app);
 
 /** Mount Swagger only when enabled to avoid noisy prod setups. */
 const mountSwagger = (app: Application) => {
-  const enabled = String(configKeys.SWAGGER_ENABLED || '').toLowerCase() === 'true';
+  const enabled =
+    String(configKeys.SWAGGER_ENABLED || '').toLowerCase() === 'true';
   if (!enabled) {
     if (process.env.NODE_ENV !== 'production') {
-      console.log(colorHEX('#FFC107', '[Swagger] Disabled (SWAGGER_ENABLED != "true")'));
+      console.log(
+        colorHEX('#FFC107', '[Swagger] Disabled (SWAGGER_ENABLED != "true")')
+      );
     }
     return;
   }
   const docsPath = configKeys.SWAGGER_PATH || '/api-docs';
-  app.use(docsPath, swaggerUi.serve, swaggerUi.setup(swaggerSpec, { explorer: true }));
+  app.use(
+    docsPath,
+    swaggerUi.serve,
+    swaggerUi.setup(swaggerSpec, { explorer: true })
+  );
   console.log(colorHEX('#00C853', `[Swagger] UI mounted at ${docsPath}`));
 };
 
@@ -68,11 +75,12 @@ app.use(express.static(path.join(__dirname, 'public')));
 
   // Helper endpoint to advertise docs location
   app.get('/api/docs', (req, res) => {
-    const enabled = String(configKeys.SWAGGER_ENABLED || '').toLowerCase() === 'true';
+    const enabled =
+      String(configKeys.SWAGGER_ENABLED || '').toLowerCase() === 'true';
     res.status(200).json({
       platform: 'GrayHat',
       swaggerEnabled: enabled,
-      docsUrl: enabled ? (configKeys.SWAGGER_PATH || '/api-docs') : null,
+      docsUrl: enabled ? configKeys.SWAGGER_PATH || '/api-docs' : null,
       path: configKeys.SWAGGER_PATH || '/api-docs'
     });
   });
@@ -87,13 +95,14 @@ app.use(express.static(path.join(__dirname, 'public')));
   });
 
   serverConfig(server).startServer();
-  
+
   // FIX: Set server timeout to 1 hour (in milliseconds) to match Nginx.
   // This is the definitive fix for the "Timeout was reached" error.
   server.setTimeout(3600 * 1000);
-
 })().catch((err) => {
-  console.error(colorHEX('#FF5252', `[BOOT] Failed to start: ${err?.message || err}`));
+  console.error(
+    colorHEX('#FF5252', `[BOOT] Failed to start: ${err?.message || err}`)
+  );
   process.exit(1);
 });
 

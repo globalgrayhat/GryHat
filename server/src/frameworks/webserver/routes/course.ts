@@ -529,7 +529,6 @@ const courseRouter = (redisClient: RedisClient) => {
     controller.getRejectedCoursesByInstructor
   );
 
-
   // ==================== PUT ROUTES ====================
 
   /**
@@ -807,7 +806,7 @@ export default courseRouter;
  *         requirements: { type: array, items: { type: string } }
  *         videoSource: { type: string, enum: [local, s3, youtube, vimeo] }
  *         videoUrl: { type: string, description: "Required when videoSource is youtube/vimeo" }
- *         introductionKey: { type: string, description: "TUS key for intro (optional)" }
+ *         introductionKey: { type: string, description: "local key for intro (optional)" }
  *     MultipartCourseEdit:
  *       type: object
  *       properties:

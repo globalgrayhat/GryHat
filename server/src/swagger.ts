@@ -3,8 +3,11 @@ import swaggerUi from 'swagger-ui-express';
 import configKeys from './config';
 
 // Build base URL from env (protocol/host/port)
-const PROTOCOL = (process.env.SWAGGER_SERVER_PROTOCOL || process.env.PROTOCOL || 'http')
-  .replace(/:$/, '');
+const PROTOCOL = (
+  process.env.SWAGGER_SERVER_PROTOCOL ||
+  process.env.PROTOCOL ||
+  'http'
+).replace(/:$/, '');
 const HOST = process.env.SWAGGER_SERVER_HOST || process.env.HOST || 'localhost';
 const PORT = Number(configKeys.PORT) || 5000;
 const BASE_URL = `${PROTOCOL}://${HOST}:${PORT}`;
@@ -16,29 +19,29 @@ const options = {
     info: {
       title: 'GrayHat API',
       version: '1.0.0',
-      description: 'API documentation for GrayHat - E-Learning Platform',
+      description: 'API documentation for GrayHat - E-Learning Platform'
     },
     servers: [
       {
         url: BASE_URL,
-        description: 'Environment server (dynamic)',
-      },
+        description: 'Environment server (dynamic)'
+      }
     ],
     components: {
       securitySchemes: {
         bearerAuth: {
           type: 'http',
           scheme: 'bearer',
-          bearerFormat: 'JWT',
-        },
-      },
+          bearerFormat: 'JWT'
+        }
+      }
     },
-    security: [{ bearerAuth: [] }],
+    security: [{ bearerAuth: [] }]
   },
   apis: [
     './src/frameworks/webserver/routes/*.ts',
-    './src/adapters/controllers/*.ts',
-  ],
+    './src/adapters/controllers/*.ts'
+  ]
 };
 
 const swaggerSpec = swaggerJSDoc(options);
