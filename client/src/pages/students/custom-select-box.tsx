@@ -8,7 +8,7 @@ interface Category {
   name: string;
   description: string;
 }
-        
+
 const SelectInterest: React.FC = () => {
   const [categories, setCategories] = useState<Category[] | null>(null);
 

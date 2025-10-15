@@ -1,7 +1,8 @@
-import { createSlice, PayloadAction, createAsyncThunk } from "@reduxjs/toolkit";
-import { RootState } from "../store";
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import type { PayloadAction } from "@reduxjs/toolkit";
+import type { RootState } from "../store";
 import { getStudentDetails } from "../../api/endpoints/student";
-import { ApiResponseStudent } from "../../api/types/apiResponses/api-response-student";
+import type { ApiResponseStudent } from "../../api/types/apiResponses/api-response-student";
 import decodeJwtToken from "../../utils/decode";
 
 interface StudentData {
@@ -12,11 +13,16 @@ interface StudentData {
 }
 
 const accessToken = localStorage.getItem("accessToken");
-const decodedToken = decodeJwtToken(accessToken??"")
+let decodedToken = null;
+try {
+  decodedToken = accessToken ? decodeJwtToken(accessToken) : null;
+} catch (error) {
+  console.warn("Error decoding JWT token in studentSlice:", error);
+}
 
 const initialState: StudentData = {
   studentDetails: null,
-  studentId: decodedToken?.payload.Id || null,
+  studentId: decodedToken?.payload?.Id || null,
   isFetching: false,
   error: null,
 };
@@ -28,8 +34,15 @@ export const fetchStudentData = createAsyncThunk(
     try {
       const response = await getStudentDetails();
       return response.data;
-    } catch (error: any) {
-      throw new Error(error?.response?.data?.message || "Failed to fetch student data");
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(
+          (error as { response?: { data?: { message?: string } } })?.response
+            ?.data?.message || "Failed to fetch student data"
+        );
+      } else {
+        throw new Error("Unknown error occurred");
+      }
     }
   }
 );
@@ -52,7 +65,7 @@ const studentSlice = createSlice({
       state.error = null;
     });
     builder.addCase(fetchStudentData.fulfilled, (state, action) => {
-        state.isFetching = false;
+      state.isFetching = false;
       state.studentDetails = action.payload;
     });
     builder.addCase(fetchStudentData.rejected, (state, action) => {
@@ -66,9 +79,11 @@ export const { setDetails, clearDetails } = studentSlice.actions;
 
 export const selectStudent = (state: RootState) => state.student;
 
-export const selectStudentId = (state: RootState) => state.student.studentDetails?._id;
+export const selectStudentId = (state: RootState) =>
+  state.student.studentDetails?._id;
 
-export const selectIsFetchingStudent = (state: RootState) => state.student.isFetching;
+export const selectIsFetchingStudent = (state: RootState) =>
+  state.student.isFetching;
 
 export const selectStudentError = (state: RootState) => state.student.error;
 

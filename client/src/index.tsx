@@ -1,17 +1,17 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import "./index.css";
-import AppRouter from "./routes";
+import AppRouter from "./api/routes";
 import { RouterProvider } from "react-router-dom";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { Provider } from "react-redux";
-import { store,persistor } from "./redux/store";
+import { store, persistor } from "./redux/store";
 // Material Tailwind theme provider handles component theming and tokens
 import { ThemeProvider as MaterialThemeProvider } from "@material-tailwind/react";
 // Our application theme provider toggles dark/light mode
-import { ThemeProvider as AppThemeProvider } from './contexts/ThemeContext';
-import { LanguageProvider } from './contexts/LanguageContext';
-import { SiteSettingsProvider } from './contexts/SiteSettingsContext';
+import { ThemeProvider as AppThemeProvider } from "./contexts/ThemeContext";
+import { LanguageProvider } from "./contexts/LanguageContext";
+import { SiteSettingsProvider } from "./contexts/SiteSettingsContext";
 import { ToastContainer } from "react-toastify";
 import Modal from "react-modal";
 import CONFIG_KEYS from "./config";

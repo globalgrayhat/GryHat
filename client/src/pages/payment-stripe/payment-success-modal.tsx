@@ -7,7 +7,7 @@ import {
   DialogFooter,
   Typography,
 } from "@material-tailwind/react";
-import { useNavigate,useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { CheckCircleIcon } from "@heroicons/react/24/outline";
 interface PaymentModalProps {
   open: boolean;
@@ -19,12 +19,12 @@ const PaymentSuccessModal: React.FC<PaymentModalProps> = ({
   setOpen,
 }) => {
   const handleOpen = () => setOpen((cur) => !cur);
-  const {courseId} = useParams()
-  const navigate = useNavigate()
-  const handleClose = ()=>{
-    setOpen(!open)
-    navigate(`/courses/${courseId}/#success`)
-  }
+  const { courseId } = useParams();
+  const navigate = useNavigate();
+  const handleClose = () => {
+    setOpen(!open);
+    navigate(`/courses/${courseId}/#success`);
+  };
 
   return (
     <Fragment>
@@ -38,7 +38,7 @@ const PaymentSuccessModal: React.FC<PaymentModalProps> = ({
           </div>
         </DialogHeader>
         <DialogBody divider>
-          <Typography variant="body" color="gray">
+          <Typography variant="paragraph" color="gray">
             Thank you for your payment. Your transaction was successful. Please
             check your email for the payment confirmation and additional
             details.
@@ -49,7 +49,7 @@ const PaymentSuccessModal: React.FC<PaymentModalProps> = ({
             variant="gradient"
             color="green"
             onClick={handleClose}
-            className="w-full"   
+            className="w-full"
           >
             <span>Close</span>
           </Button>

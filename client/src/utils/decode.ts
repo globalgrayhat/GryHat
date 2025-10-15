@@ -1,4 +1,5 @@
-import jwtDecode, { JwtPayload } from "jwt-decode";
+import jwtDecode from "jwt-decode";
+import type { JwtPayload } from "jwt-decode";
 
 interface Payload {
   email: string;

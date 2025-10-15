@@ -1,9 +1,10 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { RootState } from "../store";
+import { createSlice } from "@reduxjs/toolkit";
+import type { PayloadAction } from "@reduxjs/toolkit";
+import type { RootState } from "../store";
 
 const initialState = {
   data: {
-    footerVisible:true,
+    footerVisible: true,
   },
 };
 
@@ -15,13 +16,13 @@ const helperSlice = createSlice({
       state.data = {
         footerVisible: action.payload,
       };
-    }
+    },
   },
 });
 
 export const { setFooterVisible } = helperSlice.actions;
 
-export const selectIsFooterVisible = (state: RootState) => state.helper.data.footerVisible
-
+export const selectIsFooterVisible = (state: RootState) =>
+  state.helper.data.footerVisible;
 
 export const helperReducer = helperSlice.reducer;

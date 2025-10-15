@@ -1,6 +1,7 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { RootState } from "../store";
-import { CourseInterface } from "../../types/course"; // Corrected import path
+import { createSlice } from "@reduxjs/toolkit";
+import type { PayloadAction } from "@reduxjs/toolkit";
+import type { RootState } from "../store";
+import type { CourseInterface } from "../../types/course"; // Corrected import path
 
 interface InitialState {
   course: CourseInterface | null;
@@ -23,8 +24,8 @@ const courseSlice = createSlice({
   },
 });
 
-export const { setCourse, clearCourse } = courseSlice.actions; 
+export const { setCourse, clearCourse } = courseSlice.actions;
 
-export const selectCourse = (state: RootState) => state.course.course
+export const selectCourse = (state: RootState) => state.course.course;
 
 export const courseReducer = courseSlice.reducer;

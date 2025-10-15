@@ -1,5 +1,5 @@
-import axiosInstance from "api/middlewares/interceptor";
-import { ContactInfo } from "../types/student/student";
+import axiosInstance from "../middlewares/interceptor";
+import type { ContactInfo } from "../types/student/student";
 import CONFIG_KEYS from "../../config";
 
 export const submitResponseService = async (
@@ -10,5 +10,5 @@ export const submitResponseService = async (
     `${CONFIG_KEYS.API_BASE_URL}/${endpoint}`,
     info
   );
-  return response.data
+  return response.data;
 };

@@ -4,14 +4,14 @@ import { useSelector, useDispatch } from "react-redux";
 import "react-toastify/dist/ReactToastify.css";
 
 // Common Components
-import StudentHeader from "./components/partials/student-header";
-import StudentFooter from "./components/partials/student-footer";
+import StudentHeader from "./components/partials/header";
+import StudentFooter from "./components/partials/footer";
 import YouAreOffline from "./components/common/you-are-offline";
 import SessionExpired from "./components/common/session-expired-modal";
 
 // Instructor Components
 import InstructorLoginPage from "./pages/instructors/instructor-login-modal";
-import InstructorLayout from "./pages/instructors/InstructorLayout"; // ✅ 1. استيراد المكون الجديد
+import InstructorLayout from "./pages/instructors/InstructorLayout";
 
 // Admin Components
 import AdminLoginPage from "./pages/admin/admin-login-page";
@@ -155,7 +155,6 @@ export const Instructor: React.FC = () => {
     );
   }
 
-  // ✅ 2. إذا نجحت كل الشروط، قم بعرض التصميم المتجاوب الجديد
   // The <Outlet /> is now rendered inside the InstructorLayout component.
   return (
     <div dir={dir}>

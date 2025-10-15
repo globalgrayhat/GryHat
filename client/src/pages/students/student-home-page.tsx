@@ -2,34 +2,40 @@ import React, { useEffect, useMemo, useState, useCallback } from "react";
 import Carousel from "../../components/elements/carousel-page";
 import TrendingCard from "../home/trending-card";
 import RecommendedCard from "../home/recommended-card";
-import TrendingCardShimmer from "components/shimmer/shimmer-trending-course";
+import TrendingCardShimmer from "@components/shimmer/shimmer-trending-course";
 import {
-  ApiResponseRecommended,
-  ApiResponseTrending,
+  type ApiResponseRecommended,
+  type ApiResponseTrending,
 } from "../../api/types/apiResponses/api-response-home-page-listing";
-import { selectIsLoggedIn, selectUserType } from "../../redux/reducers/authSlice";
+import {
+  selectIsLoggedIn,
+  selectUserType,
+} from "../../redux/reducers/authSlice";
 import { useSelector } from "react-redux";
 import { Typography } from "@material-tailwind/react";
-import { getTrendingCourses, getRecommendedCourses } from "../../api/endpoints/course/course";
+import {
+  getTrendingCourses,
+  getRecommendedCourses,
+} from "../../api/endpoints/course/course";
 import { Link } from "react-router-dom";
 import { useLanguage } from "../../contexts/LanguageContext";
 
 /* --------------------------------- Utils --------------------------------- */
 /** Robust array extractor that tolerates guest/logged-in response shapes */
-function extractArray<T = any>(resp: any): T[] {
-  const payload = resp?.data ?? resp;
+function extractArray<T>(resp: unknown): T[] {
+  const payload = (resp as { data?: unknown })?.data ?? resp;
 
   // Common flat & nested keys
   const candidates = [
     payload,
-    payload?.data,
-    payload?.items,
-    payload?.result,
-    payload?.records,
-    payload?.data?.data,
-    payload?.data?.items,
-    payload?.data?.result,
-    payload?.data?.records,
+    (payload as { data?: unknown })?.data,
+    (payload as { items?: unknown })?.items,
+    (payload as { result?: unknown })?.result,
+    (payload as { records?: unknown })?.records,
+    (payload as { data?: unknown })?.data,
+    (payload as { items?: unknown })?.items,
+    (payload as { result?: unknown })?.result,
+    (payload as { records?: unknown })?.records,
   ];
 
   for (const c of candidates) {
@@ -51,11 +57,11 @@ function extractArray<T = any>(resp: any): T[] {
 }
 
 /** Section header with optional CTA (theme-aware) */
-const SectionHeader: React.FC<{ title: string; ctaLabel?: string; ctaTo?: string }> = ({
-  title,
-  ctaLabel,
-  ctaTo,
-}) => (
+const SectionHeader: React.FC<{
+  title: string;
+  ctaLabel?: string;
+  ctaTo?: string;
+}> = ({ title, ctaLabel, ctaTo }) => (
   <div className="mb-4 flex items-center justify-between">
     <Typography
       variant="h1"
@@ -76,7 +82,10 @@ const SectionHeader: React.FC<{ title: string; ctaLabel?: string; ctaTo?: string
 
 /** Shimmer grid reused for both sections */
 const LoadingGrid: React.FC<{ count?: number }> = ({ count = 6 }) => (
-  <div className="grid gap-6 px-2 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3" aria-busy="true">
+  <div
+    className="grid gap-6 px-2 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+    aria-busy="true"
+  >
     {Array.from({ length: count }).map((_, i) => (
       <TrendingCardShimmer key={`shimmer-${i}`} />
     ))}
@@ -84,10 +93,16 @@ const LoadingGrid: React.FC<{ count?: number }> = ({ count = 6 }) => (
 );
 
 /** Empty state (matches ListCourse theme) */
-const EmptyState: React.FC<{ label: string; browseLabel: string }> = ({ label, browseLabel }) => (
+const EmptyState: React.FC<{ label: string; browseLabel: string }> = ({
+  label,
+  browseLabel,
+}) => (
   <div className="mx-2 rounded-xl border border-gray-200 bg-white p-8 text-center dark:border-gray-700 dark:bg-gray-900">
     <p className="font-medium text-gray-900 dark:text-gray-100">{label}</p>
-    <Link to="/courses" className="mt-3 inline-block font-semibold text-blue-700 hover:underline dark:text-blue-300">
+    <Link
+      to="/courses"
+      className="mt-3 inline-block font-semibold text-blue-700 hover:underline dark:text-blue-300"
+    >
       {browseLabel}
     </Link>
   </div>
@@ -99,12 +114,19 @@ const StudentHomePage: React.FC = () => {
   const userType = useSelector(selectUserType);
 
   // i18n
-  const { t, lang } = useLanguage() as { t: (k: string) => string; lang?: "ar" | "en" };
+  const { t, lang } = useLanguage() as {
+    t: (k: string) => string;
+    lang?: "ar" | "en";
+  };
   const dir = lang === "ar" ? "rtl" : "ltr";
 
   // Data
-  const [trendingCourses, setTrendingCourses] = useState<ApiResponseTrending[]>([]);
-  const [recommendedCourses, setRecommendedCourses] = useState<ApiResponseRecommended[]>([]);
+  const [trendingCourses, setTrendingCourses] = useState<ApiResponseTrending[]>(
+    []
+  );
+  const [recommendedCourses, setRecommendedCourses] = useState<
+    ApiResponseRecommended[]
+  >([]);
 
   // Loading
   const [isLoadingTrending, setIsLoadingTrending] = useState(false);
@@ -120,15 +142,21 @@ const StudentHomePage: React.FC = () => {
 
   // Labels (with English fallbacks)
   const titleTrending = t("home.trendingCourses") || "Trending Courses";
-  const titleRecommended = t("home.recommendedCourses") || "Recommended Courses";
+  const titleRecommended =
+    t("home.recommendedCourses") || "Recommended Courses";
   const labelViewMore = t("home.viewMore") || "View More";
   const labelViewAll = t("home.viewAll") || "View All";
   const labelBrowseAll = t("home.browseAll") || "Browse all courses";
-  const errTrending = t("home.errors.trendingFail") || "Unable to load trending courses right now.";
+  const errTrending =
+    t("home.errors.trendingFail") ||
+    "Unable to load trending courses right now.";
   const errRecommended =
-    t("home.errors.recommendedFail") || "Unable to load your recommendations right now.";
-  const emptyTrending = t("home.empty.trending") || "No trending courses at the moment.";
-  const emptyRecommended = t("home.empty.recommended") || "No recommendations for you yet.";
+    t("home.errors.recommendedFail") ||
+    "Unable to load your recommendations right now.";
+  const emptyTrending =
+    t("home.empty.trending") || "No trending courses at the moment.";
+  const emptyRecommended =
+    t("home.empty.recommended") || "No recommendations for you yet.";
 
   /** Load trending for everyone (guest + logged-in) */
   const fetchTrending = useCallback(async () => {
@@ -185,7 +213,10 @@ const StudentHomePage: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100 transition-colors" dir={dir}>
+    <div
+      className="min-h-screen bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100 transition-colors"
+      dir={dir}
+    >
       {/* Hero / Carousel (aligned with ListCourse palette) */}
       <div className="bg-gradient-to-b from-white to-gray-50 dark:from-gray-900 dark:to-gray-900">
         <div className="container mx-auto px-4">
@@ -197,7 +228,11 @@ const StudentHomePage: React.FC = () => {
 
       {/* Trending — visible for all users */}
       <section className="container mx-auto px-4 pt-8 lg:pt-12">
-        <SectionHeader title={titleTrending} ctaLabel={labelViewAll} ctaTo="/courses" />
+        <SectionHeader
+          title={titleTrending}
+          ctaLabel={labelViewAll}
+          ctaTo="/courses"
+        />
 
         {isLoadingTrending ? (
           <LoadingGrid />
@@ -209,7 +244,11 @@ const StudentHomePage: React.FC = () => {
           <>
             <div className="grid gap-6 px-2 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
               {trendingVisible.map((course) => (
-                <Link key={course._id} to={`/courses/${course._id}`} className="block">
+                <Link
+                  key={course._id}
+                  to={`/courses/${course._id}`}
+                  className="block"
+                >
                   <TrendingCard courseInfo={course} />
                 </Link>
               ))}
@@ -232,7 +271,11 @@ const StudentHomePage: React.FC = () => {
       {/* Recommended — only when logged-in as student */}
       {isLoggedIn && userType === "student" && (
         <section className="container mx-auto px-4 pb-14 pt-10">
-          <SectionHeader title={titleRecommended} ctaLabel={labelViewAll} ctaTo="/courses?tab=recommended" />
+          <SectionHeader
+            title={titleRecommended}
+            ctaLabel={labelViewAll}
+            ctaTo="/courses?tab=recommended"
+          />
 
           {isLoadingRecommended ? (
             <LoadingGrid />
@@ -244,7 +287,11 @@ const StudentHomePage: React.FC = () => {
             <>
               <div className="grid gap-6 px-2 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
                 {recommendedVisible.map((course) => (
-                  <Link key={course._id} to={`/courses/${course._id}`} className="block">
+                  <Link
+                    key={course._id}
+                    to={`/courses/${course._id}`}
+                    className="block"
+                  >
                     <RecommendedCard courseInfo={course} />
                   </Link>
                 ))}
