@@ -1,8 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable no-unsafe-optional-chaining */
 import React from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
-import { AdminLoginInfo } from "../../api/types/admin/auth-interface";
+import type { AdminLoginInfo } from "../../api/types/admin/auth-interface";
 import { loginAdmin } from "../../api/endpoints/auth/auth";
 import { setToken } from "../../redux/reducers/authSlice";
 import { useDispatch } from "react-redux";

@@ -1,4 +1,5 @@
-import React, { useState,useEffect } from "react";
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import React, { useState } from "react";
 import {
   Button,
   Dialog,

@@ -7,7 +7,7 @@ type QuizzesSwitchProps = {
   setAddQuiz: (addQuiz: boolean) => void;
 };
 
-const QuizSwitch: React.FC<QuizzesSwitchProps> = ({ addQuiz, setAddQuiz }) => {
+const QuizSwitch: React.FC<QuizzesSwitchProps> = ({ setAddQuiz }) => {
   const handleSwitchChange: React.ChangeEventHandler<HTMLInputElement> = (event) => {
     const isChecked = event.target.checked;
     setAddQuiz(isChecked);

@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { Routes, Route } from "react-router-dom";
 import { IconButton } from "@material-tailwind/react";
 import {

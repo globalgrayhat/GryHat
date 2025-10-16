@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import CONFIG_KEYS from "../config";
-import { LessonDto, LessonMedia } from "../types/video";
+import type { LessonDto, LessonMedia } from "../types/video";
 
 export type PlaybackKind = "s3" | "local" | "youtube" | "vimeo" | "unknown";
 

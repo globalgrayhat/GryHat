@@ -93,6 +93,14 @@ const AdminArticlesPage: React.FC = () => {
           </table>
         </CardBody>
         <CardFooter className='border-t border-blue-gray-50 p-4 flex justify-end'>
+          <div className='flex items-center gap-2'>
+            <Button size='sm' color='blue' variant='outlined'>
+              {t('common.previous') || 'Previous'}
+            </Button>
+            <Button size='sm' color='blue' variant='outlined'>
+              {t('common.next') || 'Next'}
+            </Button>
+          </div>
           {/* Pagination placeholder */}
         </CardFooter>
       </Card>

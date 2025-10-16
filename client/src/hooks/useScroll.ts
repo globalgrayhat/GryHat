@@ -1,7 +1,7 @@
  import {useState,useEffect} from 'react'
  import { throttle } from 'lodash';
  const useScroll = () =>{
-    const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+    const [, setIsHeaderVisible] = useState(true);
     const [prevScrollPos, setPrevScrollPos] = useState(window.pageYOffset);
     useEffect(() => {
         const handleScroll = throttle(() => {

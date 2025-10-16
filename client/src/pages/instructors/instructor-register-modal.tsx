@@ -1,11 +1,12 @@
-import React, { useState, ChangeEvent, useEffect } from 'react';
-import { Formik, Form, Field, ErrorMessage, FormikHelpers } from 'formik';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import React, { useState, type ChangeEvent, useEffect } from 'react';
+import { Formik, Form, Field, ErrorMessage, type FormikHelpers } from 'formik';
 import * as Yup from 'yup';
 import { registerInstructor } from '../../api/endpoints/auth/instructor-auth';
-import { InstructorRegisterDataInterface } from '../../api/types/instructor/auth-interface';
+import type { InstructorRegisterDataInterface } from '../../api/types/instructor/auth-interface';
 import { toast } from 'react-toastify';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { XMarkIcon, PhotoIcon, ArrowUpTrayIcon, EyeIcon, EyeSlashIcon, SparklesIcon, PlusIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, PhotoIcon, EyeIcon, EyeSlashIcon, SparklesIcon, PlusIcon } from '@heroicons/react/24/outline';
 
 // --- Component Props & Initial Data ---
 interface InstructorRegisterModalProps {

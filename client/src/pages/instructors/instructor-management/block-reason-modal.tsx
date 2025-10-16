@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Fragment, useRef, useState } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
-import { SetStateAction, Dispatch } from "react";
+import type { SetStateAction, Dispatch } from "react";
 import {toast} from 'react-toastify'
 import { blockInstructors } from "../../../api/endpoints/instructor-management";
 interface ModalProps {
@@ -27,7 +28,8 @@ export default function BlockReasonModal({open,setOpen,updated,setUpdated,id}:Mo
       toast.success(response.data.message, {
         position: toast.POSITION.BOTTOM_RIGHT,
       });
-      setUpdated(!updated)
+      setUpdated(!updated);
+      setOpen(false);
 
     } catch (error: any) {
       toast.error(error.data.message, {

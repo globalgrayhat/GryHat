@@ -1,5 +1,5 @@
 import api from "../../middlewares/protected-interceptor";
-import { PaymentIntent } from "@stripe/stripe-js";
+import type { PaymentIntent } from "@stripe/stripe-js";
 import axiosInstance from "../../middlewares/interceptor";
 import CONFIG_KEYS from "../../../config";
 

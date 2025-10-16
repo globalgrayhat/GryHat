@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, AxiosResponse, AxiosError } from "axios";
+import axios, { type AxiosInstance, type AxiosResponse, AxiosError } from "axios";
 import CustomApiError from "../../utils/CustomApiError";
 import CONFIG_KEYS from "../../config";
 import { refreshTokenApi } from "../endpoints/auth/token-refresh";

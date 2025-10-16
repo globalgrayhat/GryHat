@@ -1,8 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react";
-import { Formik, Field, FieldArray, Form, ErrorMessage } from "formik";
+import { Field, FieldArray, ErrorMessage } from "formik";
 import { Tooltip } from "@material-tailwind/react";
 import { TiTrash } from "react-icons/ti";
-import { QuizValidationSchema } from "../../../validations/course/AddCourse";
 
 export const QuizzesComponent: React.FC = (values:any) => {
 

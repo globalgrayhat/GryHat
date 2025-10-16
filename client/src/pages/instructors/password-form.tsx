@@ -1,8 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-expressions */
 import { useState } from "react";
 import { useFormik } from "formik";
 import { changePassword } from "../../api/endpoints/instructor";
 import { toast } from "react-toastify";
-import { PasswordInfo } from "../../api/types/student/student";
+import type { PasswordInfo } from "../../api/types/student/student";
 import { PasswordValidationSchema } from "../../validations/student";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 const ChangePasswordForm = () => {

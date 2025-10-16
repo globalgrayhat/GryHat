@@ -5,9 +5,9 @@ import axiosInstance from '../middlewares/interceptor';
 // and enabled login providers.
 
 export const getSiteSettings = async () => {
-  return await axiosInstance.get('/settings');
+  return await axiosInstance.get('/');
 };
 
-export const updateSiteSettings = async (data: { platformName?: string; loginOptions?: any }) => {
-  return await axiosInstance.put('/settings', data);
+export const updateSiteSettings = async (data: { platformName?: string; loginOptions?: GainOptions[] }) => {
+  return await axiosInstance.put('/', data);
 };

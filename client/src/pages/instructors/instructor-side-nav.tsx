@@ -1,4 +1,3 @@
-// client/src/components/pages/instructors/instructor-side-nav.tsx
 
 // Import necessary libraries and hooks from React and react-router-dom
 import React, { useState } from "react";

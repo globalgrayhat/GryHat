@@ -1,5 +1,5 @@
 import CONFIG_KEYS from "../../../config";
-import { AdminLoginInfo } from "../../types/admin/auth-interface";
+import type { AdminLoginInfo } from "../../types/admin/auth-interface";
 import authInstanceAxios from "../../middlewares/interceptor";
 
 export const login = async (

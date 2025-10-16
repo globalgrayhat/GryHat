@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useMemo, useState } from "react";
 import { Disclosure } from "@headlessui/react";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
-import { Link, useLocation, NavLink, useNavigate } from "react-router-dom";
+import { Link, useLocation, NavLink } from "react-router-dom";
 import ProfileMenu from "../elements/profile-menu";
 import { selectIsLoggedIn, selectUserType } from "../../redux/reducers/authSlice";
 import { useSelector } from "react-redux";
@@ -42,7 +43,6 @@ type RRNavState = { isActive: boolean };
 // Main Component
 const StudentHeader: React.FC = () => {
   const location = useLocation();
-  const navigate = useNavigate();
 
   const isLoggedIn = useSelector(selectIsLoggedIn);
   const userType = useSelector(selectUserType);

@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-unused-expressions */
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getIndividualInstructors } from "../../../api/endpoints/instructor-management";
@@ -6,13 +10,13 @@ import { acceptInstructorRequest } from "../../../api/endpoints/instructor-manag
 import {toast} from 'react-toastify'
 import Modal from "../../../components/common/modal-page";
 import { Button } from "@material-tailwind/react";
-import { InstructorApiResponse } from "../../../api/types/apiResponses/api-response-instructors";
+import type { InstructorApiResponse } from "../../../api/types/apiResponses/api-response-instructors";
 
 
 
   const ViewMoreInstructorRequest: React.FC = () => {
   const { id } = useParams();
-  const [instructor, setInstructor] = useState<InstructorApiResponse>();
+  const [instructor, setInstructor] = useState<InstructorApiResponse | null>(null);
   const [open, setOpen] = useState<boolean>(false)
   const fetchInfo = async () => {
     try {

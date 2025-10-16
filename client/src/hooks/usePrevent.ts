@@ -31,7 +31,7 @@ const usePreventBackButton = (isLoggedIn: boolean): void => {
     return () => {
       window.removeEventListener('popstate', handleBackButton);
     };
-  }, [isLoggedIn]);
+  }, [isLoggedIn, location.pathname, navigate]);
 };
 
 export default usePreventBackButton;

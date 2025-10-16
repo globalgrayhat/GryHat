@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { Formik, Form, Field, ErrorMessage, FormikHelpers } from "formik";
+import { Formik, Form, Field, ErrorMessage, type FormikHelpers } from "formik";
 import { instructorLoginValidationSchema } from "../../validations/auth/InstructorLoginValidation";
 import { toast } from "react-toastify";
 import { loginInstructor } from "../../api/endpoints/auth/instructor-auth";
-import { InstructorLoginInfo } from "../../api/types/instructor/auth-interface";
+import type { InstructorLoginInfo } from "../../api/types/instructor/auth-interface";
 import { useDispatch, useSelector } from "react-redux";
 import { setToken, selectUserType, selectIsLoggedIn } from "../../redux/reducers/authSlice";
 import { EyeIcon, EyeSlashIcon, XMarkIcon, KeyIcon } from "@heroicons/react/24/outline";
@@ -44,8 +44,8 @@ const InstructorLoginModal: React.FC<InstructorLoginModalProps> = ({ isOpen, onC
       } else {
         toast.warn(message || t('toast.loginFailed') || "Login failed.");
       }
-    } catch (error: any) {
-      toast.error(error?.response?.data?.message || t('toast.unexpectedError') || "An unexpected error occurred.");
+    } catch (error: unknown) {
+      toast.error((error as { data?: { message?: string } })?.data?.message || t('toast.unexpectedError') || "An unexpected error occurred.");
     } finally {
       setIsSubmitting(false);
     }

@@ -1,4 +1,3 @@
-import React from "react";
 import ViewInstructorsCardShimmer from "./view-instructors-card-shimmer";
 
 const Shimmer = () => {

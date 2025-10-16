@@ -1,7 +1,9 @@
-import React, { useState, ChangeEvent } from "react";
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-unused-expressions */
+import React, { useState, type ChangeEvent } from "react";
 import {
   Formik,
-  FormikHelpers,
+  type FormikHelpers,
   Form,
   Field,
   ErrorMessage,
@@ -13,7 +15,7 @@ import { TiTrash } from "react-icons/ti";
 import QuizSwitch from "./quiz-switch";
 import { Tooltip } from "@material-tailwind/react";
 import { addLesson } from "../../../api/endpoints/course/lesson";
-import { FormValuesLesson } from "../../../types/lesson";
+import type { FormValuesLesson } from "../../../types/lesson";
 import SpinnerDialog from "../../../components/common/spinner-page"
 import { lessonSchema } from "../../../validations/lesson";
 import { useParams } from "react-router-dom";
@@ -66,7 +68,7 @@ const AddLessonForm: React.FC = () => {
           const questionsJSON = JSON.stringify(lesson[key]);
           formData.append(key, questionsJSON);
         } else {
-          formData.append(key, lesson[key]);
+          formData.append(key, String(lesson[key]));
         }
       });
 

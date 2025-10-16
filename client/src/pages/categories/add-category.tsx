@@ -1,9 +1,10 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import { CategoryValidationSchema } from "../../validations/category";
 import { toast } from "react-toastify";
 import { addCategory } from "../../api/endpoints/category";
-import { FormikHelpers } from "formik";
+import type { FormikHelpers } from "formik";
 import { useNavigate } from "react-router-dom";
 
 const initialValues = {

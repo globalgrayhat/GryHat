@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import * as Yup from "yup";
 export const AddCourseValidationSchema = Yup.object().shape({
     title: Yup.string().required("Title is required"),
@@ -30,11 +31,6 @@ export const AddCourseValidationSchema = Yup.object().shape({
     // ),
   });
 
-  interface CustomFile {
-    type: string;
-    size: number;
-    name: string;
-  }
     
  export const QuizValidationSchema = Yup.object().shape({
     questions: Yup.array().of(

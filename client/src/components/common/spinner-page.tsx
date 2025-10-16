@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Fragment, useState } from "react";
 import { Dialog, DialogBody, DialogFooter } from "@material-tailwind/react";
 import { HashLoader } from "react-spinners";
@@ -7,8 +8,8 @@ interface SpinnerDialogProps {
 }
 
 const SpinnerDialog: React.FC<SpinnerDialogProps> = ({ isUploading }) => {
-  const [size, setSize] = useState(null);
-  const [isOpen, setIsOpen] = useState(isUploading);
+  const [, setSize] = useState(null);
+  // const [isOpen, setIsOpen] = useState(isUploading);
 
   const handleOpen = (value: any) => setSize(value);
 

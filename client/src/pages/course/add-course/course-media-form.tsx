@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from "react";
 import { Formik, Field, Form, ErrorMessage } from "formik";
 import * as Yup from "yup";
@@ -6,7 +7,7 @@ type CourseMediaFormProps = {
   onSubmit: (formData: any) => void;
 };
 
-const CourseMediaForm: React.FC<CourseMediaFormProps> = ({ onSubmit }) => {
+export const CourseMediaForm: React.FC<CourseMediaFormProps> = ({ onSubmit }) => {
   // Define the validation schema using Yup
   const validationSchema = Yup.object({
     introductionVideo: Yup.mixed().required("Introduction video is required"),

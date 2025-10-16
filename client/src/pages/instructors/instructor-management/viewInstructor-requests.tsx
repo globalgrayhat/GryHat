@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useState } from "react";
 import {
   getAllInstructorRequests,
@@ -5,7 +6,7 @@ import {
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
 import useTimeAgo from "../../../hooks/useTimeAgo";
-import { InstructorApiResponse } from "../../../api/types/apiResponses/api-response-instructors";
+import type { InstructorApiResponse } from "../../../api/types/apiResponses/api-response-instructors";
 import { Avatar } from "@material-tailwind/react";
 
 const ViewInstructorRequests: React.FC = () => {

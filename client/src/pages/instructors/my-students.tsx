@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   MagnifyingGlassIcon,
   ChevronUpDownIcon,
@@ -19,7 +20,7 @@ import { useState, useEffect } from "react";
 import usePagination from "../../hooks/usePagination";
 import { formatDate } from "../../utils/helpers";
 import { toast } from "react-toastify";
-import { Students } from "../../api/types/student/student";
+import type { Students } from "../../api/types/student/student";
 const TABLE_HEAD = ["Student", "Course", "Status", "Joined"];
 
 const MyStudents: React.FC = () => {
@@ -96,12 +97,10 @@ const MyStudents: React.FC = () => {
               {currentData?.map(
                 (
                   {
-                    _id,
                     email,
                     firstName,
                     lastName,  
                     course,
-                    mobile,
                     isBlocked,
                     isGoogleUser,
                     dateJoined,

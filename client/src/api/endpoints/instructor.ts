@@ -4,7 +4,7 @@ import {
   getMyStudentsService,
   getInstructorDetailsService,
 } from "../services/instructor";
-import { PasswordInfo } from "../types/student/student";
+import type { PasswordInfo } from "../types/student/student";
 import END_POINTS from "../../constants/endpoints";
 
 export const changePassword = (passwordInfo: PasswordInfo) => {

@@ -4,9 +4,7 @@ import ChangePasswordForm from "./password-form";
 import { PencilIcon, LockClosedIcon } from "@heroicons/react/24/outline"; // Importing icons from Heroicons
 import { useLanguage } from "../../contexts/LanguageContext";
 
-type Props = {};
-
-const InstructorProfile: React.FC = (props: Props) => {
+const InstructorProfile: React.FC = () => {
   const [editMode, setEditMode] = useState(false);
   const { t } = useLanguage();
 

@@ -1,8 +1,9 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useEffect, useMemo, useState } from "react";
-import Select, { SingleValue, ActionMeta, StylesConfig } from "react-select";
+import Select, { type SingleValue, type ActionMeta, type StylesConfig } from "react-select";
 import makeAnimated from "react-select/animated";
 import { getAllCategories } from "../../api/endpoints/category";
-import { ApiResponseCategory } from "../../api/types/apiResponses/api-response-category";
+import type { ApiResponseCategory } from "../../api/types/apiResponses/api-response-category";  
 import { toast } from "react-toastify";
 import { useLanguage } from "../../contexts/LanguageContext";
 

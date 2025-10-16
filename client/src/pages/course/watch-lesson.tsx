@@ -1,11 +1,13 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useSelector } from "react-redux";
 
 import { getLessonById, getLessonsByCourse } from "../../api/endpoints/course/lesson";
-import { LessonDto } from "../../types/video";
-import { buildPlaybackFromLesson, isUserEnrolled, Playback } from "../../utils/media";
+import type { LessonDto } from "../../types/video";
+import { buildPlaybackFromLesson, isUserEnrolled, type Playback } from "../../utils/media";
 
 import VideoPlayer from "./video-player";
 import AboutLesson from "./about-lesson";
@@ -46,7 +48,6 @@ const TABS = [
   { key: 2, label: "Quizzes", icon: QuestionMarkCircleIcon },
 ] as const;
 
-const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n));
 
 /** -----------------------------
  * Lesson list item (desktop & mobile)

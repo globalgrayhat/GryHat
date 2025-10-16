@@ -1,10 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect } from "react";
 import { useFormik } from "formik";
 import { toast } from "react-toastify";
 import { getInstructorDetails, updateProfile } from "../../api/endpoints/instructor";
-import { UpdateProfileInfo } from "../../api/types/instructor/instructor";
 import { Avatar } from "@material-tailwind/react";
-import { InstructorApiResponse } from "../../api/types/apiResponses/api-response-instructors";
+import type { InstructorApiResponse } from "../../api/types/apiResponses/api-response-instructors";
 import { useLanguage } from '../../contexts/LanguageContext';
 import { getFullUrl } from "../../utils/helpers";
 

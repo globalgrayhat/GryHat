@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useState, useMemo } from "react";
 import {
   MagnifyingGlassIcon,
@@ -22,12 +23,11 @@ import {
   Tabs,
   TabsHeader,
   Tab,
-  Avatar,
   IconButton,
   Tooltip,
 } from "@material-tailwind/react";
 import { getCourseSelf } from "../../../api/endpoints/course/course";
-import { formatDate, getFullUrl } from "../../../utils/helpers";
+import { formatDate } from "../../../utils/helpers";
 import { Link } from "react-router-dom";
 import usePagination from "../../../hooks/usePagination";
 import useSearch from "../../../hooks/useSearch";
@@ -119,7 +119,6 @@ function CourseRow({
   const {
     _id,
     title,
-    thumbnailUrl,
     category,
     createdAt,
     isVerified,
@@ -275,7 +274,7 @@ const ListCourseForInstructors: React.FC = () => {
                 >
                   <div className="flex items-center justify-center gap-2">
                     <ExclamationCircleIcon className="h-6 w-6 text-blue-gray-400" />
-                    <Typography variant="body" color="blue-gray">
+                    <Typography variant="paragraph" color="blue-gray">
                       No courses found matching your criteria.
                     </Typography>
                   </div>

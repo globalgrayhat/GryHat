@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-expressions */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState, Fragment, useRef, useEffect } from "react";
 import useTimeAgo from "../../hooks/useTimeAgo";
 import { BiMessageRoundedDots } from "react-icons/bi";
@@ -11,14 +13,14 @@ import {
 } from "@material-tailwind/react";
 import { useSelector } from "react-redux";
 import { selectStudentId } from "../../redux/reducers/studentSlice";
-import { ApiResponseDiscussion } from "../../api/types/apiResponses/api-response-discussion";
+import type { ApiResponseDiscussion } from "../../api/types/apiResponses/api-response-discussion";
 import { RiEdit2Line, RiDeleteBinLine, RiFlagLine } from "react-icons/ri";
 import EditDiscussionModal from "./edit-discussion-modal";
 import { deleteDiscussions } from "../../api/endpoints/course/discussion";
 import { toast } from "react-toastify";
 import { getRepliesByDiscussion } from "../../api/endpoints/course/discussion";
 import { SyncLoader } from "react-spinners";
-import { ApiResponseDiscussionReply } from "../../api/types/apiResponses/api-response-discussion";
+import type { ApiResponseDiscussionReply } from "../../api/types/apiResponses/api-response-discussion";
 import { IoSend } from "react-icons/io5";
 import { replyDiscussions } from "../../api/endpoints/course/discussion";
 import { Tooltip } from "@material-tailwind/react";

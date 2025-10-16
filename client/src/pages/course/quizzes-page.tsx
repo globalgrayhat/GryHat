@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useMemo, useState } from "react";
 import { getQuizzesByLesson } from "../../api/endpoints/course/quiz";
 import { toast } from "react-toastify";
-import {
+import type {
   Question,
   Option,
 } from "../../api/types/apiResponses/api-response-quizzes";
@@ -22,7 +23,7 @@ const Quizzes: React.FC<{ lessonId: string | undefined }> = ({ lessonId }) => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);
   const [selectedOptionId, setSelectedOptionId] = useState<string | undefined>(undefined);
   const [nextClicked, setNextClicked] = useState(false);
-  const [answeredCorrectly, setAnsweredCorrectly] = useState<boolean | undefined>(undefined);
+  const [, setAnsweredCorrectly] = useState<boolean | undefined>(undefined);
   const [score, setScore] = useState<number>(0);
 
   useEffect(() => {

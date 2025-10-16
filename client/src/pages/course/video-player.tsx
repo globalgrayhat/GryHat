@@ -1,5 +1,5 @@
 import React from "react";
-import { Playback } from "../../utils/media";
+import type { Playback } from "../../utils/media";
 import { useNavigate, useParams } from "react-router-dom";
 
 /**

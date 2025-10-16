@@ -3,7 +3,7 @@ import {
 	updateProfileService,
 	getStudentDetailsService,
 } from "../services/student";
-import { PasswordInfo } from "../types/student/student";
+import type { PasswordInfo } from "../types/student/student";
 import END_POINTS from "../../constants/endpoints";
 
 export const changePassword = (

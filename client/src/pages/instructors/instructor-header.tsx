@@ -1,4 +1,3 @@
-import React from "react";
 import { Navbar, Typography, IconButton } from "@material-tailwind/react";
 import { Bars3Icon } from "@heroicons/react/24/solid";
 import { ProfileMenu } from "./profile-menu-instructor";

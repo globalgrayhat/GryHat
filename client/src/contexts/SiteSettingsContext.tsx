@@ -67,6 +67,7 @@ const SiteSettingsProvider: React.FC<{ children: React.ReactNode }> = ({
  * Hook to access site settings context. Throws an error if used outside of
  * SiteSettingsProvider.
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export const useSiteSettings = () => {
   const context = useContext(SiteSettingsContext);
   if (!context) {

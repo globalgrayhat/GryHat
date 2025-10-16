@@ -1,15 +1,13 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Spinner } from "@material-tailwind/react";
-import { RiSearchLine } from "react-icons/ri";
 import { toast } from "react-toastify";
 
 import InstructorCard from "./instructor-card";
 import ShimmerListAllInstructors from "../../components/shimmer/shimmer-list-all-instructors";
-import FilterInstructorSelectBox from "./filter-instructor-select-box";
 
 import { getAllInstructors } from "../../api/endpoints/instructor-management";
-import { InstructorApiResponse } from "../../api/types/apiResponses/api-response-instructors";
+import type { InstructorApiResponse } from "../../api/types/apiResponses/api-response-instructors";
 import { useLanguage } from "../../contexts/LanguageContext";
 
 /** Simple, reusable debounce hook */
@@ -30,8 +28,8 @@ const ListAllInstructors: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   // UI state
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [filterValue, setFilterValue] = useState<string>(""); // subject/category
+  const [searchQuery] = useState<string>("");
+  const [filterValue] = useState<string>(""); // subject/category
   const debouncedQuery = useDebounced(searchQuery, 250);
 
   // Fetch all instructors

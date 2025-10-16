@@ -20,7 +20,7 @@ import {
 import { formatDate } from "../../../utils/helpers";
 import { getLessonsByCourse } from "../../../api/endpoints/course/lesson";
 import { useParams } from "react-router-dom";
-import { ApiResponseLessons } from "../../../api/types/apiResponses/api-response-instructors";
+import type { ApiResponseLessons } from "../../../api/types/apiResponses/api-response-instructors";
 import AddLessonForm from "./add-lessons-form";
 import { Link } from "react-router-dom";
 import { LESSON_AVATAR } from "../../../constants/common";
@@ -89,7 +89,7 @@ const ViewLessons: React.FC = () => {
             <ul className='mt-4 w-full min-w-max text-left'>
               {lessons?.map(
                 (
-                  { _id, title, thumbnail, videoUrl, description, createdAt },
+                  { _id, title, thumbnail, description, createdAt },
                   index
                 ) => {
                   const isLast = index === lessons.length - 1;

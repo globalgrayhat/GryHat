@@ -1,6 +1,6 @@
 import authInstanceAxios from "../../middlewares/interceptor";
 import CONFIG_KEYS from "../../../config";
-import {
+import type {
   InstructorLoginInfo,
 } from "../../types/instructor/auth-interface";
 

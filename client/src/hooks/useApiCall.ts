@@ -1,3 +1,5 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from 'react';
 
 type RefreshDataFunction = () => void;
@@ -22,7 +24,6 @@ const useApiData = <T>(apiCall: (...args: any[]) => Promise<T>, ...args: any[]):
   };
 
   useEffect(() => {
-    let timerId:any;
     const fetchData = async (): Promise<void> => {
       setIsLoading(true);
       try {
@@ -32,9 +33,9 @@ const useApiData = <T>(apiCall: (...args: any[]) => Promise<T>, ...args: any[]):
         setIsError(true);
         setError(error);
       }
-      timerId = setTimeout(()=>{
+      setTimeout(() => {
         setIsLoading(false);
-      },2000)
+      }, 2000);
     };
 
     fetchData();

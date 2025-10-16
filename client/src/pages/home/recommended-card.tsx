@@ -1,6 +1,6 @@
 import React from "react";
 import { Card, CardHeader, CardBody, Typography } from "@material-tailwind/react";
-import { ApiResponseRecommended } from "../../api/types/apiResponses/api-response-home-page-listing";
+import type { ApiResponseRecommended } from "../../api/types/apiResponses/api-response-home-page-listing";
 import { getFullUrl } from "../../utils/helpers";
 import { AcademicCapIcon } from "@heroicons/react/24/solid";
 

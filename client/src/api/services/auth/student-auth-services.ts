@@ -1,5 +1,5 @@
 import CONFIG_KEYS from "../../../config";
-import {
+import type {
   StudentRegisterData,
   StudentLoginData,
 } from "../../types/student/auth-interface";

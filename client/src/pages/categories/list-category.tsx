@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { useState, useEffect } from "react";
 import { PlusCircleIcon } from "@heroicons/react/24/solid";
@@ -15,13 +16,12 @@ import { getAllCategories } from "../../api/endpoints/category";
 import { toast } from "react-toastify";
 import { formatDate } from "../../utils/helpers";
 import usePagination from "../../hooks/usePagination";
-import useSearch from "../../hooks/useSearch";
 
 const TABLE_HEAD = ["Name", "description", "Date added", ""];
 
 const ListCategories: React.FC = () => {
   const [categories, setCategories] = useState([]);
-  const [searchQuery,setSearchQuery] = useState<string>('')
+  const [,setSearchQuery] = useState<string>('')
   const {
     currentData,
     currentPage,
@@ -29,7 +29,6 @@ const ListCategories: React.FC = () => {
     goToPreviousPage,
     totalPages,
   } = usePagination(categories, 7);
-  const searchResult = useSearch(categories,searchQuery)
   const fetchCategories = async () => {
     try {
       const response = await getAllCategories();
@@ -47,7 +46,6 @@ const ListCategories: React.FC = () => {
   const handleSearch = (e: React.FormEvent<HTMLInputElement>) => {
     setSearchQuery(e.currentTarget.value);
   };
-  const displayData = searchQuery !== "" ? searchResult : currentData;
 
   return (
     <Card className='h-full w-full'>

@@ -6,7 +6,7 @@ import {
   Typography,
   Avatar,
 } from "@material-tailwind/react";
-import { InstructorApiResponse } from "../../api/types/apiResponses/api-response-instructors";
+import type { InstructorApiResponse } from "../../api/types/apiResponses/api-response-instructors";
 import { AcademicCapIcon, CheckBadgeIcon } from "@heroicons/react/24/solid";
 import { getFullUrl } from "../../utils/helpers";
 
@@ -45,7 +45,6 @@ const InstructorCard: React.FC<Props> = (props) => {
     coverUrl,
     about,
     isVerified,
-    experience,
     dateJoined,
     certificates,
   } = props;

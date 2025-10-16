@@ -1,6 +1,6 @@
 import api from "../middlewares/protected-interceptor";
 import CONFIG_KEYS from "../../config";
-import { PasswordInfo } from "../types/student/student";
+import type { PasswordInfo } from "../types/student/student";
 
 export const changePasswordService = async (
   endpoint: string,

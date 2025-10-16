@@ -27,7 +27,6 @@ const AdminProfilePage: React.FC = () => {
     e.preventDefault();
     // TODO: Hook up to API to save admin profile
     // For now, just log the values
-    // eslint-disable-next-line no-console
     console.log({ name, email });
     alert(t('admin.profileSaved') || 'Profile saved');
   };

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { RiSearchLine } from "react-icons/ri";
@@ -10,7 +12,7 @@ import ShimmerCard from "../../components/shimmer/shimmer-card";
 import FilterCoursesSelectBox from "./filter-course-selectbox";
 
 import { getAllCourses, searchCourse } from "../../api/endpoints/course/course";
-import { CourseInterface } from "../../types/course";
+import type { CourseInterface } from "../../types/course";
 import { useLanguage } from "../../contexts/LanguageContext";
 
 /**
@@ -43,7 +45,6 @@ const ListCourse: React.FC = () => {
 
   useEffect(() => {
     fetchCourse();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {

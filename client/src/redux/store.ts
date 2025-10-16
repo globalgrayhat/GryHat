@@ -4,7 +4,6 @@ import { courseReducer } from "./reducers/courseSlice";
 import { studentReducer } from "./reducers/studentSlice";
 import { helperReducer } from "./reducers/helperSlice";
 import { instructorReducer } from "./reducers/instructorSlice";
-import * as reduxThunk from "redux-thunk/extend-redux";
 import { persistStore, persistReducer } from 'redux-persist';
 import storage from 'redux-persist/lib/storage';
 

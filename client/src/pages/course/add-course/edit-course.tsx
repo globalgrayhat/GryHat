@@ -1,12 +1,14 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from "react";
-import { Formik, Field, Form, ErrorMessage, FormikHelpers } from "formik";
+import { Formik, Field, Form, ErrorMessage, type FormikHelpers } from "formik";
 import * as Yup from "yup";
 import { toast } from "react-toastify";
 import { getIndividualCourse, editCourse } from "../../../api/endpoints/course/course";
 import { getAllCategories } from "../../../api/endpoints/category";
-import { ApiResponseCategory } from "../../../api/types/apiResponses/api-response-category";
+import type { ApiResponseCategory } from "../../../api/types/apiResponses/api-response-category";
 import { useParams, useNavigate } from "react-router-dom";
-import { CourseInterface } from "../../../types/course";
+import type { CourseInterface } from "../../../types/course";
 
 interface CourseFormValues {
   title: string;

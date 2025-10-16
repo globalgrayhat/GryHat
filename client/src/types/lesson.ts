@@ -1,5 +1,5 @@
 export interface FormValuesLesson {
-  [key: string]: any;
+  [key: string]: unknown;
    title: string;
     description: string;
     about:string;

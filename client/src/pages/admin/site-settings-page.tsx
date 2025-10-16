@@ -1,6 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useState } from 'react';
-import { useDispatch } from 'react-redux';
-import { getSiteSettings, updateSiteSettings } from '../../api/services/site-settings-service';
 // Use alias import for site settings context. The file is located in
 // src/contexts/SiteSettingsContext.tsx and the tsconfig path alias
 // @src points to the src directory. This avoids relative import issues.

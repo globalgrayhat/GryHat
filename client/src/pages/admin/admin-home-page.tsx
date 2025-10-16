@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState, useEffect } from "react";
 import RevenueChart from "./revenue-chart";
 import TrendingCoursesChart from "./trending-chart";
@@ -13,7 +14,7 @@ import {
   getDashboardData,
   getGraphData,
 } from "../../api/endpoints/dashboard-data";
-import {
+import type {
   DashData,
   GraphData,
 } from "../../api/types/apiResponses/api-response-dash";
@@ -55,7 +56,7 @@ const AdminHomePage: React.FC = () => {
               <Typography variant='h6' color='blue-gray' className='pt-2 '>
                 Monthly revenue
               </Typography>
-              <Typography variant='body' color='gray'>
+              <Typography variant='paragraph' color='gray'>
                 {formatToINR(dashboardData?.monthlyRevenue ?? 0)}
               </Typography>
             </div>
@@ -68,7 +69,7 @@ const AdminHomePage: React.FC = () => {
               <Typography variant='h6' color='blue-gray' className='pt-2 '>
                 Courses
               </Typography>
-              <Typography variant='body' color='gray'>
+              <Typography variant='paragraph' color='gray'>
                 {dashboardData?.numberOfCourses}
               </Typography>
             </div>
@@ -81,7 +82,7 @@ const AdminHomePage: React.FC = () => {
               <Typography variant='h6' color='blue-gray' className='pt-2 '>
                 Instructors
               </Typography>
-              <Typography variant='body' color='gray'>
+              <Typography variant='paragraph' color='gray'>
                 {dashboardData?.numberInstructors}
               </Typography>
             </div>
@@ -94,7 +95,7 @@ const AdminHomePage: React.FC = () => {
               <Typography variant='h6' color='blue-gray' className='pt-2 '>
                 Students
               </Typography>
-              <Typography variant='body' color='gray'>
+              <Typography variant='paragraph' color='gray'>
                 {dashboardData?.numberOfStudents}
               </Typography>
             </div>

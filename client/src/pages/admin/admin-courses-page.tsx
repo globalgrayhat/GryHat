@@ -2,8 +2,8 @@ import React from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import useApiCall from '../../hooks/useApiCall';
 import { getAllCourses } from '../../api/endpoints/course/course';
-import { CourseInterface } from '../../types/course';
-import { Button, Card, CardBody, CardHeader, CardFooter, Typography, Input, Chip, Avatar } from '@material-tailwind/react';
+import type { CourseInterface } from '../../types/course';
+import { Button, Card, CardBody, CardHeader, Typography, Input } from '@material-tailwind/react';
 import { ExclamationCircleIcon } from '@heroicons/react/24/outline';
 
 /**

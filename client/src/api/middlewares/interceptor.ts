@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, AxiosResponse, AxiosError } from "axios";
+import axios, { type AxiosInstance, type AxiosResponse, AxiosError } from "axios";
 import CONFIG_KEYS from "../../config";
 import CustomApiError from "../../utils/CustomApiError";
 const axiosInstance: AxiosInstance = axios.create({

@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useState } from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import { AddCourseValidationSchema } from "../../../validations/course/AddCourse";
 import { Switch } from "@material-tailwind/react";
@@ -30,9 +31,9 @@ const initialValues: FormValues = {
 type CourseDescriptionFormProps = {
   onSubmit: (formData: any) => void;
 };
-const CourseDescriptionForm: React.FC<CourseDescriptionFormProps> = ({onSubmit}) => {
+export default function CourseDescriptionForm({ onSubmit }: CourseDescriptionFormProps) {
   const [paid, setPaid] = useState(false);
-  const handleSubmit = (values: FormValues, { resetForm }: any) => {
+  const handleSubmit = (values: FormValues) => {
     // Handle form submission
     onSubmit(values)
   };

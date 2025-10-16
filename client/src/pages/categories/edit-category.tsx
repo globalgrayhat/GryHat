@@ -1,10 +1,12 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useEffect, useState } from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import { CategoryValidationSchema } from "../../validations/category";
 import { useParams, useNavigate } from "react-router-dom";
 import { getCategory, editCategory } from "../../api/endpoints/category";
 import { toast } from "react-toastify";
-import { ApiResponseCategory } from "../../api/types/apiResponses/api-response-category";
+import type { ApiResponseCategory } from "../../api/types/apiResponses/api-response-category";
 
 const EditCategory: React.FC = () => {
   const { categoryId } = useParams();

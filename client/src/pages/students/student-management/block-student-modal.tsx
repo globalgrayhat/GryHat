@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Fragment, useRef, useState } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
-import { SetStateAction, Dispatch } from "react";
+import type { SetStateAction, Dispatch } from "react";
 import {toast} from 'react-toastify'
 import { blockStudents } from "../../../api/endpoints/student-management";
 interface ModalProps {

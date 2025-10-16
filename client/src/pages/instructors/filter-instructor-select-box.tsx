@@ -1,7 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { getAllCategories } from "../../api/endpoints/category";
-import { ApiResponseCategory } from "../../api/types/apiResponses/api-response-category";
+import type { ApiResponseCategory } from "../../api/types/apiResponses/api-response-category";
 import Select from "react-select";
 
 interface Props {
