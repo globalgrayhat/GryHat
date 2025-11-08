@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { getAllCategories } from "../../api/endpoints/category";
@@ -11,16 +10,21 @@ interface Props {
 }
 
 const FilterInstructorSelectBox: React.FC<Props> = ({ handleSelect }) => {
-  const [categories, setCategories] = useState<ApiResponseCategory[] | null>(null);
+  const [categories, setCategories] = useState<ApiResponseCategory[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const fetchAllCategories = async () => {
     try {
+      setLoading(true);
       const response = await getAllCategories();
-      setCategories(response?.data);
-    } catch (error) {
+      const data = response?.data?.data || response?.data || [];
+      if (Array.isArray(data)) setCategories(data);
+    } catch {
       toast.error("Something went wrong", {
         position: toast.POSITION.BOTTOM_RIGHT,
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -32,27 +36,23 @@ const FilterInstructorSelectBox: React.FC<Props> = ({ handleSelect }) => {
     handleSelect(selectedOption?.value || "");
   };
 
+  if (!categories.length && !loading) return null;
+
   return (
-    <>
-      {categories && (
-        <Select
-          // Responsive width: full width on small screens, half on medium and up
-          className='basic-single w-full md:w-1/2 lg:w-1/3'
-          classNamePrefix='select'
-          defaultValue={null}
-          isLoading={false}
-          isClearable={true}
-          isSearchable={true}
-          name='color'
-          onChange={handleSelectChange}
-          placeholder='Filter by category...'
-          options={categories.map((category) => ({
-            value: category?.name,
-            label: category?.name,
-          }))}
-        />
-      )}
-    </>
+    <Select
+      className="w-full basic-single md:w-1/2 lg:w-1/3"
+      classNamePrefix="select"
+      isLoading={loading}
+      isClearable
+      isSearchable
+      name="category"
+      onChange={handleSelectChange}
+      placeholder="Filter by category..."
+      options={categories.map((category) => ({
+        value: category?.name,
+        label: category?.name,
+      }))}
+    />
   );
 };
 

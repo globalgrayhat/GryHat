@@ -22,14 +22,15 @@ import { formatToINR } from "../../utils/helpers";
 import { toast } from "react-toastify";
 
 const AdminHomePage: React.FC = () => {
-  const [dashboardData, seDashboardData] = useState<DashData | null>(null);
+  const [dashboardData, setDashboardData] = useState<DashData | null>(null);
   const [graphData, setGraphData] = useState<GraphData | null>(null);
+
   const fetchDashboardDetails = async () => {
     try {
       const response = await getDashboardData();
-      seDashboardData(response.data);
-    } catch (error) {
-      toast.error("Something went wrong")
+      setDashboardData(response.data);
+    } catch {
+      toast.error("Something went wrong");
     }
   };
 
@@ -37,90 +38,106 @@ const AdminHomePage: React.FC = () => {
     try {
       const response = await getGraphData();
       setGraphData(response.data);
-    } catch (error) {
-      toast.error("Something went wrong")
+    } catch {
+      toast.error("Something went wrong");
     }
   };
+
   useEffect(() => {
     fetchDashboardDetails();
     fetchGraphData();
   }, []);
 
   return (
-    <div className=' pl-1'>
-      <div className='ml-3 mr-3 flex items-center justify-between'>
-        <div className='bg-white flex-1 rounded-md pb-5 pr-5 pl-5 border shadow-sm border-gray-200 mr-4'>
-          <div className='flex items-center '>
-            <FaRupeeSign size={26} className='text-green-500 mr-3' />
-            <div>
-              <Typography variant='h6' color='blue-gray' className='pt-2 '>
-                Monthly revenue
-              </Typography>
-              <Typography variant='paragraph' color='gray'>
-                {formatToINR(dashboardData?.monthlyRevenue ?? 0)}
-              </Typography>
-            </div>
+    <div className="px-2 py-4 sm:px-4 lg:px-6">
+      {/* Top Stat Cards */}
+      <div className="grid grid-cols-1 gap-3 mb-6 sm:grid-cols-2 xl:grid-cols-4 sm:gap-4">
+        <div className="flex items-center gap-3 px-4 py-3 bg-white border border-gray-100 shadow-sm rounded-2xl">
+          <FaRupeeSign className="text-green-500" size={22} />
+          <div>
+            <Typography variant="small" className="text-gray-500">
+              Monthly Revenue
+            </Typography>
+            <Typography className="text-sm font-semibold text-blue-gray-900">
+              {formatToINR(dashboardData?.monthlyRevenue ?? 0)}
+            </Typography>
           </div>
         </div>
-        <div className='bg-white flex-1 rounded-md pb-5 pr-5 pl-5 shadow-sm border border-gray-200 mr-4'>
-          <div className='flex items-center'>
-            <AiOutlineBook size={26} className='text-blue-500 mr-3' />
-            <div>
-              <Typography variant='h6' color='blue-gray' className='pt-2 '>
-                Courses
-              </Typography>
-              <Typography variant='paragraph' color='gray'>
-                {dashboardData?.numberOfCourses}
-              </Typography>
-            </div>
+
+        <div className="flex items-center gap-3 px-4 py-3 bg-white border border-gray-100 shadow-sm rounded-2xl">
+          <AiOutlineBook className="text-blue-500" size={22} />
+          <div>
+            <Typography variant="small" className="text-gray-500">
+              Courses
+            </Typography>
+            <Typography className="text-sm font-semibold text-blue-gray-900">
+              {dashboardData?.numberOfCourses ?? 0}
+            </Typography>
           </div>
         </div>
-        <div className='bg-white flex-1 rounded-md pb-5 shadow-sm pr-5 pl-5 border border-gray-200 mr-4'>
-          <div className='flex items-center'>
-            <AiOutlineUser size={26} className='text-yellow-500 mr-3' />
-            <div>
-              <Typography variant='h6' color='blue-gray' className='pt-2 '>
-                Instructors
-              </Typography>
-              <Typography variant='paragraph' color='gray'>
-                {dashboardData?.numberInstructors}
-              </Typography>
-            </div>
+
+        <div className="flex items-center gap-3 px-4 py-3 bg-white border border-gray-100 shadow-sm rounded-2xl">
+          <AiOutlineUser className="text-yellow-500" size={22} />
+          <div>
+            <Typography variant="small" className="text-gray-500">
+              Instructors
+            </Typography>
+            <Typography className="text-sm font-semibold text-blue-gray-900">
+              {dashboardData?.numberInstructors ?? 0}
+            </Typography>
           </div>
         </div>
-        <div className='bg-white flex-1 rounded-md pb-5 shadow-sm pr-5 pl-5 border border-gray-200'>
-          <div className='flex items-center'>
-            <AiOutlineUsergroupAdd size={26} className='text-red-500 mr-3' />
-            <div>
-              <Typography variant='h6' color='blue-gray' className='pt-2 '>
-                Students
-              </Typography>
-              <Typography variant='paragraph' color='gray'>
-                {dashboardData?.numberOfStudents}
-              </Typography>
-            </div>
+
+        <div className="flex items-center gap-3 px-4 py-3 bg-white border border-gray-100 shadow-sm rounded-2xl">
+          <AiOutlineUsergroupAdd className="text-red-500" size={22} />
+          <div>
+            <Typography variant="small" className="text-gray-500">
+              Students
+            </Typography>
+            <Typography className="text-sm font-semibold text-blue-gray-900">
+              {dashboardData?.numberOfStudents ?? 0}
+            </Typography>
           </div>
         </div>
       </div>
 
-      <div className='py-5 px-4'>
-        <Typography variant='h3' color='blue-gray' className='mb-4'>
+      {/* Revenue Chart */}
+      <div className="mb-6">
+        <Typography
+          variant="h6"
+          color="blue-gray"
+          className="mb-3 font-semibold"
+        >
           Monthly Revenue Chart
         </Typography>
         <RevenueChart data={graphData?.revenue ?? []} />
       </div>
-      <div className='flex items-center '>
-        <div className='py-5 px-4 w-6/12'>
-          <Typography variant='h4' color='blue-gray' className='mb-4'>
+
+      {/* Bottom charts: responsive grid */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <div>
+          <Typography
+            variant="h6"
+            color="blue-gray"
+            className="mb-3 font-semibold"
+          >
             Trending Courses
           </Typography>
-          <TrendingCoursesChart data={graphData?.trendingCourses??[]} />
+          <TrendingCoursesChart
+            data={graphData?.trendingCourses ?? []}
+          />
         </div>
-        <div className='px-4 w-6/12'>
-          <Typography variant='h4' color='blue-gray' className='mb-4'>
+        <div>
+          <Typography
+            variant="h6"
+            color="blue-gray"
+            className="mb-3 font-semibold"
+          >
             Categories
           </Typography>
-          <CourseCategoryChart data={graphData?.courseByCategory??[]} />
+          <CourseCategoryChart
+            data={graphData?.courseByCategory ?? []}
+          />
         </div>
       </div>
     </div>

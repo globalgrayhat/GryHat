@@ -6,18 +6,14 @@ import InstructorSideNav from "./instructor-side-nav";
 const InstructorLayout: React.FC = () => {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
 
-  const toggleSidebar = () => {
-    setSidebarOpen(!isSidebarOpen);
-  };
+  const toggleSidebar = () => setSidebarOpen((prev) => !prev);
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
-      {/* Sidebar */}
+    <div className="flex min-h-screen bg-gray-50">
       <InstructorSideNav isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
-      {/* Main content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex flex-col flex-1 min-h-screen">
         <InstructorHeader toggleSidebar={toggleSidebar} />
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 p-4 overflow-y-auto sm:p-6 lg:p-8">
           <Outlet />
         </main>
       </div>

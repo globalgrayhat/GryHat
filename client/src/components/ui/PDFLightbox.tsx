@@ -21,23 +21,23 @@ const PDFLightbox: React.FC<{
         <div className="mx-auto w-[96vw] max-w-5xl rounded-2xl bg-white dark:bg-gray-900 ring-1 ring-black/10 dark:ring-white/10 overflow-hidden">
           <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-gray-800">
             <div className="flex items-center gap-2">
-              <Button variant="text" size="sm" className="normal-case px-2 py-1" onClick={() => setPdfPage(Math.max(1, pdfPage - 1))}>Prev</Button>
+              <Button variant="text" size="sm" className="px-2 py-1 normal-case" onClick={() => setPdfPage(Math.max(1, pdfPage - 1))}>Prev</Button>
               <div className="text-sm text-gray-700 dark:text-gray-300">Page {pdfPage}</div>
-              <Button variant="text" size="sm" className="normal-case px-2 py-1" onClick={() => setPdfPage(pdfPage + 1)}>Next</Button>
-              <span className="mx-2 h-5 w-px bg-gray-200 dark:bg-gray-700" />
-              <Button variant="text" size="sm" className="normal-case px-2 py-1" onClick={() => setZoomIndex(Math.max(0, zoomIndex - 1))}>-</Button>
+              <Button variant="text" size="sm" className="px-2 py-1 normal-case" onClick={() => setPdfPage(pdfPage + 1)}>Next</Button>
+              <span className="w-px h-5 mx-2 bg-gray-200 dark:bg-gray-700" />
+              <Button variant="text" size="sm" className="px-2 py-1 normal-case" onClick={() => setZoomIndex(Math.max(0, zoomIndex - 1))}>-</Button>
               <div className="text-sm text-gray-700 dark:text-gray-300 min-w-[52px] text-center">{zoomLevels[zoomIndex] === "page-width" ? "Fit" : `${zoomLevels[zoomIndex]}%`}</div>
-              <Button variant="text" size="sm" className="normal-case px-2 py-1" onClick={() => setZoomIndex(Math.min(zoomLevels.length - 1, zoomIndex + 1))}>+</Button>
-              <Button variant="text" size="sm" className="normal-case px-2 py-1" onClick={() => setZoomIndex(0)}>Fit</Button>
+              <Button variant="text" size="sm" className="px-2 py-1 normal-case" onClick={() => setZoomIndex(Math.min(zoomLevels.length - 1, zoomIndex + 1))}>+</Button>
+              <Button variant="text" size="sm" className="px-2 py-1 normal-case" onClick={() => setZoomIndex(0)}>Fit</Button>
             </div>
-            <Button variant="text" size="sm" className="normal-case px-2 py-1" onClick={() => setPdfOpen(false)}>Close</Button>
+            <Button variant="text" size="sm" className="px-2 py-1 normal-case" onClick={() => setPdfOpen(false)}>Close</Button>
           </div>
 
           <div className="h-[65vh] sm:h-[70vh] bg-gray-50 dark:bg-gray-800">
-            {pdfLoading && <div className="flex h-full w-full items-center justify-center text-sm text-gray-500 dark:text-gray-400">Loading PDF…</div>}
-            {!pdfLoading && pdfError && <div className="flex h-full w-full items-center justify-center p-4 text-center text-sm text-red-600 dark:text-red-400">{pdfError}</div>}
+            {pdfLoading && <div className="flex items-center justify-center w-full h-full text-sm text-gray-500 dark:text-gray-400">Loading PDF…</div>}
+            {!pdfLoading && pdfError && <div className="flex items-center justify-center w-full h-full p-4 text-sm text-center text-red-600 dark:text-red-400">{pdfError}</div>}
             {!pdfLoading && !pdfError && pdfSrc ? (
-              <iframe key={`${pdfPage}-${zoomLevels[zoomIndex]}`} src={`${pdfSrc}#page=${pdfPage}&zoom=${zoomLevels[zoomIndex]}&pagemode=none`} title={`viewer-${courseId ?? ""}`} className="h-full w-full" />
+              <iframe key={`${pdfPage}-${zoomLevels[zoomIndex]}`} src={`${pdfSrc}#page=${pdfPage}&zoom=${zoomLevels[zoomIndex]}&pagemode=none`} title={`viewer-${courseId ?? ""}`} className="w-full h-full" />
             ) : null}
           </div>
         </div>

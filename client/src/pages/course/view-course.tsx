@@ -85,23 +85,23 @@ const ViewCourseStudent: React.FC = () => {
       <LoginConfirmation confirm={loginConfirmation} setConfirm={setLoginConfirmation} />
       <PaymentConfirmationModal open={openPaymentConfirmation} setUpdated={refreshHookData} courseDetails={{ price: course?.price ?? 0, overview: course?.description ?? "", isPaid: course?.isPaid ?? false }} setOpen={setOpenPaymentConfirmation} />
 
-      <div className="flex flex-col px-3 sm:px-6 pt-3 md:pt-5 md:px-12 lg:px-20">
+      <div className="flex flex-col px-3 pt-3 sm:px-6 md:pt-5 md:px-12 lg:px-20">
         <CustomBreadCrumbs paths={location.pathname} />
       </div>
 
-      <section className="mx-auto max-w-6xl p-2 sm:p-4 md:p-6">
-        <Card shadow={false} className="overflow-hidden rounded-2xl border border-gray-200 bg-white transition hover:shadow-md dark:border-gray-700 dark:bg-gray-800">
+      <section className="max-w-6xl p-2 mx-auto sm:p-4 md:p-6">
+        <Card shadow={false} className="overflow-hidden transition bg-white border border-gray-200 rounded-2xl hover:shadow-md dark:border-gray-700 dark:bg-gray-800">
           {/* Cover area */}
           <div className="relative aspect-[16/8] w-full sm:aspect-[16/8] md:aspect-[21/9]">
             {coverUrl ? (
-              <img src={coverUrl} alt={course?.title ?? "Course cover"} className="h-full w-full object-cover" loading="lazy" />
+              <img src={coverUrl} alt={course?.title ?? "Course cover"} className="object-cover w-full h-full" loading="lazy" />
             ) : (
-              <div className="h-full w-full bg-gradient-to-br from-gray-200 to-gray-100 dark:from-gray-700 dark:to-gray-600" />
+              <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-100 dark:from-gray-700 dark:to-gray-600" />
             )}
 
             <div className="absolute inset-0 bg-gradient-to-tr from-black/35 via-black/10 to-transparent dark:from-black/55 dark:via-black/20" />
 
-            <div className="absolute top-2 left-2 flex flex-wrap gap-2">
+            <div className="absolute flex flex-wrap gap-2 top-2 left-2">
               {course?.category && <span className="rounded-full px-2 py-0.5 text-[10px] sm:px-2.5 sm:py-1 sm:text-[11px] font-semibold bg-white/95 text-gray-900 ring-1 ring-black/5 dark:bg-blue-500 dark:text-white dark:ring-blue-400/40">{typeof course?.category === 'string' ? course?.category : (course?.category?.name ?? '')}</span>}
               {(typeof course?.price === "number" || typeof course?.isPaid === "boolean") && (
                 <span className={isFree ? "rounded-full px-2 py-0.5 text-[10px] sm:px-2.5 sm:py-1 sm:text-[11px] font-semibold text-white bg-green-600 dark:bg-green-500" : "rounded-full px-2 py-0.5 text-[10px] sm:px-2.5 sm:py-1 sm:text-[11px] font-semibold text-gray-900 bg-white/95 ring-1 ring-black/5 dark:bg-indigo-500 dark:text-white dark:ring-indigo-400/40"}>
@@ -132,13 +132,13 @@ const ViewCourseStudent: React.FC = () => {
               <SyllabusSection expandedIndex={expandedIndex} handleToggle={handleToggle} introduction={introduction} isSupportedVideo={isSupportedVideo} guidelinesUrl={guidelinesUrl} openGuidelines={openGuidelines} lessons={lessons} />
 
               <section className="mt-6">
-                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">About this course</h3>
-                <div className="mt-2 whitespace-pre-wrap break-words rounded-xl border border-gray-200 bg-white p-3 sm:p-4 text-gray-700 shadow-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200">{course?.about || "—"}</div>
+                <h3 className="text-lg font-semibold text-gray-900 sm:text-xl dark:text-white">About this course</h3>
+                <div className="p-3 mt-2 text-gray-700 break-words whitespace-pre-wrap bg-white border border-gray-200 shadow-sm rounded-xl sm:p-4 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200">{course?.about || "—"}</div>
               </section>
 
               <section className="mt-6">
-                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">Requirements</h3>
-                <ul className="mt-2 divide-y divide-gray-200 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:divide-gray-700 dark:border-gray-700 dark:bg-gray-800">
+                <h3 className="text-lg font-semibold text-gray-900 sm:text-xl dark:text-white">Requirements</h3>
+                <ul className="mt-2 overflow-hidden bg-white border border-gray-200 divide-y divide-gray-200 shadow-sm rounded-xl dark:divide-gray-700 dark:border-gray-700 dark:bg-gray-800">
                   {Array.isArray(course?.requirements) && (course?.requirements?.length ?? 0) > 0 ? ((course?.requirements ?? []) as string[]).map((item, idx) => (<li key={idx} className="flex items-start gap-2 p-2.5 sm:p-3 text-gray-700 dark:text-gray-200"><span className="pt-1 text-blue-500">•</span><span className="flex-1">{item}</span></li>)) : (<li className="p-3 text-sm text-gray-500 dark:text-gray-400">No specific requirements.</li>)}
                 </ul>
               </section>

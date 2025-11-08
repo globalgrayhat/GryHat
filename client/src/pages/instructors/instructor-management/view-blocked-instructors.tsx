@@ -1,9 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { PencilIcon } from "@heroicons/react/24/solid";
-import {
-  MagnifyingGlassIcon,
-} from "@heroicons/react/24/outline";
+import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import {
   Card,
   CardHeader,
@@ -19,18 +17,52 @@ import {
 } from "@material-tailwind/react";
 import {
   unblockInstructors,
+  getBlockedInstructors,
 } from "../../../api/endpoints/instructor-management";
 import { toast } from "react-toastify";
-import { formatDate } from "../../../utils/helpers";
+import { formatDate, getFullUrl } from "../../../utils/helpers";
 import usePagination from "../../../hooks/usePagination";
-import { getBlockedInstructors } from "../../../api/endpoints/instructor-management";
 
 const TABLE_HEAD = ["Name", "Email", "Date Joined", "Status", "Actions", ""];
 
 const ViewBlockedInstructors: React.FC = () => {
-  const [instructors, setInstructors] = useState([]);
+  const [instructors, setInstructors] = useState<any[]>([]);
+  const [search, setSearch] = useState("");
   const [updated, setUpdated] = useState(false);
   const ITEMS_PER_PAGE = 6;
+
+  // Fetch blocked instructors from API
+  const fetchBlockedInstructors = async () => {
+    try {
+      const response = await getBlockedInstructors();
+      setInstructors(response?.data?.data || []);
+    } catch (error: any) {
+      const msg =
+        error?.response?.data?.message ||
+        error?.data?.message ||
+        "Failed to load blocked instructors";
+      toast.error(msg, {
+        position: toast.POSITION.BOTTOM_RIGHT,
+      });
+    }
+  };
+
+  useEffect(() => {
+    fetchBlockedInstructors();
+  }, [updated]);
+
+  // Client-side search by name/email
+  const filtered = useMemo(
+    () =>
+      instructors.filter((ins) =>
+        `${ins.firstName || ""} ${ins.lastName || ""} ${ins.email || ""}`
+          .toLowerCase()
+          .includes(search.toLowerCase().trim())
+      ),
+    [instructors, search]
+  );
+
+  // Paginate filtered results
   const {
     currentPage,
     totalPages,
@@ -38,72 +70,63 @@ const ViewBlockedInstructors: React.FC = () => {
     goToPage,
     goToPreviousPage,
     goToNextPage,
-  } = usePagination(instructors, ITEMS_PER_PAGE);
-  const fetchBlockedInstructors = async () => {
-    try {
-      const response = await getBlockedInstructors();
-      setInstructors(response?.data?.data);
-    } catch (error: any) {
-      toast.error(error.data.message, {
-        position: toast.POSITION.BOTTOM_RIGHT,
-      });
-    }
-  };
-  useEffect(() => {
-    fetchBlockedInstructors();
-  }, [updated]);
+  } = usePagination(filtered, ITEMS_PER_PAGE);
 
+  // Handle unblock action
   const handleUnblock = async (instructorId: string) => {
     try {
       const response = await unblockInstructors(instructorId);
-      toast.success(response.data.message, {
+      toast.success(response.data.message || "Instructor unblocked", {
         position: toast.POSITION.BOTTOM_RIGHT,
       });
-      setUpdated(!updated);
+      setUpdated((prev) => !prev);
     } catch (error: any) {
-      toast.error(error.data.message, {
+      const msg =
+        error?.response?.data?.message ||
+        error?.data?.message ||
+        "Failed to unblock instructor";
+      toast.error(msg, {
         position: toast.POSITION.BOTTOM_RIGHT,
       });
     }
   };
+
   return (
-    <Card className='h-full w-full'>
-      <CardHeader floated={false} shadow={false} className='rounded-none'>
-        <div className='mb-4 flex flex-col justify-between gap-8 md:flex-row md:items-center'>
+    <Card className="w-full h-full">
+      {/* Header: title + search */}
+      <CardHeader floated={false} shadow={false} className="rounded-none">
+        <div className="flex flex-col gap-4 mb-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <Typography variant='h5' color='blue-gray'>
-              Manage Instructors
+            <Typography variant="h5" color="blue-gray">
+              Blocked Instructors
             </Typography>
-            <Typography color='gray' className='mt-1 font-normal'>
-              These are details about the instructors
+            <Typography color="gray" className="mt-1 text-sm font-normal">
+              These instructors are currently blocked from the platform.
             </Typography>
           </div>
-          <div className='flex w-full shrink-0 gap-2 md:w-max'>
-            <div className='w-full md:w-72'>
-              <Input
-                label='Search'
-                icon={<MagnifyingGlassIcon className='h-5 w-5' />}
-              />
-            </div>
+          <div className="flex w-full md:w-72">
+            <Input
+              label="Search"
+              icon={<MagnifyingGlassIcon className="w-5 h-5" />}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              crossOrigin=""
+            />
           </div>
         </div>
       </CardHeader>
-      <CardBody className='overflow-scroll px-0'>
-        <table className='w-full min-w-max table-auto text-left'>
+
+      {/* Table */}
+      <CardBody className="px-0 overflow-x-auto">
+        <table className="w-full text-left table-auto min-w-max">
           <thead>
             <tr>
               {TABLE_HEAD.map((head) => (
                 <th
                   key={head}
-                  className='border-y border-blue-gray-100 bg-blue-gray-50/50 p-4'
+                  className="p-4 text-xs font-medium tracking-wide uppercase text-blue-gray-600 bg-blue-gray-50/60 border-y border-blue-gray-100"
                 >
-                  <Typography
-                    variant='small'
-                    color='blue-gray'
-                    className='font-normal leading-none opacity-70'
-                  >
-                    {head}
-                  </Typography>
+                  {head}
                 </th>
               ))}
             </tr>
@@ -114,107 +137,123 @@ const ViewBlockedInstructors: React.FC = () => {
                 {
                   _id,
                   profileUrl,
+                  profilePic,
                   firstName,
                   lastName,
                   email,
                   dateJoined,
-                  isBlocked,
-                  isVerified,
-                },
-                index
+                }: any,
+                index: number
               ) => {
-                const isLast = index === instructors.length - 1;
+                const isLast = index === currentData.length - 1;
                 const classes = isLast
                   ? "p-4"
                   : "p-4 border-b border-blue-gray-50";
 
+                // Normalize avatar URL:
+                // - support `profilePic.url` or `profileUrl` (relative or absolute)
+                let avatarSrc: string | undefined;
+                if (profilePic?.url) {
+                  avatarSrc = getFullUrl(profilePic.url);
+                } else if (profileUrl) {
+                  avatarSrc = getFullUrl(profileUrl);
+                }
+
+                const displayName =
+                  `${firstName || ""} ${lastName || ""}`.trim() ||
+                  "Unknown Instructor";
+
                 return (
-                  <tr key={_id}>
+                  <tr key={_id} className="hover:bg-blue-gray-50/30">
+                    {/* Name + Avatar */}
                     <td className={classes}>
-                      <div className='flex items-center gap-3'>
-                        <Avatar
-                          src={profileUrl}
-                          alt='image'
-                          size='md'
-                          className='border border-blue-gray-50 bg-blue-gray-50/50 object-contain p-1'
-                        />
+                      <div className="flex items-center gap-3">
+                        {avatarSrc ? (
+                          <Avatar
+                            src={avatarSrc}
+                            alt={displayName}
+                            size="md"
+                            className="object-cover p-1 border border-blue-gray-50 bg-blue-gray-50/60"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display =
+                                "none";
+                            }}
+                          />
+                        ) : (
+                          <div className="flex items-center justify-center w-10 h-10 text-gray-400 bg-gray-200 rounded-full">
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                              />
+                            </svg>
+                          </div>
+                        )}
                         <Typography
-                          variant='small'
-                          color='blue-gray'
-                          className='font-bold'
+                          variant="small"
+                          color="blue-gray"
+                          className="font-semibold"
                         >
-                          {`${firstName} ${lastName}`}
+                          {displayName}
                         </Typography>
                       </div>
                     </td>
+
+                    {/* Email */}
                     <td className={classes}>
                       <Typography
-                        variant='small'
-                        color='blue-gray'
-                        className='font-normal'
+                        variant="small"
+                        color="blue-gray"
+                        className="font-normal break-all"
                       >
-                        {email}
+                        {email || "-"}
                       </Typography>
                     </td>
+
+                    {/* Date Joined */}
                     <td className={classes}>
                       <Typography
-                        variant='small'
-                        color='blue-gray'
-                        className='font-normal'
+                        variant="small"
+                        color="blue-gray"
+                        className="font-normal"
                       >
-                        {formatDate(dateJoined)}
+                        {dateJoined ? formatDate(dateJoined) : "-"}
                       </Typography>
                     </td>
+
+                    {/* Status */}
                     <td className={classes}>
-                      <div className='w-max'>
-                        <Chip
-                          size='sm'
-                          variant='ghost'
-                          value={
-                            isBlocked
-                              ? "Blocked"
-                              : isVerified === false
-                              ? "Pending"
-                              : "Active"
-                          }
-                          color={
-                            isBlocked
-                              ? "red"
-                              : isVerified === false
-                              ? "amber"
-                              : "green"
-                          }
-                        />
-                      </div>
+                      <Chip
+                        size="sm"
+                        variant="ghost"
+                        value="Blocked"
+                        color="red"
+                        className="px-2 py-0.5 text-[10px] font-semibold"
+                      />
                     </td>
+
+                    {/* Unblock button */}
                     <td className={classes}>
-                      <div className='flex items-center '>
-                        {isBlocked ? (
-                          <div>
-                            <button
-                              onClick={() => {
-                                handleUnblock(_id);
-                              }}
-                              className='w-[80px] px-1 py-1.5 text-xs bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg shadow-md transform-gpu transition-transform duration-300 ease-in-out active:scale-95'
-                            >
-                              Unblock
-                            </button>
-                          </div>
-                        ) : (
-                          <div>
-                            <button
-                              className='w-[80px] px-1 py-1.5 text-xs bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg shadow-md transform-gpu transition-transform duration-300 ease-in-out active:scale-95'
-                            >
-                              Block
-                            </button>
-                          </div>
-                        )}
-                      </div>
+                      <button
+                        onClick={() => handleUnblock(_id)}
+                        className="w-20 px-2 py-1.5 text-[11px] bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg shadow-sm transform transition-transform duration-200 active:scale-95"
+                      >
+                        Unblock
+                      </button>
                     </td>
+
+                    {/* Edit icon */}
                     <td className={classes}>
-                      <Tooltip content='Edit User'>
-                        <IconButton variant='text' color='blue-gray'>
-                          <PencilIcon className='h-4 w-4' />
+                      <Tooltip content="Edit User">
+                        <IconButton variant="text" color="blue-gray" size="sm">
+                          <PencilIcon className="w-4 h-4" />
                         </IconButton>
                       </Tooltip>
                     </td>
@@ -224,42 +263,53 @@ const ViewBlockedInstructors: React.FC = () => {
             )}
           </tbody>
         </table>
+
+        {currentData.length === 0 && (
+          <div className="py-8 text-sm text-center text-gray-500">
+            No blocked instructors found.
+          </div>
+        )}
       </CardBody>
-      <CardFooter className='flex items-center justify-between border-t border-blue-gray-50 p-4'>
-        <Button
-          variant='outlined'
-          color='blue-gray'
-          size='sm'
-          onClick={goToPreviousPage}
-          disabled={currentPage === 1}
-        >
-          Previous
-        </Button>
-        <div className='flex items-center gap-2'>
-          {Array.from({ length: totalPages }, (_, index) => index + 1).map(
-            (pageNumber) => (
-              <IconButton
-                key={pageNumber}
-                variant={pageNumber === currentPage ? "outlined" : "text"}
-                color='blue-gray'
-                size='sm'
-                onClick={() => goToPage(pageNumber)}
-              >
-                {pageNumber}
-              </IconButton>
-            )
-          )}
-        </div>
-        <Button
-          variant='outlined'
-          color='blue-gray'
-          size='sm'
-          onClick={goToNextPage}
-          disabled={currentPage === totalPages}
-        >
-          Next
-        </Button>
-      </CardFooter>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <CardFooter className="flex items-center justify-between p-4 border-t border-blue-gray-50">
+          <Button
+            variant="outlined"
+            color="blue-gray"
+            size="sm"
+            onClick={goToPreviousPage}
+            disabled={currentPage === 1}
+          >
+            Previous
+          </Button>
+          <div className="flex items-center gap-1">
+            {Array.from({ length: totalPages }, (_, index) => index + 1).map(
+              (pageNumber) => (
+                <IconButton
+                  key={pageNumber}
+                  variant={pageNumber === currentPage ? "filled" : "text"}
+                  color="blue-gray"
+                  size="sm"
+                  onClick={() => goToPage(pageNumber)}
+                  className="min-w-[28px]"
+                >
+                  <span className="text-xs">{pageNumber}</span>
+                </IconButton>
+              )
+            )}
+          </div>
+          <Button
+            variant="outlined"
+            color="blue-gray"
+            size="sm"
+            onClick={goToNextPage}
+            disabled={currentPage === totalPages}
+          >
+            Next
+          </Button>
+        </CardFooter>
+      )}
     </Card>
   );
 };

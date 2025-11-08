@@ -26,19 +26,19 @@ const MyProfile: React.FC = () => {
   };
 
   return (
-    <div className='w-full flex justify-center items-center'>
+    <div className='flex items-center justify-center w-full'>
       <div className='w-11/12'>
         <div>
-          <div className='pt-5 pb-6 w-full'>
+          <div className='w-full pt-5 pb-6'>
             <h2 className='text-3xl font-semibold text-gray-800 dark:text-gray-100'>
               {t('settings.editProfileInfo') || 'Edit profile info'}
             </h2>
           </div>
         </div>
-        <div className='flex flex-col md:flex-row gap-x-10 h-full pb-10'>
+        <div className='flex flex-col h-full pb-10 md:flex-row gap-x-10'>
           <div className='border md:w-7/12 w-full h-full rounded-md bg-white dark:bg-[#3b4252] border-gray-200 dark:border-gray-600 shadow-sm'>
             <div className='flex justify-between'>
-              <h3 className='pl-5 pt-5 text-lg font-semibold text-gray-800 dark:text-gray-100'>
+              <h3 className='pt-5 pl-5 text-lg font-semibold text-gray-800 dark:text-gray-100'>
                 {t('settings.accountInfo') || 'Account Info'}
               </h3>
               <div>
@@ -46,7 +46,7 @@ const MyProfile: React.FC = () => {
                   className='p-5'
                   onClick={() => handleEditClick("account")}
                 >
-                   <FiEdit className='text-gray-600 dark:text-gray-300 text-lg' />
+                   <FiEdit className='text-lg text-gray-600 dark:text-gray-300' />
                 </button>
               </div>
             </div>
@@ -66,7 +66,7 @@ const MyProfile: React.FC = () => {
                 className='pr-3'
                 onClick={() => handleEditClick("password")}
               >
-                <FiEdit className='text-gray-600 dark:text-gray-300 text-lg' />
+                <FiEdit className='text-lg text-gray-600 dark:text-gray-300' />
               </button>
             </div>
             <div className='p-6'>

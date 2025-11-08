@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Card,
   CardHeader,
@@ -7,63 +7,74 @@ import {
   Typography,
   Button,
   Input,
-} from '@material-tailwind/react';
-import { useLanguage } from '../../contexts/LanguageContext';
+} from "@material-tailwind/react";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 /**
  * AdminProfilePage
- *
- * A simple editable profile page for administrators. It allows admins to
- * update their name and email. This is a placeholder page; in a real
- * application, this would connect to the backend to persist profile
- * changes. The form is styled consistently with the rest of the admin
- * dashboard and supports dark mode.
+ * Compact, centered admin profile card.
  */
 const AdminProfilePage: React.FC = () => {
   const { t } = useLanguage();
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Hook up to API to save admin profile
-    // For now, just log the values
+    // TODO: Call API to save profile
     console.log({ name, email });
-    alert(t('admin.profileSaved') || 'Profile saved');
+    alert(t("admin.profileSaved") || "Profile saved");
   };
+
   return (
-    <Card className='max-w-xl mx-auto'>
-      <CardHeader shadow={false} floated={false} className='rounded-none'>
-        <Typography variant='h5' color='blue-gray'>
-          {t('admin.profileSettings') || 'Profile Settings'}
-        </Typography>
-        <Typography color='gray' className='mt-1 font-normal'>
-          {t('admin.profileSettingsDescription') || 'Update your admin profile information'}
-        </Typography>
-      </CardHeader>
-      <form onSubmit={handleSubmit}>
-        <CardBody className='space-y-4'>
-          <div>
+    <div className="flex justify-center px-2 py-4 sm:px-4 lg:px-6">
+      <Card className="w-full max-w-md bg-white border shadow-sm rounded-2xl border-blue-gray-50">
+        <CardHeader
+          shadow={false}
+          floated={false}
+          className="px-4 pt-4 pb-2 rounded-t-2xl"
+        >
+          <Typography variant="h6" color="blue-gray">
+            {t("admin.profileSettings") || "Profile Settings"}
+          </Typography>
+          <Typography
+            color="gray"
+            className="mt-1 text-xs font-normal sm:text-sm"
+          >
+            {t("admin.profileSettingsDescription") ||
+              "Update your admin profile information."}
+          </Typography>
+        </CardHeader>
+        <form onSubmit={handleSubmit}>
+          <CardBody className="px-4 pb-2 space-y-4">
             <Input
-              label={t('admin.name') || 'Name'}
+              label={t("admin.name") || "Name"}
               value={name}
               onChange={(e) => setName(e.target.value)}
+              className="!text-sm"
+              crossOrigin={undefined}
             />
-          </div>
-          <div>
             <Input
-              label={t('admin.email') || 'Email'}
+              label={t("admin.email") || "Email"}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              className="!text-sm"
+              crossOrigin={undefined}
             />
-          </div>
-        </CardBody>
-        <CardFooter className='pt-0'>
-          <Button type='submit' color='blue'>
-            {t('admin.save') || 'Save'}
-          </Button>
-        </CardFooter>
-      </form>
-    </Card>
+          </CardBody>
+          <CardFooter className="flex justify-end px-4 pt-0 pb-4">
+            <Button
+              type="submit"
+              color="blue"
+              size="sm"
+              className="px-4 py-2 text-xs normal-case sm:text-sm"
+            >
+              {t("admin.save") || "Save"}
+            </Button>
+          </CardFooter>
+        </form>
+      </Card>
+    </div>
   );
 };
 

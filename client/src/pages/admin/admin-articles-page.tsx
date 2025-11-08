@@ -1,107 +1,169 @@
-import React from 'react';
-import { Card, CardHeader, CardBody, CardFooter, Button, Typography, Input } from '@material-tailwind/react';
-import { useLanguage } from '../../contexts/LanguageContext';
+import React from "react";
+import {
+  Card,
+  CardHeader,
+  CardBody,
+  CardFooter,
+  Button,
+  Typography,
+  Input,
+} from "@material-tailwind/react";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 /**
- * AdminArticlesPage displays a list of articles stored in the platform.  This
- * initial version is a placeholder; integrate it with your backend by
- * replacing the hard-coded data and connecting the actions below to API
- * endpoints.  The page respects dark mode and uses Material‑Tailwind
- * components for consistency with the rest of the admin dashboard.
+ * AdminArticlesPage
+ * Responsive & compact layout for managing articles.
  */
 const AdminArticlesPage: React.FC = () => {
   const { t } = useLanguage();
 
-  // Placeholder data.  Replace this with real data from your API once
-  // endpoints are available.
   const articles = [
-    { _id: '1', title: 'What is Machine Learning?', author: 'Admin', date: '2025-01-20' },
-    { _id: '2', title: 'Building a Modern Web App', author: 'Admin', date: '2025-02-10' },
+    {
+      _id: "1",
+      title: "What is Machine Learning?",
+      author: "Admin",
+      date: "2025-01-20",
+    },
+    {
+      _id: "2",
+      title: "Building a Modern Web App",
+      author: "Admin",
+      date: "2025-02-10",
+    },
   ];
 
   return (
-    <div className='p-4'>
-      <h1 className='text-2xl font-semibold mb-4 dark:text-gray-100'>
-        {t('admin.articles') || 'Articles'}
-      </h1>
-      <Card className='w-full'>
-        <CardHeader floated={false} shadow={false} className='rounded-none'>
-          <div className='flex flex-col md:flex-row items-center justify-between gap-4'>
-            <div>
-              <Typography variant='h5' className='dark:text-gray-200'>
-                {t('admin.articles') || 'Articles'}
+    <div className="px-2 py-4 sm:px-4 lg:px-6">
+      <Typography
+        variant="h5"
+        className="mb-3 font-semibold text-blue-gray-900"
+      >
+        {t("admin.articles") || "Articles"}
+      </Typography>
+
+      <Card className="w-full bg-white border shadow-sm rounded-2xl border-blue-gray-50">
+        <CardHeader
+          floated={false}
+          shadow={false}
+          className="px-3 py-3 border-b rounded-none sm:px-4 lg:px-6 border-blue-gray-50"
+        >
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-0.5">
+              <Typography variant="h6" className="text-blue-gray-900">
+                {t("admin.articles") || "Articles"}
               </Typography>
-              <Typography color='gray' className='mt-1 font-normal dark:text-gray-400'>
-                {t('admin.articlesDescription') || 'Manage platform articles.'}
+              <Typography
+                color="gray"
+                className="text-xs font-normal sm:text-sm"
+              >
+                {t("admin.articlesDescription") ||
+                  "Manage platform articles and editorial content."}
               </Typography>
             </div>
-            <div className='w-full md:w-72 flex items-center gap-2'>
-              <Input label={t('admin.search') || 'Search'} className='dark:text-gray-200' />
-              <Button size='sm' color='blue'>
-                {t('common.add') || 'Add'}
+            <div className="flex w-full gap-2 sm:w-auto">
+              <div className="flex-1 min-w-[140px]">
+                <Input
+                  label={t("admin.search") || "Search"}
+                  className="!text-sm"
+                  crossOrigin={undefined}
+                />
+              </div>
+              <Button
+                size="sm"
+                color="blue"
+                className="px-3 py-2 text-xs normal-case whitespace-nowrap sm:text-sm"
+              >
+                {t("common.add") || "Add"}
               </Button>
             </div>
           </div>
         </CardHeader>
-        <CardBody className='overflow-x-auto p-0'>
-          <table className='min-w-full divide-y divide-gray-200 dark:divide-gray-700'>
-            <thead className='bg-gray-50 dark:bg-gray-800'>
+
+        <CardBody className="p-0 overflow-x-auto">
+          <table className="min-w-full text-left">
+            <thead className="bg-gray-50">
               <tr>
-                <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider'>
-                  {t('article.title') || 'Title'}
+                <th className="px-4 sm:px-6 py-3 text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wide">
+                  {t("article.title") || "Title"}
                 </th>
-                <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider'>
-                  {t('article.author') || 'Author'}
+                <th className="px-4 sm:px-6 py-3 text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wide">
+                  {t("article.author") || "Author"}
                 </th>
-                <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider'>
-                  {t('article.date') || 'Published'}
+                <th className="px-4 sm:px-6 py-3 text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wide">
+                  {t("article.date") || "Published"}
                 </th>
-                <th className='px-6 py-3' />
+                <th className="px-4 py-3 sm:px-6" />
               </tr>
             </thead>
-            <tbody className='bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700'>
+            <tbody className="bg-white divide-y divide-gray-100">
               {articles.length > 0 ? (
                 articles.map((article) => (
-                  <tr key={article._id} className='hover:bg-gray-50 dark:hover:bg-gray-800'>
-                    <td className='px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100'>
+                  <tr
+                    key={article._id}
+                    className="transition-colors hover:bg-gray-50"
+                  >
+                    <td className="px-4 py-3 text-xs font-medium text-gray-900 sm:px-6 whitespace-nowrap sm:text-sm">
                       {article.title}
                     </td>
-                    <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300'>
+                    <td className="px-4 sm:px-6 py-3 whitespace-nowrap text-[11px] sm:text-sm text-gray-600">
                       {article.author}
                     </td>
-                    <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300'>
+                    <td className="px-4 sm:px-6 py-3 whitespace-nowrap text-[11px] sm:text-sm text-gray-600">
                       {article.date}
                     </td>
-                    <td className='px-6 py-4 whitespace-nowrap text-right text-sm font-medium flex gap-2'>
-                      <Button size='sm' color='blue' variant='outlined'>
-                        {t('common.edit') || 'Edit'}
-                      </Button>
-                      <Button size='sm' color='red' variant='outlined'>
-                        {t('common.delete') || 'Delete'}
-                      </Button>
+                    <td className="px-4 py-3 sm:px-6 whitespace-nowrap">
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          size="sm"
+                          variant="outlined"
+                          color="blue"
+                          className="px-2 py-1 text-[10px] sm:text-xs normal-case"
+                        >
+                          {t("common.edit") || "Edit"}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outlined"
+                          color="red"
+                          className="px-2 py-1 text-[10px] sm:text-xs normal-case"
+                        >
+                          {t("common.delete") || "Delete"}
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={4} className='px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-300'>
-                    {t('admin.noArticles') || 'No articles found.'}
+                  <td
+                    colSpan={4}
+                    className="px-4 py-6 text-xs text-center text-gray-500 sm:px-6 sm:text-sm"
+                  >
+                    {t("admin.noArticles") || "No articles found."}
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
         </CardBody>
-        <CardFooter className='border-t border-blue-gray-50 p-4 flex justify-end'>
-          <div className='flex items-center gap-2'>
-            <Button size='sm' color='blue' variant='outlined'>
-              {t('common.previous') || 'Previous'}
-            </Button>
-            <Button size='sm' color='blue' variant='outlined'>
-              {t('common.next') || 'Next'}
-            </Button>
-          </div>
-          {/* Pagination placeholder */}
+
+        <CardFooter className="flex items-center justify-end gap-2 px-4 py-3 border-t sm:px-6 border-blue-gray-50">
+          <Button
+            size="sm"
+            variant="outlined"
+            color="blue"
+            className="px-2 py-1 text-[10px] sm:text-xs normal-case"
+          >
+            {t("common.previous") || "Previous"}
+          </Button>
+          <Button
+            size="sm"
+            variant="outlined"
+            color="blue"
+            className="px-2 py-1 text-[10px] sm:text-xs normal-case"
+          >
+            {t("common.next") || "Next"}
+          </Button>
         </CardFooter>
       </Card>
     </div>

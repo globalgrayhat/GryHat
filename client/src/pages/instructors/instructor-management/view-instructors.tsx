@@ -1,9 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { PencilIcon } from "@heroicons/react/24/solid";
-import {
-  MagnifyingGlassIcon,
-} from "@heroicons/react/24/outline";
+import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import {
   Card,
   CardHeader,
@@ -22,18 +20,52 @@ import {
   unblockInstructors,
 } from "../../../api/endpoints/instructor-management";
 import { toast } from "react-toastify";
-import { formatDate } from "../../../utils/helpers";
+import { formatDate, getFullUrl } from "../../../utils/helpers";
 import BlockReasonModal from "./block-reason-modal";
 import usePagination from "../../../hooks/usePagination";
 
 const TABLE_HEAD = ["Name", "Email", "Date Joined", "Status", "Actions", ""];
 
 const ViewInstructors: React.FC = () => {
-  const [instructors, setInstructors] = useState([]);
+  const [instructors, setInstructors] = useState<any[]>([]);
+  const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
   const [updated, setUpdated] = useState(false);
   const [id, setId] = useState("");
-  const ITEMS_PER_PAGE = 4; 
+  const ITEMS_PER_PAGE = 4;
+
+  // Fetch all instructors
+  const fetchInstructors = async () => {
+    try {
+      const response = await getAllInstructors();
+      setInstructors(response?.data?.data || []);
+    } catch (error: any) {
+      const msg =
+        error?.response?.data?.message ||
+        error?.data?.message ||
+        "Failed to load instructors";
+      toast.error(msg, {
+        position: toast.POSITION.BOTTOM_RIGHT,
+      });
+    }
+  };
+
+  useEffect(() => {
+    fetchInstructors();
+  }, [updated]);
+
+  // Client-side search
+  const filtered = useMemo(
+    () =>
+      instructors.filter((ins) =>
+        `${ins.firstName || ""} ${ins.lastName || ""} ${ins.email || ""}`
+          .toLowerCase()
+          .includes(search.toLowerCase().trim())
+      ),
+    [instructors, search]
+  );
+
+  // Pagination over filtered list
   const {
     currentPage,
     totalPages,
@@ -41,20 +73,7 @@ const ViewInstructors: React.FC = () => {
     goToPage,
     goToPreviousPage,
     goToNextPage,
-  } = usePagination(instructors, ITEMS_PER_PAGE);
-  const fetchInstructors = async () => {
-    try {
-      const response = await getAllInstructors();
-      setInstructors(response?.data?.data);
-    } catch (error: any) {
-      toast.error(error.data.message, {
-        position: toast.POSITION.BOTTOM_RIGHT,
-      });
-    }
-  };
-  useEffect(() => {
-    fetchInstructors();
-  }, [updated]);
+  } = usePagination(filtered, ITEMS_PER_PAGE);
 
   const handleUnblock = async (instructorId: string) => {
     try {
@@ -64,13 +83,18 @@ const ViewInstructors: React.FC = () => {
       });
       setUpdated(!updated);
     } catch (error: any) {
-      toast.error(error.data.message, {
+      const msg =
+        error?.response?.data?.message ||
+        error?.data?.message ||
+        "Failed to unblock instructor";
+      toast.error(msg, {
         position: toast.POSITION.BOTTOM_RIGHT,
       });
     }
   };
+
   return (
-    <Card className='h-full w-full'>
+    <Card className="w-full h-full">
       {open && (
         <BlockReasonModal
           open={open}
@@ -80,39 +104,41 @@ const ViewInstructors: React.FC = () => {
           id={id}
         />
       )}
-      <CardHeader floated={false} shadow={false} className='rounded-none'>
-        <div className='mb-4 flex flex-col justify-between gap-8 md:flex-row md:items-center'>
+
+      <CardHeader floated={false} shadow={false} className="rounded-none">
+        <div className="flex flex-col justify-between gap-4 mb-4 md:flex-row md:items-center">
           <div>
-            <Typography variant='h5' color='blue-gray'>
+            <Typography variant="h5" color="blue-gray">
               Manage Instructors
             </Typography>
-            <Typography color='gray' className='mt-1 font-normal'>
+            <Typography color="gray" className="mt-1 font-normal">
               These are details about the instructors
             </Typography>
           </div>
-          <div className='flex w-full shrink-0 gap-2 md:w-max'>
-            <div className='w-full md:w-72'>
-              <Input
-                label='Search'
-                icon={<MagnifyingGlassIcon className='h-5 w-5' />}
-              />
-            </div>
+          <div className="flex w-full gap-2 shrink-0 md:w-72">
+            <Input
+              label="Search"
+              icon={<MagnifyingGlassIcon className="w-5 h-5" />}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
           </div>
         </div>
       </CardHeader>
-      <CardBody className='overflow-scroll px-0'>
-        <table className='w-full min-w-max table-auto text-left'>
+
+      <CardBody className="px-0 overflow-x-auto">
+        <table className="w-full text-left table-auto min-w-max">
           <thead>
             <tr>
               {TABLE_HEAD.map((head) => (
                 <th
                   key={head}
-                  className='border-y border-blue-gray-100 bg-blue-gray-50/50 p-4'
+                  className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50"
                 >
                   <Typography
-                    variant='small'
-                    color='blue-gray'
-                    className='font-normal leading-none opacity-70'
+                    variant="small"
+                    color="blue-gray"
+                    className="font-normal leading-none opacity-70"
                   >
                     {head}
                   </Typography>
@@ -132,106 +158,140 @@ const ViewInstructors: React.FC = () => {
                   isBlocked,
                   isVerified,
                   profileUrl,
-                },
-                index
+                  profilePic,
+                }: any,
+                index: number
               ) => {
-                console.log(profileUrl);
-                const isLast = index === instructors.length - 1;
+                const isLast = index === currentData.length - 1;
                 const classes = isLast
                   ? "p-4"
                   : "p-4 border-b border-blue-gray-50";
 
+                // Normalize avatar source:
+                // - If backend sends `profileUrl` (string, relative or absolute)
+                // - Or `profilePic.url` (object form)
+                let avatarSrc: string | undefined;
+                if (profilePic?.url) {
+                  avatarSrc = getFullUrl(profilePic.url);
+                } else if (profileUrl) {
+                  avatarSrc = getFullUrl(profileUrl);
+                }
+
+                const statusLabel = isBlocked
+                  ? "Blocked"
+                  : isVerified === false
+                  ? "Pending"
+                  : "Active";
+
+                const statusColor = isBlocked
+                  ? "red"
+                  : isVerified === false
+                  ? "amber"
+                  : "green";
+
                 return (
                   <tr key={_id}>
                     <td className={classes}>
-                      <div className='flex items-center gap-3'>
-                        <Avatar
-                          src={profileUrl}
-                          alt='image'
-                          size='md'
-                          className='border border-blue-gray-50 bg-blue-gray-50/50 object-contain p-1'
-                        />
+                      <div className="flex items-center gap-3">
+                        {avatarSrc ? (
+                          <Avatar
+                            src={avatarSrc}
+                            alt={`${firstName} ${lastName}`}
+                            size="md"
+                            className="object-cover p-1 border border-blue-gray-50 bg-blue-gray-50/50"
+                            onError={(e) => {
+                              // Hide broken image, let name/icon carry
+                              (e.target as HTMLImageElement).style.display =
+                                "none";
+                            }}
+                          />
+                        ) : (
+                          <div className="flex items-center justify-center w-10 h-10 text-gray-400 bg-gray-200 rounded-full">
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                              />
+                            </svg>
+                          </div>
+                        )}
+
                         <Typography
-                          variant='small'
-                          color='blue-gray'
-                          className='font-bold'
+                          variant="small"
+                          color="blue-gray"
+                          className="font-bold"
                         >
-                          {`${firstName} ${lastName}`}
+                          {`${firstName || ""} ${lastName || ""}`.trim() ||
+                            "Unknown Instructor"}
                         </Typography>
                       </div>
                     </td>
+
                     <td className={classes}>
                       <Typography
-                        variant='small'
-                        color='blue-gray'
-                        className='font-normal'
+                        variant="small"
+                        color="blue-gray"
+                        className="font-normal"
                       >
-                        {email}
+                        {email || "-"}
                       </Typography>
                     </td>
+
                     <td className={classes}>
                       <Typography
-                        variant='small'
-                        color='blue-gray'
-                        className='font-normal'
+                        variant="small"
+                        color="blue-gray"
+                        className="font-normal"
                       >
-                        {formatDate(dateJoined)}
+                        {dateJoined ? formatDate(dateJoined) : "-"}
                       </Typography>
                     </td>
+
                     <td className={classes}>
-                      <div className='w-max'>
+                      <div className="w-max">
                         <Chip
-                          size='sm'
-                          variant='ghost'
-                          value={
-                            isBlocked
-                              ? "Blocked"
-                              : isVerified === false
-                              ? "Pending"
-                              : "Active"
-                          }
-                          color={
-                            isBlocked
-                              ? "red"
-                              : isVerified === false
-                              ? "amber"
-                              : "green"
-                          }
+                          size="sm"
+                          variant="ghost"
+                          value={statusLabel}
+                          color={statusColor}
                         />
                       </div>
                     </td>
+
                     <td className={classes}>
-                      <div className='flex items-center '>
+                      <div className="flex items-center">
                         {isBlocked ? (
-                          <div>
-                            <button
-                              onClick={() => {
-                                handleUnblock(_id);
-                              }}
-                              className='w-[80px] px-1 py-1.5 text-xs bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg shadow-md transform-gpu transition-transform duration-300 ease-in-out active:scale-95'
-                            >
-                              Unblock
-                            </button>
-                          </div>
+                          <button
+                            onClick={() => handleUnblock(_id)}
+                            className="w-[80px] px-2 py-1.5 text-xs bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg shadow-sm transform-gpu transition-transform duration-200 active:scale-95"
+                          >
+                            Unblock
+                          </button>
                         ) : (
-                          <div>
-                            <button
-                              onClick={() => {
-                                setOpen(true);
-                                setId(_id);
-                              }}
-                              className='w-[80px] px-1 py-1.5 text-xs bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg shadow-md transform-gpu transition-transform duration-300 ease-in-out active:scale-95'
-                            >
-                              Block
-                            </button>
-                          </div>
+                          <button
+                            onClick={() => {
+                              setId(_id);
+                              setOpen(true);
+                            }}
+                            className="w-[80px] px-2 py-1.5 text-xs bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg shadow-sm transform-gpu transition-transform duration-200 active:scale-95"
+                          >
+                            Block
+                          </button>
                         )}
                       </div>
                     </td>
+
                     <td className={classes}>
-                      <Tooltip content='Edit User'>
-                        <IconButton variant='text' color='blue-gray'>
-                          <PencilIcon className='h-4 w-4' />
+                      <Tooltip content="Edit User">
+                        <IconButton variant="text" color="blue-gray">
+                          <PencilIcon className="w-4 h-4" />
                         </IconButton>
                       </Tooltip>
                     </td>
@@ -242,24 +302,26 @@ const ViewInstructors: React.FC = () => {
           </tbody>
         </table>
       </CardBody>
-      <CardFooter className='flex items-center justify-between border-t border-blue-gray-50 p-4'>
+
+      <CardFooter className="flex items-center justify-between p-4 border-t border-blue-gray-50">
         <Button
-          variant='outlined'
-          color='blue-gray'
-          size='sm'
+          variant="outlined"
+          color="blue-gray"
+          size="sm"
           onClick={goToPreviousPage}
           disabled={currentPage === 1}
         >
           Previous
         </Button>
-        <div className='flex items-center gap-2'>
+
+        <div className="flex items-center gap-2">
           {Array.from({ length: totalPages }, (_, index) => index + 1).map(
             (pageNumber) => (
               <IconButton
                 key={pageNumber}
                 variant={pageNumber === currentPage ? "outlined" : "text"}
-                color='blue-gray'
-                size='sm'
+                color="blue-gray"
+                size="sm"
                 onClick={() => goToPage(pageNumber)}
               >
                 {pageNumber}
@@ -267,10 +329,11 @@ const ViewInstructors: React.FC = () => {
             )
           )}
         </div>
+
         <Button
-          variant='outlined'
-          color='blue-gray'
-          size='sm'
+          variant="outlined"
+          color="blue-gray"
+          size="sm"
           onClick={goToNextPage}
           disabled={currentPage === totalPages}
         >

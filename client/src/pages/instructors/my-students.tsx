@@ -13,19 +13,49 @@ import {
   Chip,
   CardFooter,
   Avatar,
-  IconButton
+  IconButton,
 } from "@material-tailwind/react";
 import { getMyStudents } from "../../api/endpoints/instructor";
 import { useState, useEffect } from "react";
 import usePagination from "../../hooks/usePagination";
-import { formatDate } from "../../utils/helpers";
+import { formatDate, getFullUrl } from "../../utils/helpers";
 import { toast } from "react-toastify";
 import type { Students } from "../../api/types/student/student";
+
 const TABLE_HEAD = ["Student", "Course", "Status", "Joined"];
 
 const MyStudents: React.FC = () => {
   const [students, setStudents] = useState<Students[]>([]);
-  const ITEMS_PER_PAGE = 5;  
+  const [search, setSearch] = useState("");
+  const ITEMS_PER_PAGE = 5;
+
+  const fetchStudents = async () => {
+    try {
+      const response = await getMyStudents();
+      const data = response?.data || [];
+      setStudents(Array.isArray(data) ? data : []);
+    } catch {
+      toast.error("Something went wrong", {
+        position: toast.POSITION.BOTTOM_RIGHT,
+      });
+    }
+  };
+
+  useEffect(() => {
+    fetchStudents();
+  }, []);
+
+  const filtered = students.filter((s) => {
+    const q = search.toLowerCase().trim();
+    if (!q) return true;
+    const name = `${s.firstName || ""} ${s.lastName || ""}`.toLowerCase();
+    return (
+      name.includes(q) ||
+      (s.email || "").toLowerCase().includes(q) ||
+      (s.course || "").toLowerCase().includes(q)
+    );
+  });
+
   const {
     currentPage,
     totalPages,
@@ -33,59 +63,51 @@ const MyStudents: React.FC = () => {
     goToPage,
     goToNextPage,
     goToPreviousPage,
-  } = usePagination(students, ITEMS_PER_PAGE);
-  const fetchStudents = async () => {
-    try {
-      const response = await getMyStudents();
-      setStudents(response.data);
-    } catch (error) {
-      toast.error("Something went wrong")
-    }
-  };
+  } = usePagination(filtered, ITEMS_PER_PAGE);
 
-  useEffect(() => {
-    fetchStudents();
-  }, []);
   return (
-    <div className='pb-10'>
-      <Card className='h-full w-full'>
-        <CardHeader floated={false} shadow={false} className='rounded-none'>
-          <div className=' flex items-center justify-between gap-8'>
+    <div className="pb-6">
+      <Card className="w-full h-full">
+        <CardHeader floated={false} shadow={false} className="rounded-none">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <Typography variant='h5' color='blue-gray'>
+              <Typography variant="h5" color="blue-gray">
                 Students list
               </Typography>
-              <Typography color='gray' className='mt-1 font-normal'>
-                See information about all students
+              <Typography color="gray" className="mt-1 text-sm font-normal">
+                See information about all students enrolled in your courses.
               </Typography>
             </div>
-            <div className='flex shrink-0 flex-col gap-2 sm:flex-row'>
+            <div className="w-full sm:w-64">
               <Input
-                label='Search'
-                icon={<MagnifyingGlassIcon className='h-5 w-5' />}
+                label="Search"
+                icon={<MagnifyingGlassIcon className="w-5 h-5" />}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
               />
             </div>
           </div>
         </CardHeader>
-        <CardBody className='overflow-scroll px-0'>
-          <table className='mt-4 w-full min-w-max table-auto text-left'>
+
+        <CardBody className="px-0 overflow-x-auto">
+          <table className="w-full mt-2 text-left table-auto min-w-max">
             <thead>
               <tr>
                 {TABLE_HEAD.map((head, index) => (
                   <th
                     key={head}
-                    className='cursor-pointer border-y border-blue-gray-100 bg-blue-gray-50/50 p-4 transition-colors hover:bg-blue-gray-50'
+                    className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50"
                   >
                     <Typography
-                      variant='small'
-                      color='blue-gray'
-                      className='flex items-center justify-between gap-2 font-normal leading-none opacity-70'
+                      variant="small"
+                      color="blue-gray"
+                      className="flex items-center justify-between gap-2 font-normal leading-none opacity-70"
                     >
-                      {head}{" "}
+                      {head}
                       {index !== TABLE_HEAD.length - 1 && (
                         <ChevronUpDownIcon
                           strokeWidth={2}
-                          className='h-4 w-4'
+                          className="w-4 h-4"
                         />
                       )}
                     </Typography>
@@ -94,47 +116,52 @@ const MyStudents: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {currentData?.map(
+              {currentData.map(
                 (
                   {
                     email,
                     firstName,
-                    lastName,  
+                    lastName,
                     course,
                     isBlocked,
                     isGoogleUser,
                     dateJoined,
                     profileUrl,
-                    profilePic
+                    profilePic,
                   },
                   index
                 ) => {
-                  const isLast = index === students.length - 1;
+                  const isLast = index === currentData.length - 1;
                   const classes = isLast
                     ? "p-4"
                     : "p-4 border-b border-blue-gray-50";
-   
+
+                  const avatarSrc = isGoogleUser
+                    ? getFullUrl(profilePic?.url || "")
+                    : getFullUrl(profileUrl || "");
+
                   return (
-                    <tr key={index}>
+                    <tr key={`${email}-${index}`}>
                       <td className={classes}>
-                        <div className='flex items-center gap-3'>
+                        <div className="flex items-center gap-3">
                           <Avatar
-                            src={isGoogleUser?profilePic?.url:profileUrl}
-                            alt={"image"}  
-                            size='sm'
+                            src={avatarSrc}
+                            alt={email}
+                            size="sm"
+                            className="object-cover"
                           />
-                          <div className='flex flex-col'>
+                          <div className="flex flex-col">
                             <Typography
-                              variant='small'
-                              color='blue-gray'
-                              className='font-normal'
+                              variant="small"
+                              color="blue-gray"
+                              className="font-medium"
                             >
-                              {firstName + " " + lastName}
+                              {(firstName || "") + " " + (lastName || "")}
                             </Typography>
                             <Typography
-                              variant='small'
-                              color='blue-gray'
-                              className='font-normal opacity-70'
+                              variant="small"
+                              color="blue-gray"
+                              className="font-normal opacity-70"
                             >
                               {email}
                             </Typography>
@@ -142,33 +169,29 @@ const MyStudents: React.FC = () => {
                         </div>
                       </td>
                       <td className={classes}>
-                        <div className='flex flex-col'>
-                          <Typography
-                            variant='small'
-                            color='blue-gray'
-                            className='font-normal'
-                          >
-                            {course}
-                          </Typography>
-                        </div>
+                        <Typography
+                          variant="small"
+                          color="blue-gray"
+                          className="font-normal"
+                        >
+                          {course || "-"}
+                        </Typography>
                       </td>
                       <td className={classes}>
-                        <div className='w-max'>
-                          <Chip
-                            variant='ghost'
-                            size='sm'
-                            value={!isBlocked ? "active" : "blocked"}
-                            color={isBlocked ? "red" : "green"}
-                          />
-                        </div>
+                        <Chip
+                          variant="ghost"
+                          size="sm"
+                          value={!isBlocked ? "Active" : "Blocked"}
+                          color={isBlocked ? "red" : "green"}
+                        />
                       </td>
                       <td className={classes}>
                         <Typography
-                          variant='small'
-                          color='blue-gray'
-                          className='font-normal'
+                          variant="small"
+                          color="blue-gray"
+                          className="font-normal"
                         >
-                          {formatDate(dateJoined)}
+                          {dateJoined ? formatDate(dateJoined) : "-"}
                         </Typography>
                       </td>
                     </tr>
@@ -177,42 +200,53 @@ const MyStudents: React.FC = () => {
               )}
             </tbody>
           </table>
-        </CardBody>
-        <CardFooter className='flex items-center justify-between border-t border-blue-gray-50 p-4'>
-        <Button
-          variant='outlined'
-          color='blue-gray'
-          size='sm'
-          onClick={goToPreviousPage}
-          disabled={currentPage === 1}
-        >
-          Previous
-        </Button>
-        <div className='flex items-center gap-2'>
-          {Array.from({ length: totalPages }, (_, index) => index + 1).map(
-            (pageNumber) => (
-              <IconButton
-                key={pageNumber}
-                variant={pageNumber === currentPage ? "outlined" : "text"}
-                color='blue-gray'
-                size='sm'
-                onClick={() => goToPage(pageNumber)}
-              >
-                {pageNumber}
-              </IconButton>
-            )
+
+          {!currentData.length && (
+            <div className="py-6 text-sm text-center text-gray-500">
+              No students found.
+            </div>
           )}
-        </div>
-        <Button
-          variant='outlined'
-          color='blue-gray'
-          size='sm'
-          onClick={goToNextPage}
-          disabled={currentPage === totalPages}
-        >
-          Next
-        </Button>
-      </CardFooter>
+        </CardBody>
+
+        {totalPages > 1 && (
+          <CardFooter className="flex items-center justify-between p-4 border-t border-blue-gray-50">
+            <Button
+              variant="outlined"
+              color="blue-gray"
+              size="sm"
+              onClick={goToPreviousPage}
+              disabled={currentPage === 1}
+            >
+              Previous
+            </Button>
+            <div className="flex items-center gap-2">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                (pageNumber) => (
+                  <IconButton
+                    key={pageNumber}
+                    variant={
+                      pageNumber === currentPage ? "outlined" : "text"
+                    }
+                    color="blue-gray"
+                    size="sm"
+                    onClick={() => goToPage(pageNumber)}
+                  >
+                    {pageNumber}
+                  </IconButton>
+                )
+              )}
+            </div>
+            <Button
+              variant="outlined"
+              color="blue-gray"
+              size="sm"
+              onClick={goToNextPage}
+              disabled={currentPage === totalPages}
+            >
+              Next
+            </Button>
+          </CardFooter>
+        )}
       </Card>
     </div>
   );
