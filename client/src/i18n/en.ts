@@ -1,8 +1,7 @@
 /* eslint-disable no-dupe-keys */
-// English translations exported as a TypeScript module.
-// Converting JSON to a TS module avoids webpack JSON parsing issues and
-// allows TypeScript to infer nested types. Simply update this object
-// when adding new translations.
+/**
+ * English translations as a TypeScript module.
+ */
 
 const en = {
   welcomeBack: "Welcome Back",
@@ -14,8 +13,7 @@ const en = {
   adminSignIn: "Admin Sign In",
   adminTagline: "Administrative access",
   becomeInstructorTagline: "Join us and start teaching today",
-  // Navigation labels. Moved from `header` to `nav` so that the translation
-  // keys match the usage in the application (e.g. `t('nav.home')`).
+
   nav: {
     home: "Home",
     courses: "Courses",
@@ -26,7 +24,6 @@ const en = {
     login: "Login",
     register: "Register",
     instructorLogin: "Instructor Login",
-    // Additional navigation keys for admin sections and settings
     settings: "Settings",
     students: "Students",
     instructors: "Instructors",
@@ -35,34 +32,23 @@ const en = {
     admin: "Admin",
     adminLogin: "Admin Login",
   },
-  adminCourses: {
-    title: "Courses",
-    course: "Course",
-    category: "Category",
-    instructor: "Instructor",
-    price: "Price",
-    actions: "Actions",
-    edit: "Edit",
-    delete: "Delete",
-  },
-  settings: {
-    adminSettings: "Admin Settings",
-    profileSettings: "Profile Settings",
-    siteSettings: "Site Settings",
-    platformName: "Platform Name",
-    platformNamePlaceholder: "Enter the platform name",
-    loginOptions: "Login Options",
-    enableStudentLogin: "Enable Student Login/Registration",
-    enableInstructorLogin: "Enable Instructor Login/Registration",
-    enableGoogleLogin: "Enable Google Login",
-    saveSettings: "Save Settings",
-    saving: "Saving...",
-    errors: {
-      platformNameRequired: "Platform name cannot be empty",
+
+  home: {
+    trendingCourses: "Trending Courses",
+    recommendedCourses: "Recommended for you",
+    viewMore: "View More",
+    viewAll: "View All",
+    browseAll: "Browse all courses",
+    empty: {
+      trending: "No trending courses at the moment.",
+      recommended: "No recommendations for you yet.",
     },
-    successfullyUpdated: "Settings updated successfully",
-    updateFailed: "Failed to update settings",
+    errors: {
+      trendingFail: "Unable to load trending courses right now.",
+      recommendedFail: "Unable to load your recommendations right now.",
+    },
   },
+
   footer: {
     explore: "Explore",
     support: "Support",
@@ -74,6 +60,7 @@ const en = {
     helpCenter: "Help Center",
     platformName: "Academic Platform",
   },
+
   auth: {
     registerTitle: "Create an account",
     personalInfo: "Personal Information",
@@ -92,7 +79,7 @@ const en = {
     certificates: "Certificates",
     password: "Password",
     confirmPassword: "Confirm Password",
-    forgotPassword: "forgot Password?",
+    forgotPassword: "Forgot Password?",
     uploadFile: "Upload File",
     uploadPhoto: "Upload Photo",
     uploadCertificate: "Upload Certificate",
@@ -101,9 +88,12 @@ const en = {
     signUp: "Sign Up",
     signIn: "Sign In",
     cancel: "Cancel",
-    studentLogin: "student Login",
-    accessAccount: "access Account",
+    studentLogin: "Student Login",
+    accessAccount: "Access Account",
     haveAccount: "Already have an account?",
+    blockedTitle: "Account Blocked",
+    blockedMessage:
+      "Your account has been blocked. Please contact support for assistance.",
   },
 
   tutors: {
@@ -112,6 +102,18 @@ const en = {
     searchPlaceholder: "Search for instructors...",
     noResults: "No instructors found.",
   },
+
+  adminCourses: {
+    title: "Courses",
+    course: "Course",
+    category: "Category",
+    instructor: "Instructor",
+    price: "Price",
+    actions: "Actions",
+    edit: "Edit",
+    delete: "Delete",
+  },
+
   admin: {
     courses: "Courses",
     coursesDescription: "Manage all courses in the platform",
@@ -119,12 +121,35 @@ const en = {
     search: "Search",
     settings: "Settings",
     siteSettings: "Site Settings",
-    // The admin profile page uses strings from the shared `settings` section to avoid duplicate keys.
     profileSaved: "Profile saved",
     name: "Name",
     email: "Email",
     save: "Save",
   },
+
+  settings: {
+    adminSettings: "Admin Settings",
+    profileSettings: "Profile Settings",
+    siteSettings: "Site Settings",
+    platformName: "Platform Name",
+    platformNamePlaceholder: "Enter the platform name",
+    loginOptions: "Login Options",
+    enableStudentLogin: "Enable Student Login/Registration",
+    enableInstructorLogin: "Enable Instructor Login/Registration",
+    enableGoogleLogin: "Enable Google Login",
+    saveSettings: "Save Settings",
+    saving: "Saving...",
+    editProfileInfo: "Edit profile info",
+    profileSubtitle: "Manage your personal information and password",
+    accountInfo: "Account Info",
+    changePassword: "Change password",
+    errors: {
+      platformNameRequired: "Platform name cannot be empty",
+    },
+    successfullyUpdated: "Settings updated successfully",
+    updateFailed: "Failed to update settings",
+  },
+
   course: {
     title: "Title",
     category: "Category",
@@ -137,14 +162,37 @@ const en = {
     duration: "Duration",
     free: "Free",
   },
+
   pagination: {
     previous: "Previous",
     next: "Next",
   },
+
+  profile: {
+    loading: "Loading profile...",
+    noChanges: "No changes to update",
+    updatedSuccessfully: "Profile updated successfully",
+    updateFailed: "Failed to update profile",
+    edit: "Edit profile",
+    save: "Save",
+    saving: "Saving...",
+    cancel: "Cancel",
+    firstName: "First name",
+    lastName: "Last name",
+    email: "Email",
+    mobile: "Mobile",
+    changeAvatar: "Profile picture",
+  },
+
+  toast: {
+    genericError: "Something went wrong. Please try again.",
+  },
+
   common: {
     edit: "Edit",
     delete: "Delete",
   },
 };
 
+export type EnTranslations = typeof en;
 export default en;

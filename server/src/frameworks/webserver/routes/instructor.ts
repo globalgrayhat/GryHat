@@ -132,14 +132,14 @@ const instructorRouter = () => {
   /**
    * @swagger
    * /api/instructors/get-all-instructors/block-instructors:
-   *   get:
+   *   patch:
    *     summary: Block an instructor (should specify which instructor internally)
    *     tags: [Instructor]
    *     responses:
    *       200:
    *         description: Instructor blocked
    */
-  router.get(
+  router.patch(
     '/get-all-instructors/block-instructors',
     controller.blockInstructor
   );

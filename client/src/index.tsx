@@ -23,7 +23,7 @@ const root = ReactDOM.createRoot(
 Modal.setAppElement("#root");
 
 root.render(
-  <React.StrictMode>
+
     <GoogleOAuthProvider clientId={CONFIG_KEYS.GOOGLE_AUTH_CLIENT_ID}>
       <Provider store={store}>
         <PersistGate loading={null} persistor={persistor}>
@@ -43,5 +43,4 @@ root.render(
         </PersistGate>
       </Provider>
     </GoogleOAuthProvider>
-  </React.StrictMode>
 );

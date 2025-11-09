@@ -15,12 +15,21 @@ import InstructorLayout from "./pages/instructors/InstructorLayout";
 
 // Admin Components
 import AdminLoginPage from "./pages/admin/admin-login-page";
-import { AdminSideNav } from "./pages/admin/admin-side-nav";
+import AdminSideNav from "./pages/admin/admin-side-nav";
 
-// Redux
-import { selectIsLoggedIn, selectUserType } from "./redux/reducers/authSlice";
-import { selectStudent, fetchStudentData } from "./redux/reducers/studentSlice";
-import { selectInstructor, setDetails } from "./redux/reducers/instructorSlice";
+// Redux Selectors & Actions
+import {
+  selectIsLoggedIn,
+  selectUserType,
+} from "./redux/reducers/authSlice";
+import {
+  selectStudent,
+  fetchStudentData,
+} from "./redux/reducers/studentSlice";
+import {
+  selectInstructor,
+  setDetails as setInstructorDetails,
+} from "./redux/reducers/instructorSlice";
 import { selectIsFooterVisible } from "./redux/reducers/helperSlice";
 
 // API & Hooks
@@ -35,46 +44,60 @@ type AnyDispatch = ReturnType<typeof useDispatch>;
 // STUDENT LAYOUT
 // =============================
 export const Student: React.FC = () => {
-  // ... (No changes in this section)
   const isOnline = useIsOnline();
   const isLoggedIn = useSelector(selectIsLoggedIn);
   const userType = useSelector(selectUserType);
   const footerVisible = useSelector(selectIsFooterVisible);
-  const student = useSelector(selectStudent);
+  const studentState = useSelector(selectStudent);
   const dispatch: AnyDispatch = useDispatch();
-  const { t, lang } = useLanguage() as { t: (k: string) => string; lang?: "ar" | "en" };
-  const dir = lang === "ar" ? "rtl" : "ltr";
-  const [showSessionExpired, setShowSessionExpired] = useState(false);
 
-  const handleCloseSessionExpired = () => setShowSessionExpired(false);
+  const { t, lang } = useLanguage() as {
+    t: (k: string) => string;
+    lang?: "ar" | "en";
+  };
+  const dir = lang === "ar" ? "rtl" : "ltr";
+
+  const [showSessionExpired, setShowSessionExpired] = useState(false);
 
   useEffect(() => {
     const handleSessionExpired = () => setShowSessionExpired(true);
     window.addEventListener("sessionExpired", handleSessionExpired);
-    return () => window.removeEventListener("sessionExpired", handleSessionExpired);
+    return () => {
+      window.removeEventListener("sessionExpired", handleSessionExpired);
+    };
   }, []);
 
   useEffect(() => {
-    if (isLoggedIn && userType === "student") {
+    if (
+      isLoggedIn &&
+      userType === "student" &&
+      !studentState.studentDetails &&
+      !studentState.isFetching
+    ) {
       dispatch(fetchStudentData());
     }
-  }, [dispatch, isLoggedIn, userType]);
-
-  const headerWrapper = "bg-gray-100 dark:bg-gray-900 opacity-100 transition-opacity duration-300";
+  }, [
+    dispatch,
+    isLoggedIn,
+    userType,
+    studentState.studentDetails,
+    studentState.isFetching,
+  ]);
 
   if (!isOnline) return <YouAreOffline />;
 
-  if (student?.studentDetails?.isBlocked) {
+  if (studentState.studentDetails?.isBlocked) {
     return (
       <div
         dir={dir}
-        className="flex min-h-screen flex-col items-center justify-center bg-gray-100 text-gray-900 dark:bg-gray-900 dark:text-gray-100 p-6"
+        className="flex flex-col items-center justify-center min-h-screen p-6 text-gray-900 bg-gray-100 dark:bg-gray-900 dark:text-gray-100"
       >
         <h1 className="text-2xl font-semibold text-red-600 dark:text-red-400">
           {t("auth.blockedTitle") || "Account Blocked"}
         </h1>
-        <p className="mt-2 max-w-md text-center text-gray-700 dark:text-gray-300">
-          {t("auth.blockedMessage") || "Your account has been blocked and you cannot access the platform."}
+        <p className="max-w-md mt-2 text-center text-gray-700 dark:text-gray-300">
+          {t("auth.blockedMessage") ||
+            "Your account has been blocked and you cannot access the platform."}
         </p>
       </div>
     );
@@ -82,12 +105,23 @@ export const Student: React.FC = () => {
 
   return (
     <>
-      {showSessionExpired && <SessionExpired show={showSessionExpired} onClose={handleCloseSessionExpired} />}
-      <div dir={dir} className="min-h-screen bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100 font-sans">
-        <div className={headerWrapper}>
+      {showSessionExpired && (
+        <SessionExpired
+          show={showSessionExpired}
+          onClose={() => setShowSessionExpired(false)}
+        />
+      )}
+
+      <div
+        dir={dir}
+        className="min-h-screen font-sans text-gray-900 bg-white dark:bg-gray-900 dark:text-gray-100"
+      >
+        <div className="bg-gray-100 dark:bg-gray-900">
           <StudentHeader />
         </div>
+
         <Outlet />
+
         {footerVisible && <StudentFooter />}
       </div>
     </>
@@ -95,67 +129,88 @@ export const Student: React.FC = () => {
 };
 
 // =============================
-// INSTRUCTOR LAYOUT (UPDATED)
+// INSTRUCTOR LAYOUT
 // =============================
 export const Instructor: React.FC = () => {
   const isOnline = useIsOnline();
   const isLoggedIn = useSelector(selectIsLoggedIn);
   const userType = useSelector(selectUserType);
-  const instructor = useSelector(selectInstructor);
+  const instructorState = useSelector(selectInstructor);
   const dispatch: AnyDispatch = useDispatch();
-  const { t, lang } = useLanguage() as { t: (k: string) => string; lang?: "ar" | "en" };
+
+  const { t, lang } = useLanguage() as {
+    t: (k: string) => string;
+    lang?: "ar" | "en";
+  };
   const dir = lang === "ar" ? "rtl" : "ltr";
 
-  // Fetch instructor details (this logic remains the same)
   useEffect(() => {
     const load = async () => {
       try {
         const response = await getInstructorDetails();
-        dispatch(setDetails({ details: response.data }));
+        const data = response.data || response;
+        dispatch(
+          setInstructorDetails({
+            details: data,
+          })
+        );
       } catch {
         if (isLoggedIn && userType === "instructor") {
-          toast.error("Something went wrong", { position: "bottom-right" });
+          toast.error(
+            t("toast.genericError") ||
+              "Something went wrong while loading instructor profile",
+            { position: "bottom-right" }
+          );
         }
       }
     };
-    if (isLoggedIn && userType === "instructor") {
-      load();
+
+    if (
+      isLoggedIn &&
+      userType === "instructor" &&
+      !instructorState.instructorDetails
+    ) {
+      void load();
     }
-  }, [dispatch, isLoggedIn, userType]);
+  }, [
+    dispatch,
+    isLoggedIn,
+    userType,
+    instructorState.instructorDetails,
+    t,
+  ]);
 
   if (!isOnline) return <YouAreOffline />;
 
-  // Case 1: Not logged in as an instructor, show login page
   if (!(isLoggedIn && userType === "instructor")) {
     return (
-      <div dir={dir} className="bg-gray-100 dark:bg-gray-900 min-h-screen">
-        <InstructorLoginPage isOpen={false} onClose={function (): void {
-          throw new Error("Function not implemented.");
-        } } onSwitchToRegister={function (): void {
-          throw new Error("Function not implemented.");
-        } } />
+      <div dir={dir} className="min-h-screen bg-gray-100 dark:bg-gray-900">
+        <InstructorLoginPage
+          isOpen={true}
+          onClose={() => undefined}
+          onSwitchToRegister={() => undefined}
+        />
       </div>
     );
   }
 
-  // Case 2: Instructor is blocked, show blocked message
-  if (instructor?.instructorDetails?.isBlocked) {
+  if (instructorState.instructorDetails?.isBlocked) {
     return (
       <div
         dir={dir}
-        className="flex min-h-screen flex-col items-center justify-center bg-gray-100 text-gray-900 dark:bg-gray-900 dark:text-gray-100 p-6"
+        className="flex flex-col items-center justify-center min-h-screen p-6 text-gray-900 bg-gray-100 dark:bg-gray-900 dark:text-gray-100"
       >
         <h1 className="text-2xl font-semibold text-red-600 dark:text-red-400">
           {t("auth.blockedTitle") || "Account Blocked"}
         </h1>
-        <p className="mt-2 max-w-md text-center text-gray-700 dark:text-gray-300">
-          {t("auth.blockedMessage") || "Your account has been blocked and you cannot use the platform."}
+        <p className="max-w-md mt-2 text-center text-gray-700 dark:text-gray-300">
+          {t("auth.blockedMessage") ||
+            "Your account has been blocked and you cannot access the platform."}
         </p>
       </div>
     );
   }
 
-  // The <Outlet /> is now rendered inside the InstructorLayout component.
   return (
     <div dir={dir}>
       <InstructorLayout />
@@ -163,12 +218,10 @@ export const Instructor: React.FC = () => {
   );
 };
 
-
 // =============================
 // ADMIN LAYOUT
 // =============================
 export const Admin: React.FC = () => {
-  // ... (No changes in this section)
   const isOnline = useIsOnline();
   const isLoggedIn = useSelector(selectIsLoggedIn);
   const userType = useSelector(selectUserType);
@@ -177,11 +230,11 @@ export const Admin: React.FC = () => {
 
   if (isLoggedIn && userType === "admin") {
     return (
-      <div className="flex min-h-screen items-start justify-center bg-gray-100 text-gray-900 dark:bg-gray-900 dark:text-gray-100 font-sans">
-        <div className="w-80">
+      <div className="flex items-start justify-start min-h-screen font-sans text-gray-900 bg-gray-100 dark:bg-gray-900 dark:text-gray-100">
+        <div className="w-72 lg:w-72 xl:w-80">
           <AdminSideNav />
         </div>
-        <div className="mt-5 flex-1 max-h-screen overflow-y-auto pl-4">
+        <div className="flex-1 max-h-screen px-3 pt-4 pb-6 overflow-y-auto">
           <Outlet />
         </div>
       </div>

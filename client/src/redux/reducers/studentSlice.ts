@@ -12,12 +12,28 @@ interface StudentData {
   error: string | null;
 }
 
-const accessToken = localStorage.getItem("accessToken");
-let decodedToken = null;
-try {
-  decodedToken = accessToken ? decodeJwtToken(accessToken) : null;
-} catch (error) {
-  console.warn("Error decoding JWT token in studentSlice:", error);
+const getStoredAccessToken = (): string => {
+  if (typeof window === "undefined") return "";
+  const raw = localStorage.getItem("accessToken");
+  if (!raw) return "";
+  try {
+    const parsed = JSON.parse(raw);
+    return typeof parsed?.accessToken === "string"
+      ? parsed.accessToken
+      : raw;
+  } catch {
+    return raw;
+  }
+};
+
+const bootstrapToken = getStoredAccessToken();
+let decodedToken = null as ReturnType<typeof decodeJwtToken> | null;
+if (bootstrapToken) {
+  try {
+    decodedToken = decodeJwtToken(bootstrapToken);
+  } catch {
+    decodedToken = null;
+  }
 }
 
 const initialState: StudentData = {
@@ -27,23 +43,11 @@ const initialState: StudentData = {
   error: null,
 };
 
-// Async Thunk action creator to fetch user data
 export const fetchStudentData = createAsyncThunk(
   "student/fetchStudentData",
   async () => {
-    try {
-      const response = await getStudentDetails();
-      return response.data;
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        throw new Error(
-          (error as { response?: { data?: { message?: string } } })?.response
-            ?.data?.message || "Failed to fetch student data"
-        );
-      } else {
-        throw new Error("Unknown error occurred");
-      }
-    }
+    const response = await getStudentDetails();
+    return response?.data || response;
   }
 );
 
@@ -51,12 +55,18 @@ const studentSlice = createSlice({
   name: "student",
   initialState,
   reducers: {
-    setDetails(state, action: PayloadAction<{ details: ApiResponseStudent }>) {
-      state.studentDetails = action.payload.details;
+    setDetails(
+      state,
+      action: PayloadAction<{ studentDetails: ApiResponseStudent }>
+    ) {
+      state.studentDetails = action.payload.studentDetails;
+      state.studentId = action.payload.studentDetails?._id || state.studentId;
     },
     clearDetails(state) {
       state.studentDetails = null;
       state.studentId = null;
+      state.isFetching = false;
+      state.error = null;
     },
   },
   extraReducers: (builder) => {
@@ -67,6 +77,7 @@ const studentSlice = createSlice({
     builder.addCase(fetchStudentData.fulfilled, (state, action) => {
       state.isFetching = false;
       state.studentDetails = action.payload;
+      state.studentId = action.payload?._id || state.studentId;
     });
     builder.addCase(fetchStudentData.rejected, (state, action) => {
       state.isFetching = false;

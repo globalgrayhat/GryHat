@@ -9,12 +9,28 @@ interface InstructorData {
   instructorId: string | null;
 }
 
-const accessToken = localStorage.getItem("accessToken");
-let decodedToken = null;
-try {
-  decodedToken = accessToken ? decodeJwtToken(accessToken) : null;
-} catch (error) {
-  console.warn("Error decoding JWT token in instructorSlice:", error);
+const getStoredAccessToken = (): string => {
+  if (typeof window === "undefined") return "";
+  const raw = localStorage.getItem("accessToken");
+  if (!raw) return "";
+  try {
+    const parsed = JSON.parse(raw);
+    return typeof parsed?.accessToken === "string"
+      ? parsed.accessToken
+      : raw;
+  } catch {
+    return raw;
+  }
+};
+
+const bootstrapToken = getStoredAccessToken();
+let decodedToken = null as ReturnType<typeof decodeJwtToken> | null;
+if (bootstrapToken) {
+  try {
+    decodedToken = decodeJwtToken(bootstrapToken);
+  } catch {
+    decodedToken = null;
+  }
 }
 
 const initialState: InstructorData = {
@@ -31,6 +47,7 @@ const instructorSlice = createSlice({
       action: PayloadAction<{ details: InstructorApiResponse }>
     ) {
       state.instructorDetails = action.payload.details;
+      state.instructorId = action.payload.details?._id || state.instructorId;
     },
     clearDetails(state) {
       state.instructorDetails = null;

@@ -1,13 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable no-unsafe-optional-chaining */
 import React from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import type { AdminLoginInfo } from "../../api/types/admin/auth-interface";
 import { loginAdmin } from "../../api/endpoints/auth/auth";
-import { setToken } from "../../redux/reducers/authSlice";
 import { useDispatch } from "react-redux";
+import { setToken } from "../../redux/reducers/authSlice";
 
 const AdminLoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -16,24 +15,34 @@ const AdminLoginPage: React.FC = () => {
   const handleSubmit = async (adminInfo: AdminLoginInfo) => {
     try {
       const response = await loginAdmin(adminInfo);
-      const {
-        accessToken,
-        refreshToken,
-      }: { accessToken: string; refreshToken: string } = response?.data;
-      dispatch(setToken({ accessToken, refreshToken, userType: "admin" }));
-      toast.success(response.data.message, {
+      const data = response?.data?.data || response?.data || {};
+      const accessToken: string = data.accessToken;
+      const refreshToken: string = data.refreshToken;
+
+      if (!accessToken) throw new Error("Access token missing from response");
+
+      dispatch(
+        setToken({
+          accessToken,
+          refreshToken,
+          userType: "admin",
+        })
+      );
+
+      toast.success(response?.data?.message || "Successfully logged in", {
         position: toast.POSITION.BOTTOM_RIGHT,
       });
+
       navigate("/admin/");
     } catch (error: any) {
-      toast.error(
+      const message =
         error?.response?.data?.message ||
-          error?.data?.message ||
-          "Login failed",
-        {
-          position: toast.POSITION.BOTTOM_RIGHT,
-        }
-      );
+        error?.data?.message ||
+        error?.message ||
+        "Login failed";
+      toast.error(message, {
+        position: toast.POSITION.BOTTOM_RIGHT,
+      });
     }
   };
 
@@ -54,10 +63,7 @@ const AdminLoginPage: React.FC = () => {
           </p>
         </div>
 
-        <Formik
-          initialValues={{ email: "", password: "" }}
-          onSubmit={handleSubmit}
-        >
+        <Formik initialValues={{ email: "", password: "" }} onSubmit={handleSubmit}>
           <Form className="space-y-4">
             <div>
               <label
@@ -116,7 +122,7 @@ const AdminLoginPage: React.FC = () => {
             <div className="pt-2">
               <button
                 type="submit"
-                className="flex justify-center w-full px-3 py-2 text-sm font-semibold text-white transition-colors bg-indigo-600 shadow-md rounded-xl hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-600"
+                className="flex justify-center w-full px-3 py-2 text-sm font-semibold text-white transition-colors bg-indigo-600 shadow-md rounded-xl hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2"
               >
                 Sign in
               </button>

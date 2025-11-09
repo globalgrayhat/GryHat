@@ -1,16 +1,24 @@
-import React, { useState } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
-import { IconButton } from "@material-tailwind/react";
-import { Cog6ToothIcon, Bars3Icon, XMarkIcon } from "@heroicons/react/24/solid";
+// client/src/pages/admin/admin-dash-board-page.tsx
 
-import { AdminSideNav } from "./admin-side-nav";
+import React, { useEffect } from "react";
+import {
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
+import { useSelector } from "react-redux";
+
+import AdminLayout from "../../components/admin/AdminLayout";
+
 import AdminHomePage from "./admin-home-page";
 import AdminLoginPage from "./admin-login-page";
 
-import ViewInstructorsIndex from "../instructors/instructor-management/view-instructors-index";
-import ViewInstructorRequests from "../instructors/instructor-management/viewInstructor-requests";
-import ViewMoreInstructorRequest from "../instructors/instructor-management/view-more-instructor-request";
-import ViewBlockedInstructors from "../instructors/instructor-management/view-blocked-instructors";
+import ViewInstructorsIndex from "./instructor-management/view-instructors-index";
+import ViewInstructorRequests from "./instructor-management/viewInstructor-requests";
+import ViewMoreInstructorRequest from "./instructor-management/view-more-instructor-request";
+import ViewBlockedInstructors from "./instructor-management/view-blocked-instructors";
 
 import Categories from "../categories/category-page";
 import ListCategories from "../categories/list-category";
@@ -22,109 +30,162 @@ import AdminArticlesPage from "./admin-articles-page";
 import AdminProfilePage from "./admin-profile-page";
 import AdminSiteSettingsPage from "./site-settings-page";
 
-const DashboardLayout: React.FC = () => {
-  const [mobileOpen, setMobileOpen] = useState(false);
+import StudentsTab from "./student-management/students-tab";
 
+import {
+  selectIsLoggedIn,
+  selectUserType,
+} from "../../redux/reducers/authSlice";
+
+/**
+ * AdminProtected
+ * - يحمي مسارات الأدمن.
+ * - يسمح فقط للمستخدم الذي نوعه "admin" ومسجل دخول.
+ * - غير ذلك → توجيه لصفحة /admin/login.
+ */
+const AdminProtected: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  const isLoggedIn = useSelector(selectIsLoggedIn);
+  const userType = useSelector(selectUserType);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (!isLoggedIn || userType !== "admin") {
+      navigate("/admin/login", {
+        replace: true,
+        state: { from: location },
+      });
+    }
+  }, [isLoggedIn, userType, navigate, location]);
+
+  if (!isLoggedIn || userType !== "admin") return null;
+  return <>{children}</>;
+};
+
+/**
+ * AdminDashboardRoutes
+ * - كل مسارات لوحة التحكم.
+ * - جميع الصفحات الداخلية تلتف داخل AdminLayout لتوحيد الواجهة.
+ */
+const AdminDashboardRoutes: React.FC = () => {
   return (
-    <div className="flex min-h-screen bg-blue-gray-50/50">
-      {/* Desktop Sidebar */}
-      <aside className="flex-shrink-0 hidden w-64 lg:block xl:w-72">
-        <AdminSideNav />
-      </aside>
+    <Routes>
+      {/* صفحة تسجيل دخول الأدمن (بدون Layout) */}
+      <Route path="/login" element={<AdminLoginPage />} />
 
-      {/* Mobile Sidebar */}
-      <div className="lg:hidden">
-        {/* Toggle Button */}
-        <IconButton
-          size="sm"
-          color="white"
-          className="fixed z-50 border shadow-lg top-3 left-3 bg-white/90 border-blue-gray-50"
-          onClick={() => setMobileOpen((prev) => !prev)}
-        >
-          {mobileOpen ? (
-            <XMarkIcon className="w-5 h-5 text-blue-gray-700" />
-          ) : (
-            <Bars3Icon className="w-5 h-5 text-blue-gray-700" />
-          )}
-        </IconButton>
+      {/* الرئيسية */}
+      <Route
+        path="/"
+        element={
+          <AdminProtected>
+            <AdminLayout>
+              <AdminHomePage />
+            </AdminLayout>
+          </AdminProtected>
+        }
+      />
 
-        {/* Overlay + Drawer */}
-        {mobileOpen && (
-          <div className="fixed inset-0 z-40 flex">
-            <div className="w-64 h-full">
-              <AdminSideNav />
-            </div>
-            <div
-              className="flex-1 h-full bg-black/30"
-              onClick={() => setMobileOpen(false)}
-            />
-          </div>
-        )}
-      </div>
+      {/* المدربين (بما فيها الراوتس الداخلية داخل ViewInstructorsIndex + Outlet) */}
+      <Route
+        path="/instructors/*"
+        element={
+          <AdminProtected>
+            <AdminLayout>
+              <ViewInstructorsIndex />
+            </AdminLayout>
+          </AdminProtected>
+        }
+      >
+        <Route path="requests" element={<ViewInstructorRequests />} />
+        <Route path="requests/:id" element={<ViewMoreInstructorRequest />} />
+        <Route path="blocked" element={<ViewBlockedInstructors />} />
+      </Route>
 
-      {/* Main Content */}
-      <main className="flex-1 px-2 pb-6 sm:px-4 lg:px-6 pt-14 lg:pt-4 lg:ml-0">
-        {/* Floating Settings Button */}
-        <IconButton
-          size="lg"
-          color="white"
-          className="fixed z-40 hidden border rounded-full shadow-xl bottom-6 right-6 bg-white/95 border-blue-gray-50 md:flex"
-          ripple={false}
-        >
-          <Cog6ToothIcon className="w-5 h-5 text-blue-gray-700" />
-        </IconButton>
+      {/* الطلاب */}
+      <Route
+        path="/students"
+        element={
+          <AdminProtected>
+            <AdminLayout>
+              <StudentsTab />
+            </AdminLayout>
+          </AdminProtected>
+        }
+      />
 
-        {/* Routes */}
-        <Routes>
-          {/* Dashboard */}
-          <Route path="/" element={<AdminHomePage />} />
+      {/* التصنيفات */}
+      <Route
+        path="/categories/*"
+        element={
+          <AdminProtected>
+            <AdminLayout>
+              <Categories />
+            </AdminLayout>
+          </AdminProtected>
+        }
+      >
+        <Route index element={<ListCategories />} />
+        <Route path="add-category" element={<AddCategory />} />
+        <Route path="edit-category/:categoryId" element={<EditCategory />} />
+      </Route>
 
-          {/* Instructors */}
-          <Route path="/instructors" element={<ViewInstructorsIndex />}>
-            <Route path="requests" element={<ViewInstructorRequests />} />
-            <Route path="requests/:id" element={<ViewMoreInstructorRequest />} />
-            <Route path="blocked" element={<ViewBlockedInstructors />} />
-          </Route>
+      {/* الكورسات */}
+      <Route
+        path="/courses"
+        element={
+          <AdminProtected>
+            <AdminLayout>
+              <AdminCoursesPage />
+            </AdminLayout>
+          </AdminProtected>
+        }
+      />
 
-          {/* Students placeholder */}
-          <Route
-            path="/students"
-            element={
-              <div className="p-4 bg-white border shadow-sm sm:p-6 rounded-2xl border-blue-gray-50">
-                <h2 className="mb-1 text-lg font-semibold sm:text-xl">
-                  Students
-                </h2>
-                <p className="text-xs text-gray-600 sm:text-sm">
-                  Students management module coming soon.
-                </p>
-              </div>
-            }
-          />
+      {/* المقالات */}
+      <Route
+        path="/articles"
+        element={
+          <AdminProtected>
+            <AdminLayout>
+              <AdminArticlesPage />
+            </AdminLayout>
+          </AdminProtected>
+        }
+      />
 
-          {/* Categories */}
-          <Route path="/categories" element={<Categories />}>
-            <Route index element={<ListCategories />} />
-            <Route path="add-category" element={<AddCategory />} />
-            <Route path="edit-category/:categoryId" element={<EditCategory />} />
-          </Route>
+      {/* بروفايل الأدمن */}
+      <Route
+        path="/profile"
+        element={
+          <AdminProtected>
+            <AdminLayout>
+              <AdminProfilePage />
+            </AdminLayout>
+          </AdminProtected>
+        }
+      />
 
-          {/* Courses */}
-          <Route path="/courses" element={<AdminCoursesPage />} />
+      {/* إعدادات الموقع */}
+      <Route
+        path="/settings"
+        element={
+          <AdminProtected>
+            <AdminLayout>
+              <AdminSiteSettingsPage />
+            </AdminLayout>
+          </AdminProtected>
+        }
+      />
 
-          {/* Articles */}
-          <Route path="/articles" element={<AdminArticlesPage />} />
-
-          {/* Profile */}
-          <Route path="/profile" element={<AdminProfilePage />} />
-
-          {/* Settings */}
-          <Route path="/settings" element={<AdminSiteSettingsPage />} />
-
-          {/* Notifications placeholder */}
-          <Route
-            path="/notifactions"
-            element={
-              <div className="p-4 bg-white border shadow-sm sm:p-6 rounded-2xl border-blue-gray-50">
+      {/* الإشعارات (placeholder حاليًا) */}
+      <Route
+        path="/notifactions"
+        element={
+          <AdminProtected>
+            <AdminLayout>
+              <div className="p-4 bg-white border shadow-sm rounded-2xl border-blue-gray-50 sm:p-6">
                 <h2 className="mb-1 text-lg font-semibold sm:text-xl">
                   Notifications
                 </h2>
@@ -132,24 +193,21 @@ const DashboardLayout: React.FC = () => {
                   Connect this section with your notifications service.
                 </p>
               </div>
-            }
-          />
+            </AdminLayout>
+          </AdminProtected>
+        }
+      />
 
-          {/* Login */}
-          <Route path="/login" element={<AdminLoginPage />} />
-
-          {/* Fallback */}
-          <Route path="*" element={<Navigate to="/admin/" replace />} />
-        </Routes>
-      </main>
-    </div>
+      {/* أي مسار غير معروف → توجيه للرئيسية */}
+      <Route path="*" element={<Navigate to="/admin/" replace />} />
+    </Routes>
   );
 };
 
 export function Dashboard() {
-  return <DashboardLayout />;
+  return <AdminDashboardRoutes />;
 }
 
-Dashboard.displayName = "/src/layout/dashboard.tsx";
+Dashboard.displayName = "/src/pages/admin/admin-dash-board-page.tsx";
 
-export default DashboardLayout;
+export default AdminDashboardRoutes;

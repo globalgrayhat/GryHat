@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useCallback } from "react";
 // Import TypeScript translation modules instead of JSON. This avoids JSON
 // parsing issues in Webpack and provides type inference for nested keys.

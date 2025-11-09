@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-expressions */
-import { useState } from "react";
+// client/src/pages/students/student-dash/chage-password-form.tsx
+
+import React, { useState } from "react";
 import { useFormik } from "formik";
 import { changePassword } from "../../../api/endpoints/student";
 import { toast } from "react-toastify";
@@ -14,205 +16,111 @@ interface Props {
 }
 
 const ChangePasswordForm: React.FC<Props> = ({ editMode, setEditMode }) => {
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showRepeatPassword, setShowRepeatPassword] = useState(false);
+  const [show, setShow] = useState({
+    current: false,
+    next: false,
+    confirm: false,
+  });
 
-  const handleSubmit = async (passwordInfo: PasswordInfo) => {
-    try {
-      const response = await changePassword(passwordInfo);
-      response?.data?.status === "success" && formik.resetForm();
-      setEditMode(false);
-      toast.success(response?.data?.message, {
-        position: toast.POSITION.BOTTOM_RIGHT,
-      });
-    } catch (error: any) {
-      toast.error(error?.data?.message, {
-        position: toast.POSITION.BOTTOM_RIGHT,
-      });
-    }
-  };
-
-  const formik = useFormik({
+  const formik = useFormik<PasswordInfo>({
     initialValues: {
       currentPassword: "",
       newPassword: "",
       repeatPassword: "",
     },
     validationSchema: PasswordValidationSchema,
-    onSubmit: (values) => {
-      handleSubmit(values);
+    onSubmit: async (values) => {
+      try {
+        const response = await changePassword(values);
+        if (response?.data?.status === "success") {
+          toast.success(response?.data?.message || "Password updated", {
+            position: toast.POSITION.BOTTOM_RIGHT,
+          });
+          formik.resetForm();
+          setEditMode(false);
+        } else {
+          throw new Error(response?.data?.message || "Failed");
+        }
+      } catch (error: any) {
+        toast.error(
+          error?.response?.data?.message ||
+            error?.data?.message ||
+            error?.message ||
+            "Failed to update password",
+          { position: toast.POSITION.BOTTOM_RIGHT }
+        );
+      }
     },
   });
 
-  const togglePasswordVisibility = (field: string) => {
-    switch (field) {
-      case "currentPassword":
-        setShowCurrentPassword(!showCurrentPassword);
-        break;
-      case "newPassword":
-        setShowNewPassword(!showNewPassword);
-        break;
-      case "repeatPassword":
-        setShowRepeatPassword(!showRepeatPassword);
-        break;
-      default:
-        break;
-    }
-  };
-
-  const getPasswordInputType = (field: string) => {
-    switch (field) {
-      case "currentPassword":
-        return showCurrentPassword ? "text" : "password";
-      case "newPassword":
-        return showNewPassword ? "text" : "password";
-      case "repeatPassword":
-        return showRepeatPassword ? "text" : "password";
-      default:
-        return "password";
-    }
+  const InputRow = (
+    name: keyof PasswordInfo,
+    label: string,
+    visible: boolean,
+    toggle: () => void
+  ) => {
+    const err = formik.touched[name] && formik.errors[name];
+    return (
+      <label className="relative block mb-4 group">
+        <span className="block mb-2 text-xs font-semibold text-gray-600 dark:text-gray-300">
+          {label}
+        </span>
+        <div
+          className={`flex items-center gap-2 rounded-2xl border bg-white/90 px-3 py-2.5 text-sm shadow-sm ring-1 transition-all dark:bg-[#3b4252]
+            ${err ? "ring-red-300 border-red-300" : "ring-gray-200 border-transparent"}
+            ${!editMode ? "opacity-70" : "hover:shadow-md"}
+          `}
+        >
+          <input
+            type={visible ? "text" : "password"}
+            name={name}
+            disabled={!editMode}
+            value={formik.values[name]}
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
+            className="w-full bg-transparent outline-none placeholder:text-gray-400 dark:text-gray-100"
+            placeholder={label}
+          />
+          <button
+            type="button"
+            className="p-1 text-gray-500 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10"
+            onClick={toggle}
+            disabled={!editMode}
+            aria-label="toggle-visibility"
+          >
+            {visible ? <AiOutlineEyeInvisible /> : <AiOutlineEye />}
+          </button>
+        </div>
+        {err && <div className="mt-1 text-xs text-red-500">{formik.errors[name] as string}</div>}
+      </label>
+    );
   };
 
   return (
     <form onSubmit={formik.handleSubmit}>
-      <div className='relative z-0 w-full mb-6 group'>
-        <input
-          type={getPasswordInputType("currentPassword")}
-          name='currentPassword'
-          id='floating_current_password'
-          disabled={!editMode}
-          value={formik.values.currentPassword}
-          onChange={formik.handleChange}
-          onBlur={formik.handleBlur}
-          className={`block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer ${
-            formik.touched.currentPassword && formik.errors.currentPassword
-              ? "border-red-500"
-              : ""
-          }`}
-          placeholder=' '
-        />
-        {formik.touched.currentPassword && formik.errors.currentPassword && (
-          <div className='text-red-500 text-xs mt-1'>
-            {formik.errors.currentPassword}
-          </div>
-        )}
-        <label
-          htmlFor='floating_email'
-          className={`peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] ${
-            formik.values.currentPassword
-              ? "peer-placeholder-shown:scale-100"
-              : ""
-          } peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6`}
-        >
-          Current Password
-        </label>
-        <button
-          type='button'
-          className='absolute right-0 top-2/4 transform -translate-y-2/4 mr-2 focus:outline-none'
-          onClick={() => togglePasswordVisibility("currentPassword")}
-        >
-          {showCurrentPassword ? (
-            <AiOutlineEyeInvisible className='text-gray-500' />
-          ) : (
-            <AiOutlineEye className='text-gray-500' />
-          )}
-        </button>
-      </div>
-      <div className='relative z-0 w-full mb-6 group'>
-        <input
-          type={getPasswordInputType("newPassword")}
-          name='newPassword'
-          disabled={!editMode}
-          id='floating_password'
-          value={formik.values.newPassword}
-          onChange={formik.handleChange}
-          onBlur={formik.handleBlur}
-          className={`block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer ${
-            formik.touched.newPassword && formik.errors.newPassword
-              ? "border-red-500"
-              : ""
-          }`}
-          placeholder=' '
-        />
-        {formik.touched.newPassword && formik.errors.newPassword && (
-          <div className='text-red-500 text-xs mt-1'>
-            {formik.errors.newPassword}
-          </div>
-        )}
-        <label
-          htmlFor='floating_password'
-          className={`peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] ${
-            formik.values.newPassword ? "peer-placeholder-shown:scale-100" : ""
-          } peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6`}
-        >
-          Password
-        </label>
-        <button
-          type='button'
-          className='absolute right-0 top-2/4 transform -translate-y-2/4 mr-2 focus:outline-none'
-          onClick={() => togglePasswordVisibility("newPassword")}
-        >
-          {showNewPassword ? (
-            <AiOutlineEyeInvisible className='text-gray-500' />
-          ) : (
-            <AiOutlineEye className='text-gray-500' />
-          )}
-        </button>
-      </div>
-      <div className='relative z-0 w-full mb-6 group'>
-        <input
-          type={getPasswordInputType("repeatPassword")}
-          name='repeatPassword'
-          disabled={!editMode}
-          id='floating_repeat_password'
-          value={formik.values.repeatPassword}
-          onChange={formik.handleChange}
-          onBlur={formik.handleBlur}
-          className={`block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer ${
-            formik.touched.repeatPassword && formik.errors.repeatPassword
-              ? "border-red-500"
-              : ""
-          }`}
-          placeholder=' '
-        />
-        {formik.touched.repeatPassword && formik.errors.repeatPassword && (
-          <div className='text-red-500 text-xs mt-1'>
-            {formik.errors.repeatPassword}
-          </div>
-        )}
-        <label
-          htmlFor='floating_repeat_password'
-          className={`peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] ${
-            formik.values.repeatPassword
-              ? "peer-placeholder-shown:scale-100"
-              : ""
-          } peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6`}
-        >
-          Confirm password
-        </label>
-        <button
-          type='button'
-          className='absolute right-0 top-2/4 transform -translate-y-2/4 mr-2 focus:outline-none'
-          onClick={() => togglePasswordVisibility("repeatPassword")}
-        >
-          {showRepeatPassword ? (
-            <AiOutlineEyeInvisible className='text-gray-500' />
-          ) : (
-            <AiOutlineEye className='text-gray-500' />
-          )}
-        </button>
-      </div>
-      <div className='relative pt-14 pr-1'>
-        {editMode && (
+      {InputRow("currentPassword", "Current Password", show.current, () =>
+        setShow((s) => ({ ...s, current: !s.current }))
+      )}
+      {InputRow("newPassword", "New Password", show.next, () =>
+        setShow((s) => ({ ...s, next: !s.next }))
+      )}
+      {InputRow("repeatPassword", "Confirm Password", show.confirm, () =>
+        setShow((s) => ({ ...s, confirm: !s.confirm }))
+      )}
+
+      {editMode && (
+        <div className="flex justify-end mt-3">
           <button
-            type='submit'
-            className='text-white absolute bottom-0 right-0 bg-blue-500 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800'
+            type="submit"
+            className="
+              rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white
+              shadow-sm transition hover:bg-indigo-700
+            "
           >
             Reset
           </button>
-        )}
-      </div>
+        </div>
+      )}
     </form>
   );
 };

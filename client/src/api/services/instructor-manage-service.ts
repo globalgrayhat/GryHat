@@ -56,7 +56,7 @@ export const unblockInstructor = async (
   endpoint: string,
   instructorId: string
 ) => {
-  const response = await api.patch(
+  const response = await api.get(
     `${CONFIG_KEYS.API_BASE_URL}/${endpoint}/${instructorId}`
   );
   return response;

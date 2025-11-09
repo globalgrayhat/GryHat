@@ -1,7 +1,7 @@
 /* eslint-disable no-dupe-keys */
-// Arabic translations exported as a TypeScript module. Ensure all
-// strings are wrapped in double quotes and keys mirror those in the
-// English version for consistency.
+/**
+ * Arabic translations as a TypeScript module.
+ */
 
 const ar = {
   welcomeBack: "مرحبًا بعودتك",
@@ -13,8 +13,7 @@ const ar = {
   adminSignIn: "تسجيل دخول المسؤول",
   adminTagline: "صلاحيات إدارية",
   becomeInstructorTagline: "انضم لنا وابدأ التدريس اليوم",
-  // Navigation labels. Moved from `header` to `nav` to align with how
-  // translations are looked up in the code (`t('nav.home')`).
+
   nav: {
     home: "الرئيسية",
     courses: "الدورات",
@@ -25,7 +24,6 @@ const ar = {
     login: "تسجيل الدخول",
     register: "التسجيل",
     instructorLogin: "دخول المدرب",
-    // Additional navigation keys for admin sections and settings
     settings: "الإعدادات",
     students: "الطلاب",
     instructors: "المدربون",
@@ -34,34 +32,23 @@ const ar = {
     admin: "المشرف",
     adminLogin: "دخول المشرف",
   },
-  adminCourses: {
-    title: "الدورات",
-    course: "الدورة",
-    category: "القسم",
-    instructor: "المدرب",
-    price: "السعر",
-    actions: "الإجراءات",
-    edit: "تعديل",
-    delete: "حذف",
-  },
-  settings: {
-    adminSettings: "إعدادات الإدارة",
-    profileSettings: "إعدادات الملف الشخصي",
-    siteSettings: "إعدادات الموقع",
-    platformName: "اسم المنصة",
-    platformNamePlaceholder: "أدخل اسم المنصة",
-    loginOptions: "خيارات تسجيل الدخول",
-    enableStudentLogin: "تمكين تسجيل دخول/تسجيل الطلاب",
-    enableInstructorLogin: "تمكين تسجيل دخول/تسجيل المدربين",
-    enableGoogleLogin: "تمكين تسجيل الدخول باستخدام جوجل",
-    saveSettings: "حفظ الإعدادات",
-    saving: "جارٍ الحفظ...",
-    errors: {
-      platformNameRequired: "اسم المنصة لا يمكن أن يكون فارغًا",
+
+  home: {
+    trendingCourses: "الدورات الرائجة",
+    recommendedCourses: "الدورات المقترحة لك",
+    viewMore: "عرض المزيد",
+    viewAll: "عرض الكل",
+    browseAll: "تصفح جميع الدورات",
+    empty: {
+      trending: "لا توجد دورات رائجة حاليًا.",
+      recommended: "لا توجد توصيات لك بعد.",
     },
-    successfullyUpdated: "تم تحديث الإعدادات بنجاح",
-    updateFailed: "فشل في تحديث الإعدادات",
+    errors: {
+      trendingFail: "تعذر تحميل الدورات الرائجة الآن.",
+      recommendedFail: "تعذر تحميل الدورات المقترحة الآن.",
+    },
   },
+
   footer: {
     explore: "استكشف",
     support: "الدعم",
@@ -73,42 +60,60 @@ const ar = {
     helpCenter: "مركز المساعدة",
     platformName: "المنصة الأكاديمية",
   },
+
   auth: {
     registerTitle: "إنشاء حساب",
     personalInfo: "معلومات شخصية",
     firstName: "الاسم الأول",
     lastName: "الاسم الأخير",
     email: "البريد الإلكتروني",
-    mobile: "الهاتف",
+    mobile: "رقم الجوال",
     qualifications: "المؤهلات",
     qualification: "المؤهل",
     subjects: "المواد",
     experience: "الخبرة",
     skills: "المهارات",
-    blockedTitle: "محظور",
-    blockedMessage: "لقد تم حظر حسابك. يرجى الاتصال بالدعم للحصول على المساعدة.",
     about: "نبذة عنك",
     photo: "صورة",
     certificate: "شهادة",
     certificates: "الشهادات",
     password: "كلمة المرور",
     confirmPassword: "تأكيد كلمة المرور",
+    forgotPassword: "هل نسيت كلمة المرور؟",
     uploadFile: "رفع ملف",
     uploadPhoto: "رفع صورة",
     uploadCertificate: "رفع شهادة",
-    dragOrDrop: "أو سحب وإفلات",
+    dragOrDrop: "أو قم بالسحب والإفلات",
     fileTypeInfo: "PNG، JPG، GIF حتى 10 ميجابايت",
     signUp: "إنشاء حساب",
+    signIn: "تسجيل الدخول",
     cancel: "إلغاء",
+    studentLogin: "تسجيل دخول الطالب",
+    accessAccount: "الوصول إلى الحساب",
     haveAccount: "لديك حساب بالفعل؟",
+    blockedTitle: "محظور",
+    blockedMessage:
+      "لقد تم حظر حسابك. يرجى الاتصال بالدعم للحصول على المساعدة.",
   },
 
   tutors: {
     title: "قائمة المدربين",
-    subtitle: "تعرف على خبراء موضوعات Gray Hat",
+    subtitle: "تعرّف على خبراء Gray Hat",
     searchPlaceholder: "ابحث عن المدربين...",
     noResults: "لم يتم العثور على مدربين.",
   },
+
+  adminCourses: {
+    title: "الدورات",
+    course: "الدورة",
+    category: "القسم",
+    instructor: "المدرب",
+    price: "السعر",
+    actions: "الإجراءات",
+    edit: "تعديل",
+    delete: "حذف",
+  },
+
   admin: {
     courses: "الدورات",
     coursesDescription: "إدارة جميع الدورات في المنصة",
@@ -121,6 +126,30 @@ const ar = {
     email: "البريد الإلكتروني",
     save: "حفظ",
   },
+
+  settings: {
+    adminSettings: "إعدادات الإدارة",
+    profileSettings: "إعدادات الملف الشخصي",
+    siteSettings: "إعدادات الموقع",
+    platformName: "اسم المنصة",
+    platformNamePlaceholder: "أدخل اسم المنصة",
+    loginOptions: "خيارات تسجيل الدخول",
+    enableStudentLogin: "تفعيل تسجيل دخول/تسجيل الطلاب",
+    enableInstructorLogin: "تفعيل تسجيل دخول/تسجيل المدربين",
+    enableGoogleLogin: "تفعيل تسجيل الدخول عبر جوجل",
+    saveSettings: "حفظ الإعدادات",
+    saving: "جارٍ الحفظ...",
+    editProfileInfo: "تعديل معلومات الحساب",
+    profileSubtitle: "إدارة بياناتك الشخصية وكلمة المرور",
+    accountInfo: "معلومات الحساب",
+    changePassword: "تغيير كلمة المرور",
+    errors: {
+      platformNameRequired: "اسم المنصة لا يمكن أن يكون فارغًا",
+    },
+    successfullyUpdated: "تم تحديث الإعدادات بنجاح",
+    updateFailed: "فشل في تحديث الإعدادات",
+  },
+
   course: {
     title: "العنوان",
     category: "الفئة",
@@ -133,14 +162,37 @@ const ar = {
     duration: "المدة",
     free: "مجانًا",
   },
+
   pagination: {
     previous: "السابق",
     next: "التالي",
   },
+
+  profile: {
+    loading: "جارٍ تحميل الملف الشخصي...",
+    noChanges: "لا توجد تغييرات للتحديث",
+    updatedSuccessfully: "تم تحديث الملف الشخصي بنجاح",
+    updateFailed: "فشل في تحديث الملف الشخصي",
+    edit: "تعديل الملف الشخصي",
+    save: "حفظ",
+    saving: "جارٍ الحفظ...",
+    cancel: "إلغاء",
+    firstName: "الاسم الأول",
+    lastName: "الاسم الأخير",
+    email: "البريد الإلكتروني",
+    mobile: "رقم الجوال",
+    changeAvatar: "الصورة الشخصية",
+  },
+
+  toast: {
+    genericError: "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
+  },
+
   common: {
     edit: "تعديل",
     delete: "حذف",
   },
 };
 
+export type ArTranslations = typeof ar;
 export default ar;
