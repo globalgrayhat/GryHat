@@ -30,9 +30,9 @@ const InstructorsListing = lazy(
 const ViewInstructor = lazy(
   () => import("@/pages/instructors/view-instructor")
 );
-const Community = lazy(
-  () => import("@/pages/sections/community/community-home")
-);
+// const Community = lazy(
+//   () => import("@/pages/sections/community/community-home")
+// );
 const AboutUs = lazy(
   () => import("@/pages/sections/about/about-us")
 );
@@ -210,10 +210,10 @@ const AppRouter = createBrowserRouter([
         path: "tutors/:tutorId",
         element: withSuspense(<ViewInstructor />),
       },
-      {
-        path: "community",
-        element: withSuspense(<Community />),
-      },
+      // {
+      //   path: "community",
+      //   element: withSuspense(<Community />),
+      // },
       {
         path: "about",
         element: withSuspense(<AboutUs />),

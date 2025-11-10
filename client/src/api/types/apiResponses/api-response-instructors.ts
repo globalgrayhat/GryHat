@@ -1,4 +1,5 @@
 export interface InstructorApiResponse {
+  title: JSX.Element;
 	profilePic: { url: string; name: string };
 	certificates: Certificate[];
 	isBlocked: boolean;

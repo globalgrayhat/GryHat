@@ -22,7 +22,6 @@ const navKeys = [
   { key: "home", href: "/" },
   { key: "courses", href: "/courses" },
   { key: "tutors", href: "/tutors" },
-  { key: "community", href: "/community" },
   { key: "about", href: "/about" },
   { key: "contact", href: "/contact" },
 ];
@@ -82,7 +81,7 @@ const StudentHeader: React.FC = () => {
   const getDashboardRoute = () => {
     if (userType === "admin") return "/admin/";
     if (userType === "instructor") return "/instructors";
-    return "/dashboard"; // الطالب الافتراضي
+    return "/dashboard";
   };
 
   // لو حاب تستخدم زر مع onClick بدل Link، يمكنك إلغاء التعليق:
@@ -107,12 +106,12 @@ const StudentHeader: React.FC = () => {
           {({ open, close }) => (
             <>
               {/* === Top Bar === */}
-              <div className="max-w-7xl mx-auto px-4">
+              <div className="px-4 mx-auto max-w-7xl">
                 <div className="flex items-center justify-between h-14 md:h-14 lg:h-16">
                   {/* === Left: Logo + Nav === */}
                   <div className="flex items-center gap-4 lg:gap-6">
                     <Link to="/" className="flex-shrink-0">
-                      <img className="h-8 md:h-9 lg:h-12 w-auto" src="/Profile.svg" alt="Logo" />
+                      <img className="w-auto h-8 md:h-9 lg:h-12" src="/Profile.svg" alt="Logo" />
                     </Link>
 
                     {/* Desktop navigation */}
@@ -135,7 +134,7 @@ const StudentHeader: React.FC = () => {
                   </div>
 
                   {/* === Right: Desktop === */}
-                  <div className="hidden lg:flex items-center gap-3">
+                  <div className="items-center hidden gap-3 lg:flex">
                     {isLoggedIn ? (
                       <>
                         {/* الزر يتغير المسار حسب نوع المستخدم */}
@@ -152,19 +151,19 @@ const StudentHeader: React.FC = () => {
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => openModal("studentLogin")}
-                          className="bg-blue-gray-600 hover:bg-blue-gray-700 text-white text-sm font-semibold py-2 px-3 rounded"
+                          className="px-3 py-2 text-sm font-semibold text-white rounded bg-blue-gray-600 hover:bg-blue-gray-700"
                         >
                           {t("nav.login") || "Login"}
                         </button>
                         <button
                           onClick={() => openModal("studentRegister")}
-                          className="bg-blue-gray-600 hover:bg-blue-gray-700 text-white text-sm font-semibold py-2 px-3 rounded"
+                          className="px-3 py-2 text-sm font-semibold text-white rounded bg-blue-gray-600 hover:bg-blue-gray-700"
                         >
                           {t("nav.register") || "Register"}
                         </button>
                         <button
                           onClick={() => openModal("instructorLogin")}
-                          className="bg-purple-800 hover:bg-purple-900 text-white text-sm font-semibold py-2 px-3 rounded"
+                          className="px-3 py-2 text-sm font-semibold text-white bg-purple-800 rounded hover:bg-purple-900"
                         >
                           {t("nav.instructorLogin") || "Instructor Login"}
                         </button>
@@ -178,17 +177,17 @@ const StudentHeader: React.FC = () => {
                   <div className="flex items-center gap-2 lg:hidden">
                     {isLoggedIn && userType === "student" && <ProfileMenu />}
                     <Disclosure.Button
-                      className="inline-flex items-center justify-center rounded-md p-2 text-blue-gray-700 dark:text-gray-200 hover:text-blue-gray-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-gray-800/60 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="inline-flex items-center justify-center p-2 rounded-md text-blue-gray-700 dark:text-gray-200 hover:text-blue-gray-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-gray-800/60 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       aria-label="Toggle main menu"
                     >
-                      {open ? <XMarkIcon className="h-6 w-6" /> : <Bars3Icon className="h-6 w-6" />}
+                      {open ? <XMarkIcon className="w-6 h-6" /> : <Bars3Icon className="w-6 h-6" />}
                     </Disclosure.Button>
                   </div>
                 </div>
               </div>
 
               {/* === Mobile Panel === */}
-              <Disclosure.Panel className="lg:hidden border-t border-white/10 dark:border-gray-800 bg-white/70 dark:bg-gray-900/70 backdrop-blur-lg">
+              <Disclosure.Panel className="border-t lg:hidden border-white/10 dark:border-gray-800 bg-white/70 dark:bg-gray-900/70 backdrop-blur-lg">
                 <div className="px-3 pt-3 pb-2 space-y-1">
                   {navigation.map((item) => (
                     <NavLink
@@ -213,7 +212,7 @@ const StudentHeader: React.FC = () => {
                 <div className="px-3 pt-2 pb-4 border-t border-white/10 dark:border-gray-800">
                   {isLoggedIn ? (
                     <Link to={getDashboardRoute()} onClick={() => close()}>
-                      <button className="w-full bg-blue-gray-600 hover:bg-blue-gray-700 text-white font-semibold py-2 px-3 rounded">
+                      <button className="w-full px-3 py-2 font-semibold text-white rounded bg-blue-gray-600 hover:bg-blue-gray-700">
                         {t("nav.dashboard") || "Dashboard"}
                       </button>
                     </Link>
@@ -224,7 +223,7 @@ const StudentHeader: React.FC = () => {
                           openModal("studentLogin");
                           close();
                         }}
-                        className="w-full bg-blue-gray-600 hover:bg-blue-gray-700 text-white font-semibold py-2 px-3 rounded"
+                        className="w-full px-3 py-2 font-semibold text-white rounded bg-blue-gray-600 hover:bg-blue-gray-700"
                       >
                         {t("nav.login") || "Login"}
                       </button>
@@ -233,7 +232,7 @@ const StudentHeader: React.FC = () => {
                           openModal("studentRegister");
                           close();
                         }}
-                        className="w-full bg-blue-gray-600 hover:bg-blue-gray-700 text-white font-semibold py-2 px-3 rounded"
+                        className="w-full px-3 py-2 font-semibold text-white rounded bg-blue-gray-600 hover:bg-blue-gray-700"
                       >
                         {t("nav.register") || "Register"}
                       </button>
@@ -242,11 +241,11 @@ const StudentHeader: React.FC = () => {
                           openModal("instructorLogin");
                           close();
                         }}
-                        className="w-full bg-purple-800 hover:bg-purple-900 text-white font-semibold py-2 px-3 rounded"
+                        className="w-full px-3 py-2 font-semibold text-white bg-purple-800 rounded hover:bg-purple-900"
                       >
                         {t("nav.instructorLogin") || "Instructor Login"}
                       </button>
-                      <div className="flex justify-end items-center gap-2 pt-2">
+                      <div className="flex items-center justify-end gap-2 pt-2">
                         <ThemeToggle />
                         <LanguageToggle />
                       </div>

@@ -62,11 +62,22 @@ const ar = {
   },
 
   auth: {
+    studentWelcome: "مرحبًا بك أيها الطالب!",
+    studentSubtitle: "قم بتسجيل الدخول للوصول إلى حسابك.",
+    studentLogin: "تسجيل دخول الطالب",
+    accessAccount: "قم بالوصول إلى حسابك باستخدام البريد الإلكتروني وكلمة المرور.",
+    email: "البريد الإلكتروني",
+    password: "كلمة المرور",
+    togglePassword: "إظهار / إخفاء كلمة المرور",
+    forgotPassword: "نسيت كلمة المرور؟",
+    signingIn: "جاري تسجيل الدخول...",
+    signIn: "تسجيل الدخول",
+    haveAccount: "ليس لديك حساب؟",
+    signUp: "سجل الآن",
     registerTitle: "إنشاء حساب",
     personalInfo: "معلومات شخصية",
     firstName: "الاسم الأول",
     lastName: "الاسم الأخير",
-    email: "البريد الإلكتروني",
     mobile: "رقم الجوال",
     qualifications: "المؤهلات",
     qualification: "المؤهل",
@@ -77,23 +88,15 @@ const ar = {
     photo: "صورة",
     certificate: "شهادة",
     certificates: "الشهادات",
-    password: "كلمة المرور",
     confirmPassword: "تأكيد كلمة المرور",
-    forgotPassword: "هل نسيت كلمة المرور؟",
     uploadFile: "رفع ملف",
     uploadPhoto: "رفع صورة",
     uploadCertificate: "رفع شهادة",
     dragOrDrop: "أو قم بالسحب والإفلات",
     fileTypeInfo: "PNG، JPG، GIF حتى 10 ميجابايت",
-    signUp: "إنشاء حساب",
-    signIn: "تسجيل الدخول",
     cancel: "إلغاء",
-    studentLogin: "تسجيل دخول الطالب",
-    accessAccount: "الوصول إلى الحساب",
-    haveAccount: "لديك حساب بالفعل؟",
     blockedTitle: "محظور",
-    blockedMessage:
-      "لقد تم حظر حسابك. يرجى الاتصال بالدعم للحصول على المساعدة.",
+    blockedMessage: "لقد تم حظر حسابك. يرجى الاتصال بالدعم للحصول على المساعدة.",
   },
 
   tutors: {
@@ -186,11 +189,48 @@ const ar = {
 
   toast: {
     genericError: "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
+    loginSuccess: "تم تسجيل الدخول بنجاح!",
+    loginFailed: "فشل تسجيل الدخول. حاول مرة أخرى."
   },
 
   common: {
     edit: "تعديل",
     delete: "حذف",
+  },
+
+  contact: {
+    title: "اتصل بنا",
+    subtitle: "يسعدنا سماع رأيك. أرسل لنا رسالة وسنرد عليك قريبًا.",
+    name: "اسمك",
+    email: "البريد الإلكتروني",
+    message: "رسالتك",
+    submit: "إرسال الرسالة",
+    sending: "جارٍ الإرسال...",
+    success: "تم إرسال الرسالة بنجاح!",
+    error: "فشل في إرسال الرسالة. يرجى المحاولة مرة أخرى.",
+  },
+
+  form: {
+    required: "مطلوب",
+    invalidEmail: "صيغة البريد الإلكتروني غير صحيحة",
+  },
+
+  register: {
+    welcome: "مرحبًا بك أيها الطالب",
+    subtitle: "قم بإنشاء حسابك للوصول إلى المنصة التعليمية",
+    title: "تسجيل حساب جديد",
+    createAccountPrompt: "املأ التفاصيل أدناه لإنشاء حسابك",
+    firstName: "الاسم الأول",
+    lastName: "اسم العائلة",
+    email: "البريد الإلكتروني",
+    mobile: "رقم الهاتف",
+    password: "كلمة المرور",
+    confirmPassword: "تأكيد كلمة المرور",
+    togglePassword: "عرض/إخفاء كلمة المرور",
+    creatingAccount: "جاري إنشاء الحساب...",
+    signUpButton: "تسجيل",
+    haveAccount: "هل لديك حساب؟",
+    signInLink: "تسجيل الدخول",
   },
 };
 
