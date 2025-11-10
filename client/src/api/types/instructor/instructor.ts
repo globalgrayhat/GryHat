@@ -1,6 +1,7 @@
 export interface PasswordInfo {
     currentPassword: string;
     newPassword: string;
+     repeatPassword: string;
   }
   export interface UpdateProfileInfo {
     firstName?: string;
